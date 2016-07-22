@@ -89,7 +89,9 @@ export class Online extends events.EventEmitter {
             .then((resolve) => {
               let summerRoom = <summerRoom>JSON.parse(resolve.toString())
               if (summerRoom.code === 0 && summerRoom.data.summerHeart) {
-                this.SummerHeart(usersData[x])
+                setTimeout(() => {
+                  this.SummerHeart(usersData[x])
+                }, 3e5) // 5分钟
               }
             })
         }
