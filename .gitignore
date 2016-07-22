@@ -35,3 +35,14 @@ jspm_packages
 
 # Optional REPL history
 .node_repl_history
+
+# Typings directories
+typings
+
+# Private configs
+configs/*.json
+!configs/*.default.json
+
+# Build flies
+.vscode
+*.js

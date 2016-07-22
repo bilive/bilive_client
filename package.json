@@ -1,0 +1,15 @@
+{
+  "name": "always_online",
+  "version": "0.1.0",
+  "description": "基于Node.JS的网站挂机系统",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "lzghzr",
+  "license": "Apache-2.0",
+  "devDependencies": {},
+  "dependencies": {
+    "nodemailer": "^2.5.0"
+  }
+}

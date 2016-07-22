@@ -1,0 +1,18 @@
+{
+  "defaultUserID": 1,
+  "defaultRommID": 5082,
+  "usersData": {
+    "0": {
+      "userName": "admin",
+      "email": "admin@example.com",
+      "status": true,
+      "cookie": "DedeUserID=; DedeUserID__ckMd5=; SESSDATA="
+    },
+    "1": {
+      "userName": "user",
+      "email": "user@example.com",
+      "status": false,
+      "cookie": "DedeUserID=; DedeUserID__ckMd5=; SESSDATA="
+    }
+  }
+}
