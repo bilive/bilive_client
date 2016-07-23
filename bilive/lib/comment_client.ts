@@ -1,6 +1,6 @@
 import * as net from 'net'
 import * as events from 'events'
-import {Tools} from '../../lib/tools'
+import * as Tools from '../../lib/tools'
 /**
  * 弹幕客户端, 用于连接弹幕服务器和发送弹幕事件
  * 
@@ -9,8 +9,6 @@ import {Tools} from '../../lib/tools'
  */
 export class CommentClient extends events.EventEmitter {
   /**
-   * 弹幕客户端, 用于连接弹幕服务器和发送弹幕事件
-   * 
    * @param {number} [userID]
    * @param {number} [roomID=23058]
    */

@@ -1,7 +1,7 @@
 import * as events from 'events'
 import * as app from './index'
 import {CommentClient} from './lib/comment_client'
-import {Tools} from '../lib/tools'
+import * as Tools from '../lib/tools'
 /**
  * 自动参与抽奖
  * 
@@ -9,10 +9,6 @@ import {Tools} from '../lib/tools'
  * @extends {events.EventEmitter}
  */
 export class Lottery extends events.EventEmitter {
-  /**
-   * 自动参与抽奖
-   * 
-   */
   constructor() {
     super()
   }
@@ -22,9 +18,9 @@ export class Lottery extends events.EventEmitter {
   /**
    * 开始挂机
    */
-  Start() {
-    Tools.UserInfo(app.appName)
-      .then((resolve: app.config) => {
+  public Start() {
+    Tools.UserInfo<app.config>(app.appName)
+      .then((resolve) => {
         this.CommentClient = new CommentClient(resolve.defaultUserID, resolve.defaultRommID)
         this.CommentClient
           .on('SYS_MSG', (jsonData) => { this.MSGHandler(<SYS_MSG>jsonData) })
@@ -59,10 +55,10 @@ export class Lottery extends events.EventEmitter {
       this.GetRoomID(jsonData.url)
         .then((resolve) => {
           roomID = resolve
-          return Tools.UserInfo(app.appName)
+          return Tools.UserInfo<app.config>(app.appName)
         })
-        .then((resolve: app.config) => {
-          let usersData: app.usersData = resolve.usersData
+        .then((resolve) => {
+          let usersData: Tools.usersData = resolve.usersData
           for (let x in usersData) {
             if (usersData[x].status === true) {
               let indexUrl = `${this.smallTVUrl}index?roomid=${roomID}`
@@ -77,12 +73,12 @@ export class Lottery extends events.EventEmitter {
    * 
    * @private
    * @param {string} indexUrl
-   * @param {app.userData} userData
+   * @param {Tools.userData} userData
    * @param {string} roomID
    */
-  private IndexSmallTV(indexUrl: string, userData: app.userData, roomID: string) {
+  private IndexSmallTV(indexUrl: string, userData: Tools.userData, roomID: string) {
     Tools.XHR(indexUrl, userData.cookie)
-      .then((resolve: Buffer) => {
+      .then((resolve) => {
         let index = <smallTVCheck>JSON.parse(resolve.toString())
         let unjion = index.data.unjoin
         for (let y of unjion) {
@@ -97,12 +93,12 @@ export class Lottery extends events.EventEmitter {
    * 
    * @private
    * @param {string} joinUrl
-   * @param {app.userData} userData
+   * @param {Tools.userData} userData
    * @param {number} jionID
    */
-  private JionSmallTV(joinUrl: string, userData: app.userData, jionID: number) {
+  private JionSmallTV(joinUrl: string, userData: Tools.userData, jionID: number) {
     Tools.XHR(joinUrl, userData.cookie)
-      .then((resolve: Buffer) => {
+      .then((resolve) => {
         let join = <smallTVJoin>JSON.parse(resolve.toString())
         setTimeout(() => {
           let rewardUrl = `${this.smallTVUrl}getReward?id=${jionID}`
@@ -115,11 +111,11 @@ export class Lottery extends events.EventEmitter {
    * 
    * @private
    * @param {string} rewardUrl
-   * @param {app.userData} userData
+   * @param {Tools.userData} userData
    */
-  private RewardSmallTV(rewardUrl: string, userData: app.userData) {
+  private RewardSmallTV(rewardUrl: string, userData: Tools.userData) {
     Tools.XHR(rewardUrl, userData.cookie)
-      .then((resolve: Buffer) => {
+      .then((resolve) => {
         let reward = <smallTVReward>JSON.parse(resolve.toString())
         if (reward.code === 0 && reward.data.status == 2) {
           setTimeout(() => {
@@ -143,9 +139,9 @@ export class Lottery extends events.EventEmitter {
       this.GetRoomID(jsonData.url)
         .then((resolve) => {
           roomID = resolve
-          return Tools.UserInfo(app.appName)
+          return Tools.UserInfo<app.config>(app.appName)
         })
-        .then((resolve: app.config) => {
+        .then((resolve) => {
           let usersData = resolve.usersData
           for (let x in usersData) {
             if (usersData[x].status === true) {
@@ -161,10 +157,10 @@ export class Lottery extends events.EventEmitter {
    * 
    * @private
    * @param {string} checkUrl
-   * @param {app.userData} userData
+   * @param {Tools.userData} userData
    * @param {string} roomID
    */
-  private CheckLottery(checkUrl: string, userData: app.userData, roomID: string) {
+  private CheckLottery(checkUrl: string, userData: Tools.userData, roomID: string) {
     Tools.XHR(checkUrl, userData.cookie)
       .then((resolve) => {
         let check = <lotteryCheck>JSON.parse(resolve.toString())
@@ -185,11 +181,11 @@ export class Lottery extends events.EventEmitter {
    * 
    * @private
    * @param {string} joinUrl
-   * @param {app.userData} userData
+   * @param {Tools.userData} userData
    * @param {String} roomID
    * @param {number} raffleID
    */
-  private JoinLottery(joinUrl: string, userData: app.userData, roomID: String, raffleID: number) {
+  private JoinLottery(joinUrl: string, userData: Tools.userData, roomID: String, raffleID: number) {
     Tools.XHR(joinUrl, userData.cookie, 'POST')
       .then((resolve) => {
         let join = <lotteryJoin>JSON.parse(resolve.toString())
@@ -206,9 +202,9 @@ export class Lottery extends events.EventEmitter {
    * 
    * @private
    * @param {string} resultUrl
-   * @param {app.userData} userData
+   * @param {Tools.userData} userData
    */
-  private RewardLottery(resultUrl: string, userData: app.userData) {
+  private RewardLottery(resultUrl: string, userData: Tools.userData) {
     Tools.XHR(resultUrl, userData.cookie)
       .then((resolve: Buffer) => {
         let reward = <lotteryReward>JSON.parse(resolve.toString())
@@ -223,7 +219,7 @@ export class Lottery extends events.EventEmitter {
  * 
  * @interface SYS_MSG
  */
-export interface SYS_MSG extends JSON {
+interface SYS_MSG {
   cmd: string
   msg: string
   rep: number
@@ -235,17 +231,17 @@ export interface SYS_MSG extends JSON {
  * 
  * @interface smallTVCheck
  */
-export interface smallTVCheck extends JSON {
+interface smallTVCheck {
   code: number
   msg: string
   data: smallTVCheckData
 }
-export interface smallTVCheckData extends JSON {
+interface smallTVCheckData {
   lastid: number
   join: smallTVCheckDataJoin[]
   unjoin: smallTVCheckDataJoin[]
 }
-export interface smallTVCheckDataJoin extends JSON {
+interface smallTVCheckDataJoin {
   id: number
   dtime: number
 }
@@ -254,12 +250,12 @@ export interface smallTVCheckDataJoin extends JSON {
  * 
  * @interface smallTVJoin
  */
-export interface smallTVJoin extends JSON {
+interface smallTVJoin {
   code: number
   msg: string
   data: smallTVJoinData
 }
-export interface smallTVJoinData extends JSON {
+interface smallTVJoinData {
   id: number
   dtime: number
   status: number
@@ -269,19 +265,19 @@ export interface smallTVJoinData extends JSON {
  * 
  * @interface smallTVReward
  */
-export interface smallTVReward extends JSON {
+interface smallTVReward {
   code: number
   msg: string
   data: smallTVRewardData
 }
-export interface smallTVRewardData extends JSON {
+interface smallTVRewardData {
   fname: string
   sname: string
   reward: smallTVRewardDataReward
   win: number
   status: number
 }
-export interface smallTVRewardDataReward extends JSON {
+interface smallTVRewardDataReward {
   id: number
   num: number
 }
@@ -289,9 +285,8 @@ export interface smallTVRewardDataReward extends JSON {
  * 系统礼物消息
  * 
  * @interface SYS_GIFT
- * @extends {JSON}
  */
-export interface SYS_GIFT extends JSON {
+interface SYS_GIFT {
   cmd: string
   msg: string
   tips: string
@@ -305,14 +300,13 @@ export interface SYS_GIFT extends JSON {
  * 房间抽奖信息
  * 
  * @interface lotteryCheck
- * @extends {JSON}
  */
-export interface lotteryCheck extends JSON {
+interface lotteryCheck {
   code: number
   msg: string
   data: lotteryCheckData[]
 }
-export interface lotteryCheckData extends JSON {
+interface lotteryCheckData {
   type: string
   raffleId: number
   time: number
@@ -322,9 +316,8 @@ export interface lotteryCheckData extends JSON {
  * 参与抽奖信息
  * 
  * @interface lotteryJoin
- * @extends {JSON}
  */
-export interface lotteryJoin extends JSON {
+interface lotteryJoin {
   code: number
   msg: string
   data: any[]
@@ -332,16 +325,14 @@ export interface lotteryJoin extends JSON {
 /**
  * 抽奖结果信息
  * 
- * @export
  * @interface lotteryReward
- * @extends {JSON}
  */
-export interface lotteryReward extends JSON {
+interface lotteryReward {
   code: number
   msg: string
   data: lotteryRewardData
 }
-export interface lotteryRewardData extends JSON {
+interface lotteryRewardData {
   giftName: string
   giftNum: number
   giftId: number | string

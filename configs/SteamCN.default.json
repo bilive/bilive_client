@@ -1,0 +1,16 @@
+{
+  "usersData": {
+    "0": {
+      "userName": "admin",
+      "email": "admin@example.com",
+      "status": true,
+      "cookie": "FtVW_2132_saltkey=; FtVW_2132_auth="
+    },
+    "1": {
+      "userName": "user",
+      "email": "user@example.com",
+      "status": false,
+      "cookie": "FtVW_2132_saltkey=; FtVW_2132_auth="
+    }
+  }
+}

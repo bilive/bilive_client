@@ -1,18 +1,15 @@
 import * as events from 'events'
 import * as app from './index'
 import {CommentClient} from './lib/comment_client'
-import {Tools} from '../lib/tools'
+import * as Tools from '../lib/tools'
 /**
  * 挂机得经验
  * 
+ * @export
  * @class Online
  * @extends {events.EventEmitter}
  */
 export class Online extends events.EventEmitter {
-  /**
-   * 挂机得经验
-   * 
-   */
   constructor() {
     super()
   }
@@ -29,18 +26,16 @@ export class Online extends events.EventEmitter {
    * @private
    */
   private OnlineHeart() {
-    this.GetUsersData()
+    Tools.UserInfo<app.config>(app.appName)
       .then((resolve) => {
-        let usersData = resolve
+        let usersData = resolve.usersData
         for (let x in usersData) {
           Tools.XHR('http://live.bilibili.com/User/userOnlineHeart', usersData[x].cookie, 'POST')
             .then((resolve) => {
-              let onlineInfo = JSON.parse(resolve.toString())
-              if (onlineInfo['code'] == -101) {
+              let onlineInfo = <userOnlineHeart>JSON.parse(resolve.toString())
+              if (onlineInfo.code == -101) {
                 this.emit('cookieInfo', usersData[x])
-                let changeUserData = usersData[x]
-                changeUserData.status = false
-                Tools.UserInfo(app.appName, { [x]: changeUserData })
+                Tools.UserInfo(app.appName, x, usersData[x])
               }
             })
         }
@@ -53,9 +48,9 @@ export class Online extends events.EventEmitter {
    * 发送活动心跳包
    * 
    * @private
-   * @param {app.userData} userData
+   * @param {Tools.userData} userData
    */
-  private SummerHeart(userData: app.userData) {
+  private SummerHeart(userData: Tools.userData) {
     Tools.XHR('http://live.bilibili.com/summer/heart', userData.cookie, 'POST')
       .then((resolve) => {
         let summerHeart = <summerHeart>JSON.parse(resolve.toString())
@@ -72,9 +67,9 @@ export class Online extends events.EventEmitter {
    * @private
    */
   private DoSign() {
-    this.GetUsersData()
+    Tools.UserInfo<app.config>(app.appName)
       .then((resolve) => {
-        let usersData = resolve
+        let usersData = resolve.usersData
         for (let x in usersData) {
           Tools.XHR('http://live.bilibili.com/sign/GetSignInfo', usersData[x].cookie)
             .then((resolve) => {
@@ -100,40 +95,19 @@ export class Online extends events.EventEmitter {
       this.DoSign()
     }, 288e5) // 8小时
   }
-  /**
-   * 获取可用用户信息
-   * 
-   * @private
-   * @returns {Promise<app.usersData>}
-   */
-  private GetUsersData(): Promise<app.usersData> {
-    return Tools.UserInfo(app.appName)
-      .then((resolve: app.config) => {
-        let usersData = resolve.usersData
-        let canUsersData: app.usersData = {}
-        for (let x in usersData) {
-          if (usersData[x].status === true) {
-            Object.assign(canUsersData, { [x]: usersData[x] })
-          }
-        }
-        return canUsersData
-      })
-  }
 }
-// gm mogrify -crop 80x31+20+6 -quality 100 getCaptcha.jpg
-// gm mogrify -format pbm -quality 0 getCaptcha.jpg
 /**
  * 签到信息
  * 
  * @export
  * @interface signInfo
  */
-export interface signInfo extends JSON {
+interface signInfo {
   code: number
   msg: string
   data: signInfoData
 }
-export interface signInfoData extends JSON {
+interface signInfoData {
   text: string
   status: number
   allDays: string
@@ -143,41 +117,52 @@ export interface signInfoData extends JSON {
   remindDays: number
 }
 /**
- * 团扇活动信息
+ * 在线心跳返回
  * 
  * @export
+ * @interface userOnlineHeart
+ */
+export interface userOnlineHeart {
+  code: number
+  msg: string
+}
+/**
+ * 团扇活动信息
+ * 
  * @interface summerRoom
  */
-export interface summerRoom extends JSON {
-  code: number;
-  msg: string;
-  data: summerRoomData;
+interface summerRoom {
+  code: number
+  msg: string
+  data: summerRoomData
 }
-export interface summerRoomData extends JSON {
-  summerStatus: number;
-  masterTitle: string;
-  summerScore: number;
-  summerNum: number;
-  isTop: number;
-  isExtra: number;
-  summerHeart: boolean;
-  summerTimelen: number;
-  bagId: number;
+interface summerRoomData {
+  summerStatus: number
+  masterTitle: string
+  summerScore: number
+  summerNum: number
+  isTop: number
+  isExtra: number
+  summerHeart: boolean
+  summerTimelen: number
+  bagId: number
 }
 /**
  * 团扇活动心跳返回
  * 
- * @export
  * @interface summerHeart
  */
-export interface summerHeart {
-  code: number;
-  msg: string;
-  data: summerHeartData;
+interface summerHeart {
+  code: number
+  msg: string
+  data: summerHeartData
 }
-export interface summerHeartData {
-  uid: number;
-  bag_id: number;
-  summerNum: number;
-  summerHeart: boolean;
+interface summerHeartData {
+  uid: number
+  bag_id: number
+  summerNum: number
+  summerHeart: boolean
 }
+
+// gm mogrify -crop 80x31+20+6 -quality 100 getCaptcha.jpg
+// gm mogrify -format pbm -quality 0 getCaptcha.jpg
