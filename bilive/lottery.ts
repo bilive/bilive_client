@@ -12,8 +12,8 @@ export class Lottery extends events.EventEmitter {
   constructor() {
     super()
   }
-  private lotteryUrl = 'http://live.bilibili.com/summer/'
-  private smallTVUrl = 'http://live.bilibili.com/SmallTV/'
+  private lotteryUrl = 'http://live.bilibili.com/summer'
+  private smallTVUrl = 'http://live.bilibili.com/SmallTV'
   private CommentClient: CommentClient
   /**
    * 开始挂机
@@ -38,7 +38,7 @@ export class Lottery extends events.EventEmitter {
    */
   private GetRoomID(url: string): Promise<string> {
     return Tools.XHR(url)
-      .then((resolve: Buffer) => {
+      .then((resolve) => {
         let roomID = resolve.toString().match(/var ROOMID = (\d+)/)[1]
         return roomID
       })
@@ -50,23 +50,23 @@ export class Lottery extends events.EventEmitter {
    * @param {SYS_MSG} jsonData 弹幕信息
    */
   private MSGHandler(jsonData: SYS_MSG) {
-    if (jsonData.rep == 1 && jsonData.url != '') {
-      let roomID: string
-      this.GetRoomID(jsonData.url)
-        .then((resolve) => {
-          roomID = resolve
-          return Tools.UserInfo<app.config>(app.appName)
-        })
-        .then((resolve) => {
-          let usersData: Tools.usersData = resolve.usersData
-          for (let x in usersData) {
-            if (usersData[x].status === true) {
-              let indexUrl = `${this.smallTVUrl}index?roomid=${roomID}`
-              this.IndexSmallTV(indexUrl, usersData[x], roomID)
-            }
+    if (jsonData.rep !== 1 || jsonData.url === '') return
+    let roomID: string
+    this.GetRoomID(jsonData.url)
+      .then((resolve) => {
+        roomID = resolve
+        return Tools.UserInfo<app.config>(app.appName)
+      })
+      .then((resolve) => {
+        let usersData: Tools.usersData = resolve.usersData
+        for (let x in usersData) {
+          if (usersData[x].status === true) {
+            let indexUrl = `${this.smallTVUrl}/index?roomid=${roomID}`
+            this.IndexSmallTV(indexUrl, usersData[x], roomID)
           }
-        })
-    }
+        }
+      })
+
   }
   /**
    * 获取小电视活动id
@@ -83,7 +83,7 @@ export class Lottery extends events.EventEmitter {
         let unjion = index.data.unjoin
         for (let y of unjion) {
           let jionID = y.id
-          let joinUrl = `${this.smallTVUrl}join?roomid=${roomID}&id=${jionID}`
+          let joinUrl = `${this.smallTVUrl}/join?roomid=${roomID}&id=${jionID}`
           this.JionSmallTV(joinUrl, userData, jionID)
         }
       })
@@ -101,7 +101,7 @@ export class Lottery extends events.EventEmitter {
       .then((resolve) => {
         let join = <smallTVJoin>JSON.parse(resolve.toString())
         setTimeout(() => {
-          let rewardUrl = `${this.smallTVUrl}getReward?id=${jionID}`
+          let rewardUrl = `${this.smallTVUrl}/getReward?id=${jionID}`
           this.RewardSmallTV(rewardUrl, userData)
         }, 28e4) // 280秒
       })
@@ -145,7 +145,7 @@ export class Lottery extends events.EventEmitter {
           let usersData = resolve.usersData
           for (let x in usersData) {
             if (usersData[x].status === true) {
-              let checkUrl = `${this.lotteryUrl}check?roomid=${roomID}`
+              let checkUrl = `${this.lotteryUrl}/check?roomid=${roomID}`
               this.CheckLottery(checkUrl, usersData[x], roomID)
             }
           }
@@ -169,7 +169,7 @@ export class Lottery extends events.EventEmitter {
           for (let y of unjoin) {
             if (y.status === false) {
               let raffleID = y.raffleId
-              let joinUrl = `${this.lotteryUrl}join?roomid=${roomID}&raffleId=${raffleID}`
+              let joinUrl = `${this.lotteryUrl}/join?roomid=${roomID}&raffleId=${raffleID}`
               this.JoinLottery(joinUrl, userData, roomID, raffleID)
             }
           }
@@ -191,7 +191,7 @@ export class Lottery extends events.EventEmitter {
         let join = <lotteryJoin>JSON.parse(resolve.toString())
         if (join.code === 0) {
           setTimeout(() => {
-            let resultUrl = `${this.lotteryUrl}notice?roomid=${roomID}&raffleId=${raffleID}`
+            let resultUrl = `${this.lotteryUrl}/notice?roomid=${roomID}&raffleId=${raffleID}`
             this.RewardLottery(resultUrl, userData)
           }, 2e5) // 200秒
         }

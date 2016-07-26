@@ -13,6 +13,7 @@ export class Online extends events.EventEmitter {
   constructor() {
     super()
   }
+  private rootUrl = 'http://live.bilibili.com'
   /**
    * 开始挂机
    */
@@ -30,7 +31,7 @@ export class Online extends events.EventEmitter {
       .then((resolve) => {
         let usersData = resolve.usersData
         for (let x in usersData) {
-          Tools.XHR('http://live.bilibili.com/User/userOnlineHeart', usersData[x].cookie, 'POST')
+          Tools.XHR(`${this.rootUrl}/User/userOnlineHeart`, usersData[x].cookie, 'POST')
             .then((resolve) => {
               let onlineInfo = <userOnlineHeart>JSON.parse(resolve.toString())
               if (onlineInfo.code == -101) {
@@ -51,7 +52,7 @@ export class Online extends events.EventEmitter {
    * @param {Tools.userData} userData
    */
   private SummerHeart(userData: Tools.userData) {
-    Tools.XHR('http://live.bilibili.com/summer/heart', userData.cookie, 'POST')
+    Tools.XHR(`${this.rootUrl}/summer/heart`, userData.cookie, 'POST')
       .then((resolve) => {
         let summerHeart = <summerHeart>JSON.parse(resolve.toString())
         if (summerHeart.code === 0 && summerHeart.data.summerHeart) {
@@ -71,16 +72,16 @@ export class Online extends events.EventEmitter {
       .then((resolve) => {
         let usersData = resolve.usersData
         for (let x in usersData) {
-          Tools.XHR('http://live.bilibili.com/sign/GetSignInfo', usersData[x].cookie)
+          Tools.XHR(`${this.rootUrl}/sign/GetSignInfo`, usersData[x].cookie)
             .then((resolve) => {
               let signInfo = <signInfo>JSON.parse(resolve.toString())
               if (signInfo.data.status == 0) {
                 this.emit('signInfo', usersData[x])
-                Tools.XHR('http://live.bilibili.com/sign/doSign', usersData[x].cookie)
+                Tools.XHR(`${this.rootUrl}/sign/doSign`, usersData[x].cookie)
               }
             })
           // 夏季团扇活动
-          Tools.XHR('http://live.bilibili.com/summer/getSummerRoom?ruid=673816', usersData[x].cookie)
+          Tools.XHR(`${this.rootUrl}/summer/getSummerRoom?ruid=673816`, usersData[x].cookie)
             .then((resolve) => {
               let summerRoom = <summerRoom>JSON.parse(resolve.toString())
               if (summerRoom.code === 0 && summerRoom.data.summerHeart) {
@@ -90,6 +91,22 @@ export class Online extends events.EventEmitter {
               }
             })
         }
+        // 夏季团扇活动
+        Tools.XHR(`${this.rootUrl}/summer/dayRank?page=1&type=2`)
+          .then((resolve) => {
+            let dayRank = <dayRank>JSON.parse(resolve.toString())
+            return Tools.XHR(dayRank.data.list[0].link)
+          })
+          .then((resolve) => {
+            let roomID = resolve.toString().match(/var ROOMID = (\d+)/)[1]
+            return Tools.XHR(`${this.rootUrl}/live/getInfo?roomid=${roomID}`)
+          })
+          .then((resolve) => {
+            let roomInfo = <getRoomInfo>JSON.parse(resolve.toString())
+            for (let x in usersData) {
+              Tools.XHR(`${this.rootUrl}/summer/getExtra?ruid=${roomInfo.data.MASTERID}`, usersData[x].cookie, 'POST')
+            }
+          })
       })
     setTimeout(() => {
       this.DoSign()
@@ -163,6 +180,82 @@ interface summerHeartData {
   summerNum: number
   summerHeart: boolean
 }
-
+/**
+ * 团扇活动排行榜
+ * 
+ * @interface RootObject
+ */
+interface dayRank {
+  code: number
+  msg: string
+  data: dayRankData
+}
+interface dayRankData {
+  uid: number
+  page: number
+  pageSize: number
+  info: any[]
+  list: dayRankDataList[]
+}
+interface dayRankDataList {
+  uname: string
+  face: string
+  rank: number
+  score: number
+  link: string
+}
+/**
+ * 房间信息
+ * 
+ * @interface getRoomInfo
+ */
+interface getRoomInfo {
+  code: number
+  msg: string
+  data: getRoomInfoData
+}
+interface getRoomInfoData {
+  UID: number;
+  IS_NEWBIE: number
+  ISATTENTION: number
+  ISADMIN: number
+  ISANCHOR: number
+  SVIP: number
+  VIP: number
+  SILVER: number
+  GOLD: number
+  BLOCK_TYPE: number
+  BLOCK_TIME: number
+  UNAME: number
+  MASTERID: number
+  ANCHOR_NICK_NAME: string
+  ROOMID: number
+  _status: string
+  LIVE_STATUS: string
+  AREAID: number
+  BACKGROUND_ID: number
+  ROOMtITLE: string
+  COVER: string
+  LIVE_TIMELINE: number
+  FANS_COUNT: number
+  GIFT_TOP: getRoomInfoDataGIFT_TOP[]
+  RCOST: number
+  MEDAL: any[]
+  IS_STAR: boolean
+  starRank: number
+  TITLE: any[]
+  USER_LEVEL: any[]
+  IS_RED_BAG: boolean
+  IS_HAVE_VT: boolean
+  ACTIVITY_ID: number
+  ACTIVITY_PIC: number
+  MI_ACTIVITY: number
+}
+interface getRoomInfoDataGIFT_TOP {
+  uid: number
+  uname: string
+  coin: number
+  isSelf: number
+}
 // gm mogrify -crop 80x31+20+6 -quality 100 getCaptcha.jpg
 // gm mogrify -format pbm -quality 0 getCaptcha.jpg
