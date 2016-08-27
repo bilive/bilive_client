@@ -10,6 +10,7 @@
   "license": "Apache-2.0",
   "devDependencies": {},
   "dependencies": {
+    "jpeg-js": "^0.2.0",
     "nodemailer": "^2.5.0"
   }
 }
