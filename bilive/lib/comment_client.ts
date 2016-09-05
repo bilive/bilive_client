@@ -28,17 +28,25 @@ export class CommentClient extends events.EventEmitter {
   public connected = false
   /**
    * 连接服务器
+   * 
+   * @param {string} [server]
    */
-  public Connect() {
-    Tools.XHR(`http://live.bilibili.com/api/player?id=cid:${this.roomID}&ts=${Date.now().toString(16)}`)
-      .then((resolve: Buffer) => {
-        this.server = resolve.toString().match(/<server>(.+)<\/server>/)[1]
-        this.SockeConnect()
-      })
-      .catch((reject) => {
-        this.server = 'livecmt-1.bilibili.com'
-        this.SockeConnect()
-      })
+  public Connect(server?: string) {
+    if (server === undefined) {
+      Tools.XHR(`http://live.bilibili.com/api/player?id=cid:${this.roomID}&ts=${Date.now().toString(16)}`)
+        .then((resolve: Buffer) => {
+          this.server = resolve.toString().match(/<server>(.+)<\/server>/)[1]
+          this.SockeConnect()
+        })
+        .catch((reject) => {
+          this.server = 'livecmt-1.bilibili.com'
+          this.SockeConnect()
+        })
+    }
+    else {
+      this.server = server
+      this.SockeConnect()
+    }
   }
   /**
    * 30分钟后重新连接
@@ -74,10 +82,7 @@ export class CommentClient extends events.EventEmitter {
     clearTimeout(this.timer)
     if (this.socket == null) return
     this.socket.end()
-    this.socket
-      .removeListener('connect', this.SockeConnectHandler.bind(this))
-      .removeListener('data', this.ReadSocketData.bind(this))
-      .removeListener('error', this.SocketErrorHandler.bind(this))
+    this.socket.removeAllListeners()
     this.socket = null
     this.connected = false
   }
@@ -199,10 +204,10 @@ export class CommentClient extends events.EventEmitter {
    * 解析消息
    * 
    * @private
-   * @param {JSON} jsonData
+   * @param {danmuData} jsonData
    */
-  private ParseSocketData(jsonData: JSON) {
-    switch (jsonData['cmd']) {
+  private ParseSocketData(jsonData: danmuData) {
+    switch (jsonData.cmd) {
       case 'DANMU_MSG':
         // 房间弹幕消息
         // {
@@ -242,6 +247,24 @@ export class CommentClient extends events.EventEmitter {
         //   roomid: 5082
         // }
         this.emit('SEND_GIFT', jsonData)
+        break
+      case 'SPECIAL_GIFT':
+        // 特殊礼物
+        // {
+        //   cmd: 'SPECIAL_GIFT',
+        //   data: {
+        //     '39': { // 节奏风暴
+        //       id: '6611',
+        //       num: 100,
+        //       time: 90,
+        //       content: 'string',
+        //       hadJoin: 0,
+        //       action: 'start'
+        //     }
+        //   },
+        //   roomid: 5082
+        // }
+        this.emit('SPECIAL_GIFT', jsonData)
         break
       case 'WELCOME':
         // 房间欢迎消息
@@ -321,4 +344,7 @@ export class CommentClient extends events.EventEmitter {
         break
     }
   }
+}
+interface danmuData {
+  cmd: string
 }

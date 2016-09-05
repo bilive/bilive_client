@@ -36,7 +36,19 @@ export class Online extends events.EventEmitter {
             .then((resolve) => {
               let onlineInfo = <userOnlineHeart>JSON.parse(resolve.toString())
               if (onlineInfo.code === -101) {
-                this.emit('cookieInfo', usersData[x])
+                if (usersData[x].failure < 5) {
+                  usersData[x].failure++
+                  Tools.UserInfo(app.appName, x, usersData[x])
+                }
+                else {
+                  this.emit('cookieInfo', usersData[x])
+                  usersData[x].failure = 0
+                  usersData[x].status = false
+                  Tools.UserInfo(app.appName, x, usersData[x])
+                }
+              }
+              else if (usersData[x].failure !== 0) {
+                usersData[x].failure = 0
                 Tools.UserInfo(app.appName, x, usersData[x])
               }
             })
@@ -60,10 +72,10 @@ export class Online extends events.EventEmitter {
           // 每日宝箱
           this.TreasureBox(usersData[x])
           // 夏季团扇活动
-          this.SummerActivity(usersData[x])
+          // this.SummerActivity(usersData[x])
         }
         // 夏季团扇活动附加
-        this.SummerActivityExtra(usersData)
+        // this.SummerActivityExtra(usersData)
       })
     setTimeout(() => {
       this.DoLoop()

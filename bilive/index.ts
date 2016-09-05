@@ -95,5 +95,5 @@ export const appName = 'BiLive'
  */
 export interface config extends Tools.config {
   defaultUserID: number
-  defaultRommID: number
+  defaultRoomID: number
 }

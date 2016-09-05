@@ -33,6 +33,7 @@ export class Online extends events.EventEmitter {
               let onlineInfo = resolve.toString()
               if (onlineInfo.includes('member.php?mod=register')) {
                 this.emit('cookieInfo', usersData[x])
+                usersData[x].status = false
                 Tools.UserInfo(app.appName, x, usersData[x])
               }
             })

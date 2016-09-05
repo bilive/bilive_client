@@ -104,7 +104,6 @@ export function UserInfo<T>(appName: string, UID?: string, userData?: userData):
           resolve(appConfig)
         }
         else {
-          userData.status = false
           Object.assign(appConfig.usersData, { [UID]: userData })
           let jsonStr = JSON.stringify(appConfig)
           fs.writeFile(`${__dirname}/../configs/${appName}.json`, jsonStr, (err) => {
@@ -172,6 +171,7 @@ export interface usersData {
 export interface userData {
   userName: string
   email: string
+  failure: number
   status: boolean
   cookie: string
 }

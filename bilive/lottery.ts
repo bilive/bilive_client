@@ -21,7 +21,7 @@ export class Lottery extends events.EventEmitter {
   public Start() {
     Tools.UserInfo<app.config>(app.appName)
       .then((resolve) => {
-        this.CommentClient = new CommentClient(resolve.defaultUserID, resolve.defaultRommID)
+        this.CommentClient = new CommentClient(resolve.defaultUserID, resolve.defaultRoomID)
         this.CommentClient
           .on('SYS_MSG', (jsonData) => { this.MSGHandler(<SYS_MSG>jsonData) })
           .on('SYS_GIFT', (jsonData) => { this.GiftHandler(<SYS_GIFT>jsonData) })

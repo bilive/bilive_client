@@ -44,5 +44,5 @@ configs/*.json
 !configs/*.default.json
 
 # Build flies
+build
 .vscode
-*.js
