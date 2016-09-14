@@ -1,55 +1,62 @@
-import * as events from 'events'
+import {EventEmitter} from 'events'
 import * as jpeg from 'jpeg-js'
 import * as app from './index'
-import {CommentClient} from './lib/comment_client'
 import * as Tools from '../lib/tools'
 /**
  * 挂机得经验
  * 
  * @export
  * @class Online
- * @extends {events.EventEmitter}
+ * @extends {EventEmitter}
  */
-export class Online extends events.EventEmitter {
+export class Online extends EventEmitter {
   constructor() {
     super()
   }
-  private rootUrl = 'http://live.bilibili.com'
+  /**
+   * 心跳包发送地址
+   * 
+   * @memberOf Online
+   */
+  public heartUrl = 'http://live.bilibili.com'
   /**
    * 开始挂机
+   * 
+   * @memberOf Online
    */
   public Start() {
     this.OnlineHeart()
     this.DoLoop()
   }
   /**
-   * 发送心跳包
+   * 发送在线心跳包, 检查cookie是否失效
    * 
-   * @private
+   * @memberOf Online
    */
-  private OnlineHeart() {
+  public OnlineHeart() {
     Tools.UserInfo<app.config>(app.appName)
       .then((resolve) => {
         let usersData = resolve.usersData
-        for (let x in usersData) {
-          Tools.XHR(`${this.rootUrl}/User/userOnlineHeart`, usersData[x].cookie, 'POST')
+        for (let uid in usersData) {
+          let userData = usersData[uid]
+          Tools.XHR(`${this.heartUrl}/User/userOnlineHeart`, userData.cookie, 'POST')
             .then((resolve) => {
               let onlineInfo = <userOnlineHeart>JSON.parse(resolve.toString())
               if (onlineInfo.code === -101) {
-                if (usersData[x].failure < 5) {
-                  usersData[x].failure++
-                  Tools.UserInfo(app.appName, x, usersData[x])
+                if (userData.failure < 5) {
+                  userData.failure++
+                  Tools.UserInfo(app.appName, uid, userData)
                 }
                 else {
-                  this.emit('cookieInfo', usersData[x])
-                  usersData[x].failure = 0
-                  usersData[x].status = false
-                  Tools.UserInfo(app.appName, x, usersData[x])
+                  this.emit('cookieInfo', userData)
+                  userData.failure = 0
+                  userData.status = false
+                  Tools.UserInfo(app.appName, uid, userData)
                 }
               }
-              else if (usersData[x].failure !== 0) {
-                usersData[x].failure = 0
-                Tools.UserInfo(app.appName, x, usersData[x])
+              else if (userData.failure !== 0) {
+                userData.failure = 0
+                Tools.UserInfo(app.appName, uid, userData)
               }
             })
         }
@@ -59,23 +66,23 @@ export class Online extends events.EventEmitter {
     }, 3e5) // 5分钟
   }
   /**
-   * 八小时循环
+   * 八小时循环, 用于签到, 宝箱, 日常活动
    * 
-   * @private
+   * @memberOf Online
    */
-  private DoLoop() {
+  public DoLoop() {
     Tools.UserInfo<app.config>(app.appName)
       .then((resolve) => {
         let usersData = resolve.usersData
-        for (let x in usersData) {
-          this.DoSign(usersData[x])
+        for (let uid in usersData) {
+          let userData = usersData[uid]
+          // 每日签到
+          if (userData.doSign) this._DoSign(userData)
           // 每日宝箱
-          this.TreasureBox(usersData[x])
-          // 夏季团扇活动
-          // this.SummerActivity(usersData[x])
+          if (userData.treasureBox) this._TreasureBox(userData)
+          // 日常活动
+          if (userData.eventRoom) this._EventRoom(userData)
         }
-        // 夏季团扇活动附加
-        // this.SummerActivityExtra(usersData)
       })
     setTimeout(() => {
       this.DoLoop()
@@ -86,14 +93,17 @@ export class Online extends events.EventEmitter {
    * 
    * @private
    * @param {Tools.userData} userData
+   * @memberOf Online
    */
-  private DoSign(userData: Tools.userData) {
-    Tools.XHR(`${this.rootUrl}/sign/GetSignInfo`, userData.cookie)
+  private _DoSign(userData: Tools.userData) {
+    Tools.XHR(`${this.heartUrl}/sign/GetSignInfo`, userData.cookie)
       .then((resolve) => {
         let signInfo = <signInfo>JSON.parse(resolve.toString())
         if (signInfo.data.status === 0) {
           this.emit('signInfo', userData)
-          Tools.XHR(`${this.rootUrl}/sign/doSign`, userData.cookie)
+          // 道具包裹, 暂时不知道有没有用
+          Tools.XHR(`${this.heartUrl}/giftBag/getSendGift`, userData.cookie)
+          Tools.XHR(`${this.heartUrl}/sign/doSign`, userData.cookie)
         }
       })
   }
@@ -102,13 +112,12 @@ export class Online extends events.EventEmitter {
    * 
    * @private
    * @param {Tools.userData} userData
+   * @memberOf Online
    */
-  private TreasureBox(userData: Tools.userData) {
-    // 道具包裹, 暂时不知道有没有用
-    Tools.XHR(`${this.rootUrl}/giftBag/getSendGift`, userData.cookie)
+  private _TreasureBox(userData: Tools.userData) {
     // 获取宝箱状态, 好像终于不用换房间冷却了呢
     let currentTask: currentTask
-    Tools.XHR(`${this.rootUrl}/FreeSilver/getCurrentTask?_=${Date.now()}`, userData.cookie)
+    Tools.XHR(`${this.heartUrl}/FreeSilver/getCurrentTask?_=${Date.now()}`, userData.cookie)
       .then((resolve) => {
         currentTask = <currentTask>JSON.parse(resolve.toString())
         return new Promise((resolve, reject) => {
@@ -121,7 +130,7 @@ export class Online extends events.EventEmitter {
         })
       })
       .then((resolve) => {
-        return Tools.XHR(`${this.rootUrl}/freeSilver/getCaptcha?ts=${Date.now()}`, userData.cookie)
+        return Tools.XHR(`${this.heartUrl}/freeSilver/getCaptcha?ts=${Date.now()}`, userData.cookie)
       })
       .then((resolve) => {
         // 读取像素信息
@@ -250,7 +259,7 @@ export class Online extends events.EventEmitter {
         return new Promise((resolve, reject) => {
           if (num.length === 4) {
             let captcha: number = num[2] === '+' ? num[0] * 10 + num[1] + num[3] : num[0] * 10 + num[1] - num[3]
-            resolve(Tools.XHR(`${this.rootUrl}/FreeSilver/getAward?time_start=${currentTask.data.time_start}&time_end=${currentTask.data.time_end}&captcha=${captcha}&_=${Date.now()}`, userData.cookie))
+            resolve(Tools.XHR(`${this.heartUrl}/FreeSilver/getAward?time_start=${currentTask.data.time_start}&time_end=${currentTask.data.time_end}&captcha=${captcha}&_=${Date.now()}`, userData.cookie))
           }
           else {
             reject('error')
@@ -278,7 +287,7 @@ export class Online extends events.EventEmitter {
         let award = <award>JSON.parse(resolve.toString())
         return new Promise((resolve, reject) => {
           if (award.code === 0) {
-            this.TreasureBox(userData)
+            this._TreasureBox(userData)
             resolve('ok')
           }
           else {
@@ -287,44 +296,25 @@ export class Online extends events.EventEmitter {
         })
       })
       .catch((reject: string) => {
-        if (reject === 'error') { this.TreasureBox(userData) }
+        if (reject === 'error') { this._TreasureBox(userData) }
       })
   }
   /**
-   * 夏季团扇活动
+   * 日常活动
    * 
    * @private
    * @param {Tools.userData} userData
+   * @memberOf Online
    */
-  private SummerActivity(userData: Tools.userData) {
-    Tools.XHR(`${this.rootUrl}/summer/getSummerRoom?ruid=673816`, userData.cookie)
+  private _EventRoom(userData: Tools.userData) {
+    Tools.XHR(`${this.heartUrl}/eventRoom/index?ruid=4162287`, userData.cookie)
       .then((resolve) => {
-        let summerRoom = <summerRoom>JSON.parse(resolve.toString())
-        if (summerRoom.code === 0 && summerRoom.data.summerHeart) {
+        let eventRoom = <eventRoom>JSON.parse(resolve.toString())
+        if (eventRoom.code === 0 && eventRoom.data.heart) {
+          let heartTime = eventRoom.data.heartTime * 1000
           setTimeout(() => {
-            this.SummerHeart(userData)
-          }, 3e5) // 5分钟
-        }
-      })
-  }
-  /**
-   * 夏季团扇活动附加
-   * 
-   * @private
-   * @param {Tools.usersData} usersData
-   */
-  private SummerActivityExtra(usersData: Tools.usersData) {
-    Tools.XHR(`${this.rootUrl}/summer/dayRank?page=1&type=2`)
-      .then((resolve) => {
-        let dayRank = <dayRank>JSON.parse(resolve.toString())
-        let link = dayRank.data.list[0].link
-        let roomID = link.match(/\d+/)[0]
-        return Tools.XHR(`${this.rootUrl}/live/getInfo?roomid=${roomID}`)
-      })
-      .then((resolve) => {
-        let roomInfo = <roomInfo>JSON.parse(resolve.toString())
-        for (let x in usersData) {
-          Tools.XHR(`${this.rootUrl}/summer/getExtra?ruid=${roomInfo.data.MASTERID}`, usersData[x].cookie, 'POST')
+            this._EventRoomHeart(userData, heartTime)
+          }, heartTime)
         }
       })
   }
@@ -333,15 +323,17 @@ export class Online extends events.EventEmitter {
    * 
    * @private
    * @param {Tools.userData} userData
+   * @param {number} heartTime
+   * @memberOf Online
    */
-  private SummerHeart(userData: Tools.userData) {
-    Tools.XHR(`${this.rootUrl}/summer/heart`, userData.cookie, 'POST')
+  private _EventRoomHeart(userData: Tools.userData, heartTime: number) {
+    Tools.XHR(`${this.heartUrl}/eventRoom/heart?roomid=1011`, userData.cookie, 'POST')
       .then((resolve) => {
-        let summerHeart = <summerHeart>JSON.parse(resolve.toString())
-        if (summerHeart.code === 0 && summerHeart.data.summerHeart) {
+        let eventRoomHeart = <eventRoomHeart>JSON.parse(resolve.toString())
+        if (eventRoomHeart.code === 0 && eventRoomHeart.data.heart) {
           setTimeout(() => {
-            this.SummerHeart(userData)
-          }, 3e5) // 5分钟
+            this._EventRoomHeart(userData, heartTime)
+          }, heartTime)
         }
       })
   }
@@ -407,118 +399,52 @@ interface awardData {
   isEnd: number
 }
 /**
- * 团扇活动信息
+ * 活动信息
  * 
- * @interface summerRoom
+ * @interface eventRoom
  */
-interface summerRoom {
+interface eventRoom {
   code: number
   msg: string
-  data: summerRoomData
+  data: eventRoomData
 }
-interface summerRoomData {
-  summerStatus: number
-  masterTitle: string
-  summerScore: number
-  summerNum: number
-  isTop: number
-  isExtra: number
-  summerHeart: boolean
-  summerTimelen: number
-  bagId: number
+interface eventRoomData {
+  eventList: eventRoomDataEventList[]
+  heart: boolean
+  heartTime: number
 }
-/**
- * 团扇活动心跳返回
- * 
- * @interface summerHeart
- */
-interface summerHeart {
-  code: number
-  msg: string
-  data: summerHeartData
-}
-interface summerHeartData {
-  uid: number
-  bag_id: number
-  summerNum: number
-  summerHeart: boolean
-}
-/**
- * 团扇活动排行榜
- * 
- * @interface RootObject
- */
-interface dayRank {
-  code: number
-  msg: string
-  data: dayRankData
-}
-interface dayRankData {
-  uid: number
-  page: number
-  pageSize: number
-  info: any[]
-  list: dayRankDataList[]
-}
-interface dayRankDataList {
-  uname: string
-  face: string
-  rank: number
+interface eventRoomDataEventList {
+  status: boolean
   score: number
-  link: string
+  giftId: number
+  type: string
+  masterTitle: string
+  keyword: string
+  bagId: number
+  num: number
 }
 /**
- * 房间信息
+ * 活动心跳返回
  * 
- * @interface roomInfo
+ * @interface eventRoomHeart
  */
-interface roomInfo {
+interface eventRoomHeart {
   code: number
   msg: string
-  data: roomInfoData
+  data: eventRoomHeartData
 }
-interface roomInfoData {
-  UID: number;
-  IS_NEWBIE: number
-  ISATTENTION: number
-  ISADMIN: number
-  ISANCHOR: number
-  SVIP: number
-  VIP: number
-  SILVER: number
-  GOLD: number
-  BLOCK_TYPE: number
-  BLOCK_TIME: number
-  UNAME: number
-  MASTERID: number
-  ANCHOR_NICK_NAME: string
-  ROOMID: number
-  _status: string
-  LIVE_STATUS: string
-  AREAID: number
-  BACKGROUND_ID: number
-  ROOMtITLE: string
-  COVER: string
-  LIVE_TIMELINE: number
-  FANS_COUNT: number
-  GIFT_TOP: roomInfoDataGIFT_TOP[]
-  RCOST: number
-  MEDAL: any[]
-  IS_STAR: boolean
-  starRank: number
-  TITLE: any[]
-  USER_LEVEL: any[]
-  IS_RED_BAG: boolean
-  IS_HAVE_VT: boolean
-  ACTIVITY_ID: number
-  ACTIVITY_PIC: number
-  MI_ACTIVITY: number
-}
-interface roomInfoDataGIFT_TOP {
+interface eventRoomHeartData {
   uid: number
-  uname: string
-  coin: number
-  isSelf: number
+  gift: eventRoomHeartDataGift
+  heart: boolean
+}
+interface eventRoomHeartDataGift {
+  '43': eventRoomHeartDataGiftOrange; // 命格转盘
+}
+export interface eventRoomHeartDataGiftOrange {
+  num: number
+  bagId: number
+  dayNum: number
 }
 // gm mogrify -crop 80x31+20+6 -quality 100 getCaptcha.jpg
 // gm mogrify -format pbm -quality 0 getCaptcha.jpg

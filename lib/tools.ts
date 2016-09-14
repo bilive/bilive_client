@@ -26,7 +26,7 @@ export function XHR(urlStr: string, cookie?: string, method = 'GET'): Promise<Bu
       'DNT': 1,
       'Host': urlObj.host,
       'Referer': `${urlObj.protocol}//${urlObj.host}/`,
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:48.0) Gecko/20100101 Firefox/48.0',
       'X-Requested-With': 'XMLHttpRequest'
     }
     // 自以为很机智的用hash附加referer
@@ -34,7 +34,7 @@ export function XHR(urlStr: string, cookie?: string, method = 'GET'): Promise<Bu
     // 很简单的把cookie加进去了, 这也是为什么不用requset
     if (cookie !== undefined) headers['Cookie'] = cookie
     if (method === 'POST') {
-      headers['Content-Type'] = 'application/x-www-form-urlencoded'
+      headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
       headers['Content-Length'] = (urlObj.query === null) ? 0 : urlObj.query.length
     }
     let options: http.RequestOptions = {
@@ -62,17 +62,17 @@ export function XHR(urlStr: string, cookie?: string, method = 'GET'): Promise<Bu
       }
       let bufferList = []
       decompress
+        .on('error', reject)
         .on('data', (chunk) => { bufferList.push(chunk) })
         .on('end', () => {
-          if (bufferList.length === 0) { reject() }
+          if (bufferList.length === 0) reject()
           else {
             let bufferChunk = Buffer.concat(bufferList)
             resolve(bufferChunk)
           }
         })
-        .on('error', (err) => { reject(err) })
     })
-    req.on('error', (err) => { reject(err) })
+    req.on('error', reject)
     if (urlObj.query !== null) req.write(urlObj.query)
     req.end()
   })
@@ -83,7 +83,7 @@ export function XHR(urlStr: string, cookie?: string, method = 'GET'): Promise<Bu
  * @export
  * @template T
  * @param {string} appName
- * @param {string} UID
+ * @param {string} [UID]
  * @param {userData} [userData]
  * @returns {Promise<T>}
  */
@@ -95,9 +95,9 @@ export function UserInfo<T>(appName: string, UID?: string, userData?: userData):
         if (userData === undefined) {
           let usersData = appConfig.usersData
           let canUsersData: usersData = {}
-          for (let x in usersData) {
-            if (usersData[x].status === true) {
-              Object.assign(canUsersData, { [x]: usersData[x] })
+          for (let uid in usersData) {
+            if (usersData[uid].status === true) {
+              Object.assign(canUsersData, { [uid]: usersData[uid] })
             }
           }
           appConfig.usersData = canUsersData
@@ -179,7 +179,6 @@ export interface userData {
  * 系统设置
  * 
  * @interface options
- * @extends {JSON}
  */
 interface options {
   SMTP: optionsSMTP

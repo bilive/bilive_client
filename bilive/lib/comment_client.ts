@@ -1,123 +1,268 @@
-import * as net from 'net'
-import * as events from 'events'
+import {Socket}  from 'net'
+import {EventEmitter}  from 'events'
 import * as Tools from '../../lib/tools'
 /**
  * 弹幕客户端, 用于连接弹幕服务器和发送弹幕事件
  * 
+ * @export
  * @class CommentClient
- * @extends {events.EventEmitter}
+ * @extends {EventEmitter}
  */
-export class CommentClient extends events.EventEmitter {
+export class CommentClient extends EventEmitter {
   /**
-   * @param {number} [userID]
-   * @param {number} [roomID=23058]
-   */
-  constructor(userID?: number, roomID = 23058) {
-    super()
-    this.userID = userID
-    this.roomID = roomID
-  }
-  private userID: number
-  private roomID: number
-  private server: string
-  private port = 788
-  private version = 1
-  private socket: net.Socket
-  private timer: NodeJS.Timer
-  private reConnectTime = 0
-  public connected = false
-  /**
-   * 连接服务器
+   * 创建一个 CommentClient 实例
    * 
-   * @param {string} [server]
+   * @param {number} [roomID=23058] 哔哩哔哩音乐台
+   * @param {number} [userID=null]
+   * @memberOf CommentClient
+   */
+  constructor(roomID: number = 23058, userID: number = null) {
+    super()
+    this.roomID = roomID
+    this.userID = userID
+  }
+  /**
+   * 用户UID
+   * 
+   * @type {number}
+   * @memberOf CommentClient
+   */
+  public userID: number = null
+  /**
+   * 房间号, 注意不要短号
+   * 
+   * @type {number}
+   * @memberOf CommentClient
+   */
+  public roomID: number = null
+  /**
+   * 弹幕服务器
+   * 
+   * @private
+   * @type {string}
+   * @memberOf CommentClient
+   */
+  private _server: string = null
+  /**
+   * 服务器端口, 目前为788
+   * 
+   * @type {number}
+   * @memberOf CommentClient
+   */
+  public port = 788
+  /**
+   * 客户端版本, 目前为1
+   * 
+   * @type {number}
+   * @memberOf CommentClient
+   */
+  public version = 1
+  /**
+   * 重连次数, 以十次为阈值
+   * 
+   * @type {number}
+   * @memberOf CommentClient
+   */
+  public reConnectTime = 0
+  /**
+   * 是否已经连接到服务器
+   * 
+   * @private
+   * @type {boolean}
+   * @memberOf CommentClient
+   */
+  private _connected = false
+  /**
+   * 模仿客户端与服务器进行通讯
+   * 
+   * @private
+   * @type {Socket}
+   * @memberOf CommentClient
+   */
+  private _Client: Socket = null
+  /**
+   * 全局计时器, 确保只有一个定时任务
+   * 
+   * @private
+   * @type {NodeJS.Timer}
+   * @memberOf CommentClient
+   */
+  private _Timer: NodeJS.Timer = null
+  /**
+   * 当前连接的弹幕服务器
+   * 
+   * @readonly
+   * @type {string}
+   * @memberOf CommentClient
+   */
+  public get server() {
+    return this._server
+  }
+  /**
+   * 是否已经连接到服务器
+   * 
+   * @readonly
+   * @type {boolean}
+   * @memberOf CommentClient
+   */
+  public get connected() {
+    return this._connected
+  }
+  /**
+   * 连接到指定服务器
+   * 
+   * @param {string} [server] 为了快速连接
+   * @memberOf CommentClient
    */
   public Connect(server?: string) {
     if (server === undefined) {
+      // 动态获取服务器地址, 防止B站临时更换
       Tools.XHR(`http://live.bilibili.com/api/player?id=cid:${this.roomID}&ts=${Date.now().toString(16)}`)
-        .then((resolve: Buffer) => {
-          this.server = resolve.toString().match(/<server>(.+)<\/server>/)[1]
-          this.SockeConnect()
+        .then((resolve) => {
+          this._server = resolve.toString().match(/<server>(.+)<\/server>/)[1]
+          this._ClientConnect()
         })
-        .catch((reject) => {
-          this.server = 'livecmt-1.bilibili.com'
-          this.SockeConnect()
+        .catch(() => {
+          this._server = 'livecmt-1.bilibili.com'
+          this._ClientConnect()
         })
     }
     else {
-      this.server = server
-      this.SockeConnect()
+      this._server = server
+      this._ClientConnect()
     }
   }
   /**
-   * 30分钟后重新连接
+   * 断开与服务器的连接
+   * 
+   * @memberOf CommentClient
+   */
+  public Close() {
+    this._ClientClose()
+  }
+  /**
+   * 重新连接到服务器
+   * 
+   * @param {string} [server]
+   * @memberOf CommentClient
+   */
+  public ReConnect(server?: string) {
+    this._ClientClose()
+    this.Connect(server)
+  }
+  /**
+   * 5分钟后重新连接
    * 
    * @private
+   * @memberOf CommentClient
    */
-  private ReConnect() {
-    this.emit('serverError', '重新连接服务器失败')
-    clearTimeout(this.timer)
-    this.connected = false
-    this.SocketClose()
-    this.timer = setTimeout(() => {
+  private _DelayReConnect() {
+    this.emit('serverError', '尝试重新连接服务器失败')
+    this._ClientClose()
+    this._Timer = setTimeout(() => {
       this.Connect()
-    }, 18e5) // 30分钟
+    }, 3e4) // 5分钟
   }
   /**
-   * 发起连接
+   * 客户端连接
    * 
    * @private
+   * @memberOf CommentClient
    */
-  private SockeConnect() {
-    this.socket = new net.Socket()
-    this.socket
-      .on('connect', this.SockeConnectHandler.bind(this))
-      .on('data', this.ReadSocketData.bind(this))
-      .on('error', this.SocketErrorHandler.bind(this))
-    this.socket.connect(this.port, this.server)
+  private _ClientConnect() {
+    this._Client = new Socket()
+    this._Client
+      .on('error', this._ClientErrorHandler.bind(this))
+      .on('connect', this._ClientConnectHandler.bind(this))
+      .on('data', this._ClientDataHandler.bind(this))
+      .on('end', this._ClientEndHandler.bind(this))
+      .connect(this.port, this._server)
   }
   /**
-   * 关闭连接
-   */
-  public SocketClose() {
-    clearTimeout(this.timer)
-    if (this.socket == null) return
-    this.socket.end()
-    this.socket.removeAllListeners()
-    this.socket = null
-    this.connected = false
-  }
-  /**
-   * 重新连接
+   * 客户端断开
    * 
    * @private
+   * @memberOf CommentClient
    */
-  private SocketReConnect() {
-    clearTimeout(this.timer)
-    this.connected = false
-    this.SocketClose()
-    this.timer = setTimeout(() => {
+  private _ClientClose() {
+    clearTimeout(this._Timer)
+    this._connected = false
+    if (this._Client === null) return
+    this._Client.end()
+    this._Client.destroy()
+    this._Client.removeAllListeners()
+    this._Client = null
+  }
+  /**
+   * 客户端连接重试
+   * 
+   * @private
+   * @memberOf CommentClient
+   */
+  private _ClientReConnect() {
+    this._ClientClose()
+    this._Timer = setTimeout(() => {
       if (this.reConnectTime >= 10) {
         this.reConnectTime = 0
-        this.ReConnect()
+        this._DelayReConnect()
       }
       else {
         this.reConnectTime++
-        this.SockeConnect()
+        this._ClientConnect()
       }
-    }, 3e4) // 30秒
+    }, 3e3) // 3秒
   }
   /**
-   * 监听连接事件
+   * 客户端错误重连
    * 
    * @private
+   * @param {Error} err
+   * @memberOf CommentClient
    */
-  private SockeConnectHandler() {
+  private _ClientErrorHandler(err: Error) {
+    this.emit('clientError', err)
+    this._ClientReConnect()
+  }
+  /**
+   * 服务器断开重连
+   * 
+   * @private
+   * @memberOf CommentClient
+   */
+  private _ClientEndHandler() {
+    this.emit('clientEnd', '服务器主动断开')
+    this._ClientReConnect()
+  }
+  /**
+   * 向服务器发送自定义握手数据
+   * 
+   * @private
+   * @memberOf CommentClient
+   */
+  private _ClientConnectHandler() {
     let roomid = this.roomID
     let uid = this.userID || 100000000000000 + parseInt((200000000000000 * Math.random()).toFixed(0))
-    let data = JSON.stringify({ roomid, uid })
-    this.SocketSendData(16 + data.length, 16, this.version, 7, 1, data)
-    this.SocketTimer()
-    this.connected = true
+    let data = JSON.stringify({ uid, roomid })
+    this._ClientSendData(16 + data.length, 16, this.version, 7, 1, data)
+    this._ClientTimer()
+    this._connected = true
+  }
+  /**
+   * 心跳包
+   * 
+   * @private
+   * @memberOf CommentClient
+   */
+  private _ClientTimer() {
+    if (this._ClientSendData(16, 16, 1, 2)) {
+      this._Timer = setTimeout(() => {
+        this._ClientTimer()
+      }, 2e4) // 20秒
+    }
+    else {
+      this.emit('clientHeartError', '心跳失败')
+      this._ClientReConnect()
+    }
   }
   /**
    * 向服务器发送数据
@@ -127,11 +272,12 @@ export class CommentClient extends events.EventEmitter {
    * @param {number} headLen 头部长度
    * @param {number} version 版本
    * @param {number} param4
-   * @param {number} [param5]
+   * @param {number} [param5=1]
    * @param {string} [data] 数据
    * @returns {boolean} 是否发送成功
+   * @memberOf CommentClient
    */
-  private SocketSendData(totalLen: number, headLen: number, version: number, param4: number, param5 = 1, data?: string): boolean {
+  private _ClientSendData(totalLen: number, headLen: number, version: number, param4: number, param5 = 1, data?: string): boolean {
     var bufferData = new Buffer(totalLen)
     bufferData.writeUInt32BE(totalLen, 0)
     bufferData.writeUInt16BE(headLen, 4)
@@ -139,212 +285,280 @@ export class CommentClient extends events.EventEmitter {
     bufferData.writeUInt32BE(param4, 8)
     bufferData.writeUInt32BE(param5, 12)
     if (data) bufferData.write(data, headLen)
-    return this.socket.write(bufferData)
+    return this._Client.write(bufferData)
   }
   /**
-   * 监听服务器断开事件
-   * 
-   * @private
-   * @param {any} err
-   */
-  private SocketErrorHandler(err) {
-    this.emit('socketError', err)
-    this.SocketReConnect()
-  }
-  /**
-   * 心跳包
-   * 
-   * @private
-   */
-  private SocketTimer() {
-    if (this.SocketSendData(16, 16, 1, 2)) {
-      this.timer = setTimeout(() => {
-        this.SocketTimer()
-      }, 3e4) //30秒
-    }
-    else {
-      this.emit('socketHeartError', '心跳失败')
-      this.SocketReConnect()
-    }
-  }
-  /**
-   * 监听数据传输
+   * 解析从服务器接收的数据
    * 
    * @private
    * @param {Buffer} data
+   * @memberOf CommentClient
    */
-  private ReadSocketData(data: Buffer) {
-    if (data.length < 16) return
+  private _ClientDataHandler(data: Buffer) {
+    let dataLen = data.length
+    if (dataLen < 16 || dataLen > 1048576) return
+    let packageIndex = 0
     let packageLen = data.readUInt32BE(0)
-    if (data.length < packageLen) return
-    let headLen = data.readUInt16BE(4)
-    if (packageLen < headLen) return
-    switch (data.readUInt32BE(8)) {
-      case 3:
-        this.emit('commentInLine', data.readUInt32BE(headLen))
-        break
-      case 5:
-        try {
-          let jsonData = JSON.parse(data.toString('utf8', headLen, packageLen))
-          this.ParseSocketData(jsonData)
-        }
-        catch (err) {
-          this.emit('commentError', '意外的弹幕信息')
-        }
-        break
-      case 17:
-        this.emit('serverUpdate', '服务器升级中')
-        this.ReConnect()
-        break
-      default:
-        break
+    while (dataLen - packageIndex >= packageLen) {
+      switch (data.readUInt32BE(packageIndex + 8)) {
+        case 3:
+          this.emit('commentInLine', data.readUInt32BE(packageIndex + 16))
+          break
+        case 5:
+          try {
+            let dataJson: danmuJson = JSON.parse(data.toString('utf8', packageIndex + 16, packageIndex + packageLen))
+            this._ParseClientData(dataJson)
+          }
+          catch (err) {
+            this.emit('commentError', '意外的弹幕信息')
+          }
+          break
+        case 8:
+          this.emit('serverSuccess', '服务器连接成功')
+          break
+        case 17:
+          this.emit('serverUpdate', '服务器升级中')
+          this._DelayReConnect()
+          break
+        default:
+          break
+      }
+      packageIndex += packageLen
+      packageLen = (dataLen - packageIndex >= 16) ? data.readUInt32BE(packageIndex) : 16
     }
   }
   /**
    * 解析消息
    * 
    * @private
-   * @param {danmuData} jsonData
+   * @param {danmuJson} dataJson
+   * @memberOf CommentClient
    */
-  private ParseSocketData(jsonData: danmuData) {
-    switch (jsonData.cmd) {
+  private _ParseClientData(dataJson: danmuJson) {
+    switch (dataJson.cmd) {
       case 'DANMU_MSG':
-        // 房间弹幕消息
-        // {
-        //   info:
-        //   [[0, 1, 25, 16738408, 1465212627, '1465209716', 0, '97c1ce5c', 0],
-        //     'string', // 消息内容
-        //     [number, 'string', 0, 1, 1, 10000], // uid, 用户名, 月费老爷, 年费老爷
-        //     [12, '谜酥', '谜之声', 117, 9982427], // 徽章等级, 徽章名, 勋章主播, 直播间
-        //     [34, 2315, 16745696], // 用户等级, 等级排名
-        //     ['sweet']], // 头衔
-        //   cmd: 'DANMU_MSG'
-        // }
-        this.emit('DANMU_MSG', jsonData)
+        this.emit('DANMU_MSG', dataJson)
         break
       case 'SEND_GIFT':
-        // 房间礼物消息
-        // {
-        //   cmd: 'SEND_GIFT',
-        //   data: {
-        //     giftName: '辣条',
-        //     num: 1,
-        //     uname: 'string',
-        //     rcost: 6020004, // 房间收礼数
-        //     uid: number,
-        //     top_list: [],
-        //     timestamp: 1465213258,
-        //     giftId: 1,
-        //     giftType: 0,
-        //     action: '喂食',
-        //     super: 0,
-        //     price: 100,
-        //     rnd: '1465210863',
-        //     newMedal: 0,
-        //     medal: 1,
-        //     capsule: []
-        //   },
-        //   roomid: 5082
-        // }
-        this.emit('SEND_GIFT', jsonData)
-        break
-      case 'SPECIAL_GIFT':
-        // 特殊礼物
-        // {
-        //   cmd: 'SPECIAL_GIFT',
-        //   data: {
-        //     '39': { // 节奏风暴
-        //       id: '6611',
-        //       num: 100,
-        //       time: 90,
-        //       content: 'string',
-        //       hadJoin: 0,
-        //       action: 'start'
-        //     }
-        //   },
-        //   roomid: 5082
-        // }
-        this.emit('SPECIAL_GIFT', jsonData)
+        this.emit('SEND_GIFT', dataJson)
         break
       case 'WELCOME':
-        // 房间欢迎消息
-        // {
-        //   cmd: 'WELCOME',
-        //   data: {
-        //     isadmin: 0,
-        //     s?vip: 1,
-        //     uid: number,
-        //     uname: 'string'
-        //   },
-        //   roomid: 5082
-        // }
-        this.emit('WELCOME', jsonData)
-        break
-      case 'ROOM_BLOCK_MSG':
-        // 房间封禁消息
-        // {
-        //   cmd: 'ROOM_BLOCK_MSG',
-        //   uid: 'number',
-        //   uname: 'string',
-        //   roomid: 5082
-        // }
-        this.emit('ROOM_BLOCK_MSG', jsonData)
-        break
-      case 'ROOM_SILENT_ON':
-        // 房间开启禁言消息
-        // {
-        //   cmd: 'ROOM_SILENT_ON',
-        //   countdown: 600,
-        //   type: -1, // -1为全局, 其他为等级
-        //   roomid: 5082
-        // }
-        this.emit('ROOM_BLOCK_MSG', jsonData)
-        break
-      case 'ADD_RED_BAG':
-        // 房间红包消息, 目前只在王尼玛看过
-        // {
-        //   cmd: 'ADD_RED_BAG',
-        //   data: {
-        //     id: 'number',
-        //     type: '1',
-        //     pwd: 'string',
-        //     countdown: 23
-        //   }
-        // }
-        this.emit('ADD_RED_BAG', jsonData)
-        break
-      case 'SYS_GIFT':
-        // 系统礼物消息
-        // {
-        //   cmd: 'SYS_GIFT',
-        //   msg: '', // 消息内容
-        //   tips: '', // 聊天窗口tip
-        //   rep: 1, // rep 1时是夏季活动消息
-        //   msgTips: 1,
-        //   url: '', // 点击跳转的地址
-        //   roomid: number,
-        //   rnd: 'number'
-        // }
-        this.emit('SYS_GIFT', jsonData)
+        this.emit('WELCOME', dataJson)
         break
       case 'SYS_MSG':
-        // 系统消息
-        // {
-        //   cmd: 'SYS_MSG',
-        //   msg: '', // 消息内容
-        //   rep: 1,
-        //   styleType: 1 | 2, // 2为小电视通知
-        //   url: '' // 点击跳转的地址
-        // }
-        this.emit('SYS_MSG', jsonData)
+        this.emit('SYS_MSG', dataJson)
+        break
+      case 'SYS_GIFT':
+        this.emit('SYS_GIFT', dataJson)
+        break
+      case 'SPECIAL_GIFT':
+        this.emit('SPECIAL_GIFT', dataJson)
+        break
+      case 'ROOM_BLOCK_MSG':
+        this.emit('ROOM_BLOCK_MSG', dataJson)
+        break
+      case 'ROOM_SILENT_ON':
+        this.emit('ROOM_BLOCK_MSG', dataJson)
         break
       default:
         // 其他消息
-        this.emit('OTHER', jsonData)
+        this.emit('OTHER', dataJson)
         break
     }
   }
 }
-interface danmuData {
+/**
+ * 弹幕基本格式
+ * 
+ * @export
+ * @interface danmuJson
+ */
+export interface danmuJson {
   cmd: string
+}
+/**
+ * 弹幕消息
+ * 
+ * @export
+ * @interface DANMU_MSG
+ * @extends {danmuJson}
+ */
+export interface DANMU_MSG extends danmuJson {
+  info:
+  [
+    [
+      number,
+      number, // 模式
+      number, // 字号
+      number, // 颜色
+      number, // 发送时间
+      number | string,// rnd
+      number,
+      string,
+      number
+    ],
+    string, // 弹幕
+    [
+      number, // 用户uid
+      string, // 用户名
+      number, // 月费老爷
+      number, // 年费老爷
+      number,
+      number
+    ],
+    [
+      number, // 徽章等级
+      string, // 徽章名
+      string, // 主播名
+      number, // 直播间
+      number
+    ],
+    [
+      number, // 用户等级
+      number, // 等级排名
+      number,
+      number | string// 等级排名
+    ],
+    [
+      string // 头衔
+    ]
+  ]
+}
+/**
+ * 礼物消息
+ * 
+ * @export
+ * @interface SEND_GIFT
+ * @extends {danmuJson}
+ */
+export interface SEND_GIFT extends danmuJson {
+  data:
+  {
+    giftName: string // 道具文案
+    num: number // 数量
+    uname: string // 用户名
+    rcost: number
+    uid: number // 用户uid
+    top_list: SEND_GIFT_top_list[], // 更新排行榜
+    timestamp: number
+    giftId: number // 礼物id
+    giftType: number // 礼物类型(活动)
+    action: string // 喂食|赠送
+    super: number // 连击
+    price: number // 价值
+    rnd: number
+    newMedal: number // 是否获取到新徽章
+    newTitle?: number // 是否获取到新头衔
+    medal: number | SEND_GIFT_medal // 新徽章
+    title?: string // 新头衔
+    newMedalName?: string // 新徽章名
+    capsule?: any[]
+    specialGift?: boolean
+  },
+  roomid: number
+}
+export interface SEND_GIFT_top_list {
+  uid: number // 用户uid
+  uname: string // 用户名
+  coin: number // 投喂总数
+}
+export interface SEND_GIFT_medal {
+  medalId: number // 徽章id
+  medalName: string // 徽章名
+  level: number // 徽章等级
+}
+/**
+ * 欢迎消息
+ * 
+ * @export
+ * @interface WELCOME
+ * @extends {danmuJson}
+ */
+export interface WELCOME extends danmuJson {
+  data: WELCOME_Data
+  roomid: number
+}
+export interface WELCOME_Data {
+  uid: number // 用户uid
+  uname: string // 用户名
+  isadmin: number // 管理员
+  vip?: number // 月费老爷
+  svip?: number // 年费老爷
+}
+/**
+ * 系统消息
+ * 
+ * @export
+ * @interface SYS_MSG
+ * @extends {danmuJson}
+ */
+export interface SYS_MSG extends danmuJson {
+  msg: string // 消息内容
+  rep: number
+  styleType?: number // 2为小电视通知
+  url: string // 点击跳转的地址
+  rnd?: number
+  roomid: number
+}
+/**
+ * 系统礼物消息
+ * 
+ * @export
+ * @interface SYS_GIFT
+ * @extends {danmuJson}
+ */
+export interface SYS_GIFT extends danmuJson {
+  msg: string // 消息内容
+  tips: string // 聊天窗口tip
+  rep: number // 1为夏季活动消息
+  msgTips: number
+  url: string // 点击跳转的地址
+  rnd: number
+  roomid: number
+}
+/**
+ * 特殊礼物消息
+ * 
+ * @export
+ * @interface SPECIAL_GIFT
+ * @extends {danmuJson}
+ */
+export interface SPECIAL_GIFT extends danmuJson {
+  data: SPECIAL_GIFT_Data
+  roomid: number
+}
+export interface SPECIAL_GIFT_Data {
+  '39': SPECIAL_GIFT_Data_BeatStorm // 节奏风暴
+}
+export interface SPECIAL_GIFT_Data_BeatStorm {
+  id?: string // 参与id
+  num?: number // 节奏数量
+  time?: number // 节奏持续时间
+  content?: string // 节奏内容
+  hadJoin?: number // 是否已经参与
+  action: string // start|end
+}
+/**
+ * 房间封禁消息
+ * 
+ * @export
+ * @interface ROOM_BLOCK_MSG
+ * @extends {danmuJson}
+ */
+export interface ROOM_BLOCK_MSG extends danmuJson {
+  uid: number // 用户uid
+  uname: string // 用户名
+  roomid: number
+}
+/**
+ * 房间开启禁言
+ * 
+ * @export
+ * @interface ROOM_SILENT_ON
+ * @extends {danmuJson}
+ */
+export interface ROOM_SILENT_ON extends danmuJson {
+  countdown: number // 禁言时间
+  type: number // -1为全局, 其他为等级
+  roomid: number
 }
