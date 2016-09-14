@@ -324,7 +324,8 @@ export class CommentClient extends EventEmitter {
           break
       }
       packageIndex += packageLen
-      packageLen = (dataLen - packageIndex >= 16) ? data.readUInt32BE(packageIndex) : 16
+      packageLen = (dataLen - packageIndex >= 16) ? data.readUInt32BE(packageIndex) : 1048576
+      if (packageLen < 16) packageLen = 1048576
     }
   }
   /**
@@ -361,7 +362,6 @@ export class CommentClient extends EventEmitter {
         this.emit('ROOM_BLOCK_MSG', dataJson)
         break
       default:
-        // 其他消息
         this.emit('OTHER', dataJson)
         break
     }
