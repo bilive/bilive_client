@@ -1,7 +1,6 @@
 import * as Tools from '../lib/tools'
 import {Online} from './online'
 import {Lottery} from './lottery'
-// import {BeatStorm} from './beatstorm'
 /**
  * 主程序
  * 
@@ -19,7 +18,6 @@ export class BiLive {
   public Start() {
     this.Online()
     this.Lottery()
-    // this.BeatStorm()
   }
   /**
    * 在线挂机
@@ -30,7 +28,7 @@ export class BiLive {
     const SOnline = new Online()
     SOnline
       .on('cookieInfo', this._CookieInfoHandler.bind(this))
-      .on('signInfo', (userData: Tools.userData) => { Tools.Log(appName, `${userData.userName} 正在签到`) })
+      .on('signInfo', (userData: userData) => { Tools.Log(appName, `${userData.userName} 正在签到`) })
       .Start()
   }
   /**
@@ -47,22 +45,13 @@ export class BiLive {
       .Start()
   }
   /**
-   * 节奏风暴
-   * 
-   * @memberOf BiLive
-   */
-  // public BeatStorm() {
-  //   const SBeatStorm = new BeatStorm()
-  //   SBeatStorm.Start()
-  // }
-  /**
    * 监听小电视事件
    * 
    * @private
-   * @param {Tools.userData} userData
+   * @param {userData} userData
    * @memberOf BiLive
    */
-  private _SmallTVHandler(userData: Tools.userData) {
+  private _SmallTVHandler(userData: userData) {
     Tools.Log(appName, `${userData.userName} 获得 1 个大号小电视`)
     Tools.SendMail(appName, '小电视已收入囊中', `<p>${userData.userName}, 你™居然中了个小电视, 滚去<a href="http://live.bilibili.com/i/awards">http://live.bilibili.com/i/awards</a>领取</p>`, userData)
       .catch(() => { Tools.Log(appName, `${userData.userName} 的大号小电视通知发出失败`) })
@@ -71,13 +60,12 @@ export class BiLive {
    * 监听抽奖事件
    * 
    * @private
-   * @param {Tools.userData} userData
+   * @param {userData} userData
+   * @param {string} giftName
    * @memberOf BiLive
    */
-  private _LotteryHandler(userData: Tools.userData) {
-    Tools.Log(appName, `${userData.userName} 获得 1 个凉拖`)
-    Tools.SendMail(appName, '凉拖已收入囊中', `<p>${userData.userName}, 你™居然中了个凉拖, 滚去<a href="http://live.bilibili.com/i/awards">http://live.bilibili.com/i/awards</a>领取</p>`, userData)
-      .catch(() => { Tools.Log(appName, `${userData.userName} 的凉拖通知发出失败`) })
+  private _LotteryHandler(userData: userData, giftName: string) {
+    Tools.Log(appName, `${userData.userName} 获得了 ${giftName}`)
   }
   /**
    * 监听服务器连接异常事件
@@ -93,10 +81,10 @@ export class BiLive {
    * 监听cookie失效事件
    * 
    * @private
-   * @param {Tools.userData} userData
+   * @param {userData} userData
    * @memberOf BiLive
    */
-  private _CookieInfoHandler(userData: Tools.userData) {
+  private _CookieInfoHandler(userData: userData) {
     Tools.Log(appName, `${userData.userName} Cookie已失效`)
     Tools.SendMail(appName, 'Cookie 已失效', `<p>${userData.userName} Cookie失效了, 无法继续享受服务, 但是网站还在建设中, 无法提供自主更新...所以忍着吧</p>`, userData)
       .catch(() => { Tools.Log(appName, `${userData.userName} Cookie 已失效通知发出失败`) })

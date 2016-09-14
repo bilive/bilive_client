@@ -510,7 +510,7 @@ export interface SYS_MSG extends danmuJson {
 export interface SYS_GIFT extends danmuJson {
   msg: string // 消息内容
   tips: string // 聊天窗口tip
-  rep: number // 1为夏季活动消息
+  rep: number // 1为活动消息
   msgTips: number
   url: string // 点击跳转的地址
   rnd: number

@@ -26,7 +26,7 @@ export class Lottery extends EventEmitter {
    * @type {string}
    * @memberOf Lottery
    */
-  public lotteryUrl = 'http://live.bilibili.com/summer'
+  public lotteryUrl = 'http://live.bilibili.com/eventRoom'
   /**
    * 用于接收系统消息
    * 
@@ -46,9 +46,25 @@ export class Lottery extends EventEmitter {
         this._CommentClient = new CommentClient(resolve.defaultRoomID, resolve.defaultUserID)
         this._CommentClient
           .on('SYS_MSG', this._SmallTVHandler.bind(this))
-          // .on('SYS_GIFT', this._LotteryHandler.bind(this))
+          .on('SYS_GIFT', this._LotteryHandler.bind(this))
           .on('serverError', (err) => { this.emit('serverError', err) })
           .Connect()
+      })
+  }
+  /**
+   * 获取房间ID
+   * 
+   * @private
+   * @param {string} url
+   * @returns {Promise<number>}
+   * @memberOf Lottery
+   */
+  private GetRoomID(url: string): Promise<number> {
+    return Tools.XHR(url)
+      .then((resolve) => {
+        let roomIDStr = resolve.toString().match(/var ROOMID = (\d+)/)[1]
+        let roomID = parseInt(roomIDStr)
+        return roomID
       })
   }
   /**
@@ -59,9 +75,13 @@ export class Lottery extends EventEmitter {
    * @memberOf Lottery
    */
   private _SmallTVHandler(dataJson: SYS_MSG) {
-    if (dataJson.rep !== 1 || dataJson.url === '') return
-    let roomID = dataJson.roomid
-    Tools.UserInfo<app.config>(app.appName)
+    if (dataJson.styleType !== 2 || dataJson.url === '') return
+    let roomID: number
+    this.GetRoomID(dataJson.url)
+      .then((resolve) => {
+        roomID = resolve
+        return Tools.UserInfo<app.config>(app.appName)
+      })
       .then((resolve) => {
         let usersData = resolve.usersData
         for (let uid in usersData) {
@@ -149,7 +169,7 @@ export class Lottery extends EventEmitter {
   private _LotteryHandler(dataJson: SYS_GIFT) {
     if (dataJson.rep !== 1 || dataJson.url === '') return
     let roomID = dataJson.roomid
-    Tools.UserInfo<app.config>(app.appName)
+    return Tools.UserInfo<app.config>(app.appName)
       .then((resolve) => {
         let usersData = resolve.usersData
         for (let uid in usersData) {
@@ -220,8 +240,9 @@ export class Lottery extends EventEmitter {
     Tools.XHR(rewardUrl, userData.cookie)
       .then((resolve) => {
         let reward = <lotteryReward>JSON.parse(resolve.toString())
-        if (reward.code === 0 && reward.data.giftId === 't') {
-          this.emit('lottery', userData)
+        if (reward.code === 0 && reward.data.giftName !== '') {
+          let giftName = reward.data.giftName
+          this.emit('lottery', userData, giftName)
         }
       })
   }

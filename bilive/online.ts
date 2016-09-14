@@ -81,7 +81,11 @@ export class Online extends EventEmitter {
           // 每日宝箱
           if (userData.treasureBox) this._TreasureBox(userData)
           // 日常活动
-          if (userData.eventRoom) this._EventRoom(userData)
+          if (userData.eventRoom) {
+            this._EventRoom(userData, 4162287, 1011) // 橙光
+            this._EventRoom(userData, 6893484, 22714) // 笔
+            this._EventRoom(userData, 1293653, 5227) // 颜料
+          }
         }
       })
     setTimeout(() => {
@@ -92,10 +96,10 @@ export class Online extends EventEmitter {
    * 每日签到
    * 
    * @private
-   * @param {Tools.userData} userData
+   * @param {app.userData} userData
    * @memberOf Online
    */
-  private _DoSign(userData: Tools.userData) {
+  private _DoSign(userData: app.userData) {
     Tools.XHR(`${this.heartUrl}/sign/GetSignInfo`, userData.cookie)
       .then((resolve) => {
         let signInfo = <signInfo>JSON.parse(resolve.toString())
@@ -111,10 +115,10 @@ export class Online extends EventEmitter {
    * 每日宝箱
    * 
    * @private
-   * @param {Tools.userData} userData
+   * @param {app.userData} userData
    * @memberOf Online
    */
-  private _TreasureBox(userData: Tools.userData) {
+  private _TreasureBox(userData: app.userData) {
     // 获取宝箱状态, 好像终于不用换房间冷却了呢
     let currentTask: currentTask
     Tools.XHR(`${this.heartUrl}/FreeSilver/getCurrentTask?_=${Date.now()}`, userData.cookie)
@@ -303,17 +307,19 @@ export class Online extends EventEmitter {
    * 日常活动
    * 
    * @private
-   * @param {Tools.userData} userData
+   * @param {app.userData} userData
+   * @param {number} rUID
+   * @param {number} roomID
    * @memberOf Online
    */
-  private _EventRoom(userData: Tools.userData) {
-    Tools.XHR(`${this.heartUrl}/eventRoom/index?ruid=4162287`, userData.cookie)
+  private _EventRoom(userData: app.userData, rUID: number, roomID: number) {
+    Tools.XHR(`${this.heartUrl}/eventRoom/index?ruid=${rUID}`, userData.cookie)
       .then((resolve) => {
         let eventRoom = <eventRoom>JSON.parse(resolve.toString())
         if (eventRoom.code === 0 && eventRoom.data.heart) {
           let heartTime = eventRoom.data.heartTime * 1000
           setTimeout(() => {
-            this._EventRoomHeart(userData, heartTime)
+            this._EventRoomHeart(userData, heartTime, roomID)
           }, heartTime)
         }
       })
@@ -322,17 +328,18 @@ export class Online extends EventEmitter {
    * 发送活动心跳包
    * 
    * @private
-   * @param {Tools.userData} userData
+   * @param {app.userData} userData
    * @param {number} heartTime
+   * @param {number} roomID
    * @memberOf Online
    */
-  private _EventRoomHeart(userData: Tools.userData, heartTime: number) {
-    Tools.XHR(`${this.heartUrl}/eventRoom/heart?roomid=1011`, userData.cookie, 'POST')
+  private _EventRoomHeart(userData: app.userData, heartTime: number, roomID: number) {
+    Tools.XHR(`${this.heartUrl}/eventRoom/heart?roomid=${roomID}`, userData.cookie, 'POST')
       .then((resolve) => {
         let eventRoomHeart = <eventRoomHeart>JSON.parse(resolve.toString())
         if (eventRoomHeart.code === 0 && eventRoomHeart.data.heart) {
           setTimeout(() => {
-            this._EventRoomHeart(userData, heartTime)
+            this._EventRoomHeart(userData, heartTime, roomID)
           }, heartTime)
         }
       })
