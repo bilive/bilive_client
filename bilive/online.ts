@@ -74,6 +74,7 @@ export class Online extends EventEmitter {
     Tools.UserInfo<app.config>(app.appName)
       .then((resolve) => {
         let usersData = resolve.usersData
+        let eventRooms = resolve.eventRooms
         for (let uid in usersData) {
           let userData = usersData[uid]
           // 每日签到
@@ -81,11 +82,7 @@ export class Online extends EventEmitter {
           // 每日宝箱
           if (userData.treasureBox) this._TreasureBox(userData)
           // 日常活动
-          if (userData.eventRoom) {
-            this._EventRoom(userData, 4162287, 1011) // 橙光
-            this._EventRoom(userData, 6893484, 22714) // 笔
-            this._EventRoom(userData, 1293653, 5227) // 颜料
-          }
+          if (userData.eventRoom && eventRooms.length > 0) this._EventRoom(userData, eventRooms)
         }
       })
     setTimeout(() => {
@@ -308,21 +305,27 @@ export class Online extends EventEmitter {
    * 
    * @private
    * @param {app.userData} userData
-   * @param {number} rUID
-   * @param {number} roomID
+   * @param {number[]} roomIDs
    * @memberOf Online
    */
-  private _EventRoom(userData: app.userData, rUID: number, roomID: number) {
-    Tools.XHR(`${this.heartUrl}/eventRoom/index?ruid=${rUID}`, userData.cookie)
-      .then((resolve) => {
-        let eventRoom = <eventRoom>JSON.parse(resolve.toString())
-        if (eventRoom.code === 0 && eventRoom.data.heart) {
-          let heartTime = eventRoom.data.heartTime * 1000
-          setTimeout(() => {
-            this._EventRoomHeart(userData, heartTime, roomID)
-          }, heartTime)
-        }
-      })
+  private _EventRoom(userData: app.userData, roomIDs: number[]) {
+    roomIDs.forEach((roomID) => {
+      Tools.XHR(`${this.heartUrl}/live/getInfo?roomid=${roomID}`)
+        .then((resolve) => {
+          let roomInfo = <roomInfo>JSON.parse(resolve.toString())
+          let masterID = roomInfo.data.MASTERID
+          return Tools.XHR(`${this.heartUrl}/eventRoom/index?ruid=${masterID}`, userData.cookie)
+        })
+        .then((resolve) => {
+          let eventRoom = <eventRoom>JSON.parse(resolve.toString())
+          if (eventRoom.code === 0 && eventRoom.data.heart) {
+            let heartTime = eventRoom.data.heartTime * 1000
+            setTimeout(() => {
+              this._EventRoomHeart(userData, heartTime, roomID)
+            }, heartTime)
+          }
+        })
+    })
   }
   /**
    * 发送活动心跳包
@@ -448,10 +451,72 @@ interface eventRoomHeartData {
 interface eventRoomHeartDataGift {
   '43': eventRoomHeartDataGiftOrange; // 命格转盘
 }
-export interface eventRoomHeartDataGiftOrange {
+interface eventRoomHeartDataGiftOrange {
   num: number
   bagId: number
   dayNum: number
+}
+/**
+ * 房间信息
+ * 
+ * @interface roomInfo
+ */
+interface roomInfo {
+  code: number
+  msg: string
+  data: roomInfoData
+}
+interface roomInfoData {
+  UID: number
+  IS_NEWBIE: number
+  ISATTENTION: number
+  ISADMIN: number
+  ISANCHOR: number
+  SVIP: number
+  VIP: number
+  SILVER: number
+  GOLD: number
+  BLOCK_TYPE: number
+  BLOCK_TIME: number
+  UNAME: number
+  MASTERID: number
+  ANCHOR_NICK_NAME: string
+  ROOMID: number
+  _status: string
+  LIVE_STATUS: string
+  ROUND_STATUS: number
+  AREAID: number
+  BACKGROUND_ID: number
+  ROOMtITLE: string
+  COVER: string
+  LIVE_TIMELINE: number
+  FANS_COUNT: number
+  GIFT_TOP: roomInfoDataGiftTop[]
+  RCOST: number
+  MEDAL: any[]
+  IS_STAR: boolean
+  starRank: number
+  TITLE: roomInfoDataTitle
+  USER_LEVEL: roomInfoDataUserLevel[]
+  IS_RED_BAG: boolean
+  IS_HAVE_VT: boolean
+  ACTIVITY_ID: number
+  ACTIVITY_PIC: number
+  MI_ACTIVITY: number
+  PENDANT: string
+}
+interface roomInfoDataGiftTop {
+  uid: number
+  uname: string
+  coin: number
+  isSelf: number
+}
+interface roomInfoDataTitle {
+  title: string
+}
+interface roomInfoDataUserLevel {
+  level: number
+  rank: number
 }
 // gm mogrify -crop 80x31+20+6 -quality 100 getCaptcha.jpg
 // gm mogrify -format pbm -quality 0 getCaptcha.jpg

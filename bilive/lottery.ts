@@ -106,13 +106,13 @@ export class Lottery extends EventEmitter {
     Tools.XHR(checkUrl, userData.cookie)
       .then((resolve) => {
         let check = <smallTVCheck>JSON.parse(resolve.toString())
-        if (check.code === 0) {
-          let unjions = check.data.unjoin
-          for (let unjion of unjions) {
-            let jionID = unjion.id
-            let joinUrl = `${this.smallTVUrl}/join?roomid=${roomID}&id=${jionID}`
-            this._SmallTVJion(joinUrl, userData, jionID)
-          }
+        if (check.code === 0 && check.data.unjoin.length > 0) {
+          let unjoins = check.data.unjoin
+          unjoins.forEach((unjoin) => {
+            let joinID = unjoin.id
+            let joinUrl = `${this.smallTVUrl}/join?roomid=${roomID}&id=${joinID}`
+            this._SmallTVjoin(joinUrl, userData, joinID)
+          })
         }
       })
   }
@@ -122,16 +122,16 @@ export class Lottery extends EventEmitter {
    * @private
    * @param {string} joinUrl
    * @param {app.userData} userData
-   * @param {number} jionID
+   * @param {number} joinID
    * @memberOf Lottery
    */
-  private _SmallTVJion(joinUrl: string, userData: app.userData, jionID: number) {
+  private _SmallTVjoin(joinUrl: string, userData: app.userData, joinID: number) {
     Tools.XHR(joinUrl, userData.cookie)
       .then((resolve) => {
         let join = <smallTVJoin>JSON.parse(resolve.toString())
         if (join.code === 0) {
           setTimeout(() => {
-            let rewardUrl = `${this.smallTVUrl}/getReward?id=${jionID}`
+            let rewardUrl = `${this.smallTVUrl}/getReward?id=${joinID}`
             this._SmallTVReward(rewardUrl, userData)
           }, 28e4) // 280秒
         }
@@ -194,15 +194,15 @@ export class Lottery extends EventEmitter {
     Tools.XHR(checkUrl, userData.cookie)
       .then((resolve) => {
         let check = <lotteryCheck>JSON.parse(resolve.toString())
-        if (check.code === 0) {
+        if (check.code === 0 && check.data.length > 0) {
           let unjoins = check.data
-          for (let unjoin of unjoins) {
+          unjoins.forEach((unjoin) => {
             if (unjoin.status === false) {
-              let jionID = unjoin.raffleId
-              let joinUrl = `${this.lotteryUrl}/join?roomid=${roomID}&raffleId=${jionID}`
-              this._LotteryJoin(joinUrl, userData, jionID, roomID)
+              let joinID = unjoin.raffleId
+              let joinUrl = `${this.lotteryUrl}/join?roomid=${roomID}&raffleId=${joinID}`
+              this._LotteryJoin(joinUrl, userData, joinID, roomID)
             }
-          }
+          })
         }
       })
   }
@@ -212,17 +212,17 @@ export class Lottery extends EventEmitter {
    * @private
    * @param {string} joinUrl
    * @param {app.userData} userData
-   * @param {number} jionID
+   * @param {number} joinID
    * @param {number} roomID
    * @memberOf Lottery
    */
-  private _LotteryJoin(joinUrl: string, userData: app.userData, jionID: number, roomID: number) {
+  private _LotteryJoin(joinUrl: string, userData: app.userData, joinID: number, roomID: number) {
     Tools.XHR(joinUrl, userData.cookie, 'POST')
       .then((resolve) => {
         let join = <lotteryJoin>JSON.parse(resolve.toString())
         if (join.code === 0) {
           setTimeout(() => {
-            let rewardUrl = `${this.lotteryUrl}/notice?roomid=${roomID}&raffleId=${jionID}`
+            let rewardUrl = `${this.lotteryUrl}/notice?roomid=${roomID}&raffleId=${joinID}`
             this._LotteryReward(rewardUrl, userData)
           }, 2e5) // 200秒
         }

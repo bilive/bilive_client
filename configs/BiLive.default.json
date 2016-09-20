@@ -1,6 +1,9 @@
 {
   "defaultUserID": 1,
   "defaultRoomID": 5082,
+  "eventRooms": [
+    5082
+  ],
   "beatStormBlackList": [
     10101
   ],
