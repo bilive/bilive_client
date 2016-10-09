@@ -47,14 +47,15 @@ export function XHR(urlStr: string, cookie?: string, method = 'GET'): Promise<Bu
     options.path = (method === 'POST') ? urlObj.pathname : urlObj.path
     let request = (urlObj.protocol === 'https:') ? https.request : http.request
     let req = request(options, (res) => {
+      res.on('error', reject)
       let decompress
       // 不知道大小写有没有影响
       switch (res.headers['content-encoding']) {
         case 'gzip':
-          decompress = res.pipe(zlib.createGunzip())
+          decompress = res.pipe(zlib.createGunzip()).on('error', reject)
           break
         case 'deflate':
-          decompress = res.pipe(zlib.createInflate())
+          decompress = res.pipe(zlib.createInflate()).on('error', reject)
           break
         default:
           decompress = res
@@ -62,7 +63,6 @@ export function XHR(urlStr: string, cookie?: string, method = 'GET'): Promise<Bu
       }
       let bufferList = []
       decompress
-        .on('error', reject)
         .on('data', (chunk) => { bufferList.push(chunk) })
         .on('end', () => {
           if (bufferList.length === 0) reject()

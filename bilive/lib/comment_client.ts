@@ -115,6 +115,8 @@ export class CommentClient extends EventEmitter {
    * @memberOf CommentClient
    */
   public Connect(server?: string) {
+    if (this._connected) return
+    clearTimeout(this._Timer)
     if (server === undefined) {
       // 动态获取服务器地址, 防止B站临时更换
       Tools.XHR(`http://live.bilibili.com/api/player?id=cid:${this.roomID}&ts=${Date.now().toString(16)}`)
@@ -138,7 +140,13 @@ export class CommentClient extends EventEmitter {
    * @memberOf CommentClient
    */
   public Close() {
-    this._ClientClose()
+    this._connected = false
+    clearTimeout(this._Timer)
+    if (this._Client === null) return
+    this._Client.end()
+    this._Client.destroy()
+    this._Client.removeAllListeners()
+    this._Client = null
   }
   /**
    * 重新连接到服务器
@@ -147,7 +155,7 @@ export class CommentClient extends EventEmitter {
    * @memberOf CommentClient
    */
   public ReConnect(server?: string) {
-    this._ClientClose()
+    this.Close()
     this.Connect(server)
   }
   /**
@@ -158,7 +166,7 @@ export class CommentClient extends EventEmitter {
    */
   private _DelayReConnect() {
     this.emit('serverError', '尝试重新连接服务器失败')
-    this._ClientClose()
+    this.Close()
     this._Timer = setTimeout(() => {
       this.Connect()
     }, 3e4) // 5分钟
@@ -179,30 +187,15 @@ export class CommentClient extends EventEmitter {
       .connect(this.port, this._server)
   }
   /**
-   * 客户端断开
-   * 
-   * @private
-   * @memberOf CommentClient
-   */
-  private _ClientClose() {
-    clearTimeout(this._Timer)
-    this._connected = false
-    if (this._Client === null) return
-    this._Client.end()
-    this._Client.destroy()
-    this._Client.removeAllListeners()
-    this._Client = null
-  }
-  /**
    * 客户端连接重试
    * 
    * @private
    * @memberOf CommentClient
    */
   private _ClientReConnect() {
-    this._ClientClose()
+    this.Close()
     this._Timer = setTimeout(() => {
-      if (this.reConnectTime >= 10) {
+      if (this.reConnectTime >= 5) {
         this.reConnectTime = 0
         this._DelayReConnect()
       }
@@ -240,12 +233,12 @@ export class CommentClient extends EventEmitter {
    * @memberOf CommentClient
    */
   private _ClientConnectHandler() {
+    this._connected = true
     let roomid = this.roomID
     let uid = this.userID || 100000000000000 + parseInt((200000000000000 * Math.random()).toFixed(0))
     let data = JSON.stringify({ uid, roomid })
     this._ClientSendData(16 + data.length, 16, this.version, 7, 1, data)
     this._ClientTimer()
-    this._connected = true
   }
   /**
    * 心跳包
@@ -254,10 +247,11 @@ export class CommentClient extends EventEmitter {
    * @memberOf CommentClient
    */
   private _ClientTimer() {
+    if (!this._connected) return
     if (this._ClientSendData(16, 16, 1, 2)) {
       this._Timer = setTimeout(() => {
         this._ClientTimer()
-      }, 2e4) // 20秒
+      }, 3e4) // 30秒
     }
     else {
       this.emit('clientHeartError', '心跳失败')
