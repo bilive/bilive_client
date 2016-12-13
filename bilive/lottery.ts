@@ -50,7 +50,6 @@ export class Lottery extends EventEmitter {
           .on('serverError', (err) => { this.emit('serverError', err) })
           .Connect()
       })
-      .catch()
   }
   /**
    * 获取房间ID
@@ -93,7 +92,6 @@ export class Lottery extends EventEmitter {
           }
         }
       })
-      .catch()
   }
   /**
    * 获取房间小电视抽奖信息
@@ -117,7 +115,6 @@ export class Lottery extends EventEmitter {
           })
         }
       })
-      .catch()
   }
   /**
    * 参加小电视抽奖
@@ -139,7 +136,6 @@ export class Lottery extends EventEmitter {
           }, 28e4) // 280秒
         }
       })
-      .catch()
   }
   /**
    * 获取小电视中奖结果
@@ -162,7 +158,6 @@ export class Lottery extends EventEmitter {
           this.emit('smalltv', userData)
         }
       })
-      .catch()
   }
   /**
    * 监听特殊礼物抽奖消息
@@ -185,7 +180,6 @@ export class Lottery extends EventEmitter {
           }
         }
       })
-      .catch()
   }
   /**
    * 获取房间抽奖信息
@@ -211,7 +205,6 @@ export class Lottery extends EventEmitter {
           })
         }
       })
-      .catch()
   }
   /**
    * 参与抽奖
@@ -234,7 +227,6 @@ export class Lottery extends EventEmitter {
           }, 2e5) // 200秒
         }
       })
-      .catch()
   }
   /**
    * 获取中奖结果
@@ -253,7 +245,6 @@ export class Lottery extends EventEmitter {
           this.emit('lottery', userData, giftName)
         }
       })
-      .catch()
   }
 }
 /**

@@ -59,10 +59,8 @@ export class Online extends EventEmitter {
                 Tools.UserInfo(app.appName, uid, userData)
               }
             })
-            .catch()
         }
       })
-      .catch()
     setTimeout(() => {
       this.OnlineHeart()
     }, 3e5) // 5分钟
@@ -85,13 +83,8 @@ export class Online extends EventEmitter {
           if (userData.treasureBox) this._TreasureBox(userData)
           // 日常活动
           if (userData.eventRoom && eventRooms.length > 0) this._EventRoom(userData, eventRooms)
-          // 日常活动附加
-          if (userData.eventRoom) Tools.XHR(`${this.heartUrl}/redLeaf/kingMoneyGift`, userData.cookie).catch()
         }
-        // 日常活动附加
-        this._EventSubject(usersData)
       })
-      .catch()
     setTimeout(() => {
       this.DoLoop()
     }, 288e5) // 8小时
@@ -114,7 +107,6 @@ export class Online extends EventEmitter {
           Tools.XHR(`${this.heartUrl}/giftBag/getSendGift`, userData.cookie)
         }
       })
-      .catch()
   }
   /**
    * 每日宝箱
@@ -333,7 +325,6 @@ export class Online extends EventEmitter {
             }, heartTime)
           }
         })
-        .catch()
     })
   }
   /**
@@ -355,35 +346,6 @@ export class Online extends EventEmitter {
           }, heartTime)
         }
       })
-      .catch()
-  }
-  /**
-   * 日常活动附加
-   * 
-   * @private
-   * @param {app.usersData} usersData
-   * @memberOf Online
-   */
-  private _EventSubject(usersData: app.usersData) {
-    Tools.XHR(`${this.heartUrl}/eventSubject/masterRank?eventKey=redleaf&eventType=fete&page=1`)
-      .then((resolve) => {
-        let eventSubject = <eventSubject>JSON.parse(resolve.toString())
-        let eventRoomList = eventSubject.data.list
-        eventRoomList.forEach((room) => {
-          Tools.XHR(`${this.heartUrl}/eventRoom/index?ruid=${room.ruid}`)
-            .then((resolve) => {
-              let eventRoom = <eventRoom>JSON.parse(resolve.toString())
-              if (eventRoom.data.eventList[0].is2233 !== 1) {
-                for (let uid in usersData) {
-                  let userData = usersData[uid]
-                  if (userData.eventRoom) Tools.XHR(`${this.heartUrl}/redLeaf/get33RoomCapsule?ruid=${room.ruid}`, userData.cookie).catch()
-                }
-              }
-            })
-            .catch()
-        })
-      })
-      .catch()
   }
 }
 /**
@@ -499,43 +461,6 @@ interface eventRoomHeartDataGiftOrange {
   num: number
   bagId: number
   dayNum: number
-}
-/**
- * 日常活动附加
- * 
- * @interface eventSubject
- */
-interface eventSubject {
-  code: number
-  msg: string
-  data: eventSubjectData
-}
-interface eventSubjectData {
-  uid: number
-  page: number
-  pageSize: number
-  info: eventSubjectInfo
-  list: eventSubjectList[]
-}
-interface eventSubjectInfo {
-  uname: string
-  ruid: number
-  face: string
-  score: number
-  link: string
-  title: string
-  rank: string
-}
-interface eventSubjectList {
-  uname: string
-  ruid: string
-  face: string
-  rank: number
-  score: number
-  roomid: string
-  title: string
-  kingMoney: number
-  link: string
 }
 /**
  * 房间信息

@@ -154,7 +154,8 @@ export function SendMail(appName: string, subject: string, html: string, userDat
  * @param {string} logData
  */
 export function Log(appName: string, logData: string) {
-  console.log(`${new Date().toISOString()} : ${appName} , ${logData}`)
+  let dt = new Date()
+  console.log(`${dt.toString().slice(4, 24)} : ${appName}, ${logData}`)
 }
 /**
  * 应用用户信息设置

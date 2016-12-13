@@ -37,13 +37,11 @@ export class Online extends EventEmitter {
               if (onlineInfo.includes('member.php?mod=register')) {
                 this.emit('cookieInfo', userData)
                 userData.status = false
-                Tools.UserInfo(app.appName, uid, userData).catch()
+                Tools.UserInfo(app.appName, uid, userData)
               }
             })
-            .catch()
         }
       })
-      .catch()
     setTimeout(() => {
       this.Online()
     }, 3e5) // 5分钟
