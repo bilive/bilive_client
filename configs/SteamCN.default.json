@@ -5,14 +5,14 @@
       "email": "admin@example.com",
       "failure": 0,
       "status": true,
-      "cookie": "FtVW_2132_saltkey=; FtVW_2132_auth="
+      "cookie": "dz_2132_saltkey=; dz_2132_auth="
     },
     "1": {
       "userName": "user",
       "email": "user@example.com",
       "failure": 0,
       "status": false,
-      "cookie": "FtVW_2132_saltkey=; FtVW_2132_auth="
+      "cookie": "dz_2132_saltkey=; dz_2132_auth="
     }
   }
 }
