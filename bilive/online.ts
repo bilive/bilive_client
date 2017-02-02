@@ -1,7 +1,10 @@
-import {EventEmitter} from 'events'
-import * as jpeg from 'jpeg-js'
-import * as app from './index'
-import * as Tools from '../lib/tools'
+import * as bluebird from 'bluebird'
+import * as request from 'request'
+import * as tools from './lib/tools'
+import { EventEmitter } from 'events'
+import { AppClient } from './lib/app_client'
+import { DeCaptcha } from './lib/boxcaptcha'
+import { usersData, userData, rootOrigin, options } from './index'
 /**
  * 挂机得经验
  * 
@@ -14,19 +17,13 @@ export class Online extends EventEmitter {
     super()
   }
   /**
-   * 心跳包发送地址
-   * 
-   * @memberOf Online
-   */
-  public heartUrl = 'http://live.bilibili.com'
-  /**
    * 开始挂机
    * 
    * @memberOf Online
    */
   public Start() {
-    this.OnlineHeart()
     this.DoLoop()
+    this.OnlineHeart()
   }
   /**
    * 发送在线心跳包, 检查cookie是否失效
@@ -34,33 +31,36 @@ export class Online extends EventEmitter {
    * @memberOf Online
    */
   public OnlineHeart() {
-    Tools.UserInfo<app.config>(app.appName)
-      .then((resolve) => {
-        let usersData = resolve.usersData
-        for (let uid in usersData) {
-          let userData = usersData[uid]
-          Tools.XHR(`${this.heartUrl}/User/userOnlineHeart`, userData.cookie, 'POST')
-            .then((resolve) => {
-              let onlineInfo = <userOnlineHeart>JSON.parse(resolve.toString())
-              if (onlineInfo.code === -101) {
-                if (userData.failure < 5) {
-                  userData.failure++
-                  Tools.UserInfo(app.appName, uid, userData)
-                }
-                else {
-                  this.emit('cookieInfo', userData)
-                  userData.failure = 0
-                  userData.status = false
-                  Tools.UserInfo(app.appName, uid, userData)
-                }
-              }
-              else if (userData.failure !== 0) {
-                userData.failure = 0
-                Tools.UserInfo(app.appName, uid, userData)
-              }
-            })
-        }
-      })
+    let roomID = options.defaultRoomID
+    let usersData = options.usersData
+    for (let uid in usersData) {
+      let userData = usersData[uid]
+      // PC
+      let online = {
+        method: 'POST',
+        uri: `${rootOrigin}/User/userOnlineHeart`,
+        jar: userData.jar
+      }
+      tools.XHR<string>(online)
+        .then((resolve) => {
+          let userOnlineHeartResponse: userOnlineHeartResponse = JSON.parse(resolve)
+          if (userOnlineHeartResponse.code === -101) this.emit('cookieError', [uid, userData])
+        })
+        .catch((reject) => { tools.Log(userData.nickname, reject) })
+      // 客户端
+      let heartbeatQuery = `access_key=${userData.accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}`
+      let heartbeat = {
+        method: 'POST',
+        uri: `${rootOrigin}/mobile/userOnlineHeart?${AppClient.ParamsSign(heartbeatQuery)}`,
+        body: `room_id=${roomID}&scale=xxhdpi&`
+      }
+      tools.XHR<string>(heartbeat)
+        .then((resolve) => {
+          let userOnlineHeartResponse: userOnlineHeartResponse = JSON.parse(resolve)
+          if (userOnlineHeartResponse.code === -101) this.emit('tokenError', [uid, userData])
+        })
+        .catch((reject) => { tools.Log(userData.nickname, reject) })
+    }
     setTimeout(() => {
       this.OnlineHeart()
     }, 3e5) // 5分钟
@@ -71,20 +71,17 @@ export class Online extends EventEmitter {
    * @memberOf Online
    */
   public DoLoop() {
-    Tools.UserInfo<app.config>(app.appName)
-      .then((resolve) => {
-        let usersData = resolve.usersData
-        let eventRooms = resolve.eventRooms
-        for (let uid in usersData) {
-          let userData = usersData[uid]
-          // 每日签到
-          if (userData.doSign) this._DoSign(userData)
-          // 每日宝箱
-          if (userData.treasureBox) this._TreasureBox(userData)
-          // 日常活动
-          if (userData.eventRoom && eventRooms.length > 0) this._EventRoom(userData, eventRooms)
-        }
-      })
+    let eventRooms = options.eventRooms
+    let usersData = options.usersData
+    for (let uid in usersData) {
+      let userData = usersData[uid]
+      // 每日签到
+      if (userData.doSign) this._DoSign(userData)
+      // 每日宝箱
+      if (userData.treasureBox) this._TreasureBox(userData)
+      // 日常活动
+      if (userData.eventRoom && eventRooms.length > 0) this._EventRoom(userData, eventRooms)
+    }
     setTimeout(() => {
       this.DoLoop()
     }, 288e5) // 8小时
@@ -93,273 +90,203 @@ export class Online extends EventEmitter {
    * 每日签到
    * 
    * @private
-   * @param {app.userData} userData
+   * @param {userData} userData
    * @memberOf Online
    */
-  private _DoSign(userData: app.userData) {
-    Tools.XHR(`${this.heartUrl}/sign/GetSignInfo`, userData.cookie)
+  private _DoSign(userData: userData) {
+    let signQuery = `access_key=${userData.accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}&scale=xxhdpi`
+    let sign: request.Options = { uri: `${rootOrigin}/AppUser/getSignInfo?${AppClient.ParamsSign(signQuery)}` }
+    tools.XHR<string>(sign)
       .then((resolve) => {
-        let signInfo = <signInfo>JSON.parse(resolve.toString())
-        if (signInfo.data.status === 0) {
+        let signInfoResponse: signInfoResponse = JSON.parse(resolve)
+        if (signInfoResponse.code === 0) tools.Log(userData.nickname, '已签到')
+      })
+      .catch((reject) => { tools.Log(userData.nickname, reject) })
+  }
+  /**
+   * 每日签到PC
+   * 
+   * @private
+   * @param {userData} userData
+   * @memberOf Online
+   */
+  private _DoSignPC(userData: userData) {
+    let sign: request.Options = {
+      uri: `${rootOrigin}/sign/GetSignInfo`,
+      jar: userData.jar
+    }
+    tools.XHR<string>(sign)
+      .then((resolve) => {
+        let signInfoResponse: signInfoResponse = JSON.parse(resolve)
+        if (signInfoResponse.data.status === 0) {
           this.emit('signInfo', userData)
-          Tools.XHR(`${this.heartUrl}/sign/doSign`, userData.cookie)
-          // 道具包裹
-          Tools.XHR(`${this.heartUrl}/giftBag/getSendGift`, userData.cookie)
+          let doSign: request.Options = {
+            uri: `${rootOrigin}/sign/doSign`,
+            jar: userData.jar
+          }
+          tools.XHR(doSign).catch((reject) => { tools.Log(userData.nickname, reject) })
         }
       })
+      .catch((reject) => { tools.Log(userData.nickname, reject) })
   }
   /**
    * 每日宝箱
    * 
    * @private
-   * @param {app.userData} userData
+   * @param {userData} userData
    * @memberOf Online
    */
-  private _TreasureBox(userData: app.userData) {
-    // 获取宝箱状态, 好像终于不用换房间冷却了呢
-    let currentTask: currentTask
-    Tools.XHR(`${this.heartUrl}/FreeSilver/getCurrentTask?_=${Date.now()}`, userData.cookie)
+  private _TreasureBox(userData: userData) {
+    // 获取宝箱状态,换房间会重新冷却
+    let currentTaskResponse: currentTaskResponse
+    let currentTaskUrl = `${rootOrigin}/mobile/freeSilverCurrentTask`
+    let currentTaskQuery = `access_key=${userData.accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}&ts=${AppClient.TS * 1000}`
+    let currentTask: request.Options = { uri: `${currentTaskUrl}?${AppClient.ParamsSign(currentTaskQuery)}` }
+    tools.XHR<string>(currentTask)
       .then((resolve) => {
-        currentTask = <currentTask>JSON.parse(resolve.toString())
-        return new Promise((resolve, reject) => {
-          if (currentTask.code === 0) {
-            setTimeout(resolve, currentTask.data.minute * 6e4, 'ok')
-          }
-          else {
-            reject('none')
-          }
-        })
+        currentTaskResponse = JSON.parse(resolve)
+        if (currentTaskResponse.code === 0) return tools.Sleep(currentTaskResponse.data.minute * 6e4)
+        else return bluebird.reject('已领取所有宝箱')
+      })
+      .then<string>((resolve) => {
+        let awardUrl = `${rootOrigin}/mobile/freeSilverAward`
+        let awardQuery = `access_key=${userData.accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}&ts=${AppClient.TS * 1000}`
+        let award: request.Options = { uri: `${awardUrl}?${AppClient.ParamsSign(awardQuery)}` }
+        return tools.XHR<string>(award)
       })
       .then((resolve) => {
-        return Tools.XHR(`${this.heartUrl}/freeSilver/getCaptcha?ts=${Date.now()}`, userData.cookie)
+        let awardResponse: awardResponse = JSON.parse(resolve)
+        if (awardResponse.code === 0) this._TreasureBox(userData)
+        else return bluebird.reject('error')
+      })
+      .catch((reject) => {
+        if (reject === 'error') this._TreasureBox(userData)
+        else tools.Log(userData.nickname, reject)
+      })
+  }
+  /**
+   * 每日宝箱PC
+   * 
+   * @private
+   * @param {userData} userData
+   * @memberOf Online
+   */
+  private _TreasureBoxPC(userData: userData) {
+    // 获取宝箱状态,换房间会重新冷却
+    let currentTaskResponse: currentTaskResponse
+    let getCurrentTask: request.Options = {
+      uri: `${rootOrigin}/FreeSilver/getCurrentTask?_=${Date.now()}`,
+      jar: userData.jar
+    }
+    tools.XHR<string>(getCurrentTask)
+      .then((resolve) => {
+        currentTaskResponse = JSON.parse(resolve)
+        if (currentTaskResponse.code === 0) return tools.Sleep(currentTaskResponse.data.minute * 6e4)
+        else return bluebird.reject('已领取所有宝箱')
       })
       .then((resolve) => {
-        // 读取像素信息
-        let rawImageData = jpeg.decode(resolve, true).data
-        // 因为图片大小固定, 直接给定值
-        let baseX = 20, baseY = 6, width = baseX + 80, height = baseY + 31, rawWidth = 480
-        // 用来存储结果, id为位置
-        let id = 0, num = []
-        // 逐列扫描
-        for (let x = baseX; x < width; x++) {
-          // 就算第x行有效像素个数
-          let sum = 0
-          for (let y = baseY; y < height; y++) {
-            sum += ImageBin(x, y)
-          }
-          // 像素个数大于3判断为有效列
-          if (sum > 3) {
-            // 逐个分析此列像素信息
-            for (let y = baseY; y < height; y++) {
-              // 分析第一个有效像素位置
-              if (ImageBin(x, y) === 1) {
-                // 可能数字0, 2, 3, 5, 6, 7, 8, 9
-                if (y < baseY + 3) {
-                  // 此列第12行有像素则可能数字0, 5, 6, 9
-                  if (ImageBin(x, baseY + 12, true) === 1) {
-                    // 右移12列第5行有像素则可能数字0, 6, 9
-                    if (ImageBin(x + 12, baseY + 5, true) === 1) {
-                      // 此列第19行有像素则可能数字0, 6
-                      if (ImageBin(x, baseY + 19, true) === 1) {
-                        // 右移16列第14行有像素则可能数字6
-                        if (ImageBin(x + 6, baseY + 14, true) === 1) {
-                          num[id] = 6
-                          id++
-                          x += 15
-                          break
-                        }
-                        else {
-                          num[id] = 0
-                          id++
-                          x += 15
-                          break
-                        }
-                      }
-                      else {
-                        num[id] = 9
-                        id++
-                        x += 15
-                        break
-                      }
-                    }
-                    else {
-                      num[id] = 5
-                      id++
-                      x += 15
-                      break
-                    }
-                  }
-                  else {
-                    // 此列第28行有像素则可能数字2, 3, 8
-                    if (ImageBin(x, baseY + 28, true) === 1) {
-                      // 右移12列第23行有像素则可能数字3, 8
-                      if (ImageBin(x + 12, baseY + 23, true) === 1) {
-                        // 此列第18行有像素则可能数字8
-                        if (ImageBin(x, baseY + 18, true) === 1) {
-                          num[id] = 8
-                          id++
-                          x += 15
-                          break
-                        }
-                        else {
-                          num[id] = 3
-                          id++
-                          x += 15
-                          break
-                        }
-                      }
-                      else {
-                        num[id] = 2
-                        id++
-                        x += 15
-                        break
-                      }
-                    }
-                    else {
-                      num[id] = 7
-                      id++
-                      x += 15
-                      break
-                    }
-                  }
-                }
-                // 可能数字1
-                else if (y < baseY + 10) {
-                  num[id] = 1
-                  id++
-                  x += 6
-                  break
-                }
-                // 可能运算符'+', '-'
-                else if (y < baseY + 18) {
-                  // 右移6列第12行有像素则可能运算符'+'
-                  if (ImageBin(x + 6, baseY + 12, true) === 1) {
-                    num[id] = '+'
-                    id++
-                    x += 16
-                    break
-                  }
-                  else {
-                    num[id] = '-'
-                    id++
-                    x += 8
-                    break
-                  }
-                }
-                else {
-                  num[id] = 4
-                  id++
-                  x += 16
-                  break
-                }
-              }
-            }
-          }
+        let getCaptcha: request.Options = {
+          uri: `${rootOrigin}/freeSilver/getCaptcha?ts=${Date.now()}`,
+          encoding: null,
+          jar: userData.jar
         }
-        // 最后结果为四位则可能正确
-        return new Promise((resolve, reject) => {
-          if (num.length === 4) {
-            let captcha: number = num[2] === '+' ? num[0] * 10 + num[1] + num[3] : num[0] * 10 + num[1] - num[3]
-            resolve(Tools.XHR(`${this.heartUrl}/FreeSilver/getAward?time_start=${currentTask.data.time_start}&time_end=${currentTask.data.time_end}&captcha=${captcha}&_=${Date.now()}`, userData.cookie))
+        return tools.XHR<Buffer>(getCaptcha)
+      })
+      .then<string>((resolve) => {
+        let captcha = DeCaptcha(resolve)
+        if (captcha > -1) {
+          let getAward: request.Options = {
+            uri: `${rootOrigin}/FreeSilver/getAward?time_start=${currentTaskResponse.data.time_start}&time_end=${currentTaskResponse.data.time_end}&captcha=${captcha}&_=${Date.now()}`,
+            jar: userData.jar
           }
-          else {
-            reject('error')
-          }
-        })
-        /**
-         * 二值化
-         * 
-         * @param {number} x
-         * @param {number} y
-         * @param {boolean} [block=false]
-         * @returns {number}
-         */
-        function ImageBin(x: number, y: number, block = false): number {
-          if (block) {
-            let sum = ImageBin(x, y) + ImageBin(x + 1, y) + ImageBin(x, y + 1) + ImageBin(x + 1, y + 1)
-            return sum > 2 ? 1 : 0
-          }
-          else {
-            return (rawImageData[x * 4 + y * rawWidth] * 3 + rawImageData[x * 4 + 1 + y * rawWidth] * 6 + rawImageData[x * 4 + 2 + y * rawWidth]) < 1280 ? 1 : 0
-          }
+          return tools.XHR<string>(getAward)
         }
+        else return bluebird.reject('error')
       })
-      .then((resolve: Buffer) => {
-        let award = <award>JSON.parse(resolve.toString())
-        return new Promise((resolve, reject) => {
-          if (award.code === 0) {
-            this._TreasureBox(userData)
-            resolve('ok')
-          }
-          else {
-            reject('error')
-          }
-        })
+      .then((resolve) => {
+        let awardResponse: awardResponse = JSON.parse(resolve)
+        if (awardResponse.code === 0) {
+          this._TreasureBoxPC(userData)
+          return bluebird.resolve('ok')
+        }
+        else return bluebird.reject('error')
       })
-      .catch((reject: string) => {
-        if (reject === 'error') { this._TreasureBox(userData) }
+      .catch((reject) => {
+        if (reject === 'error') this._TreasureBoxPC(userData)
+        else tools.Log(userData.nickname, reject)
       })
   }
   /**
    * 日常活动
    * 
    * @private
-   * @param {app.userData} userData
+   * @param {userData} userData
    * @param {number[]} roomIDs
    * @memberOf Online
    */
-  private _EventRoom(userData: app.userData, roomIDs: number[]) {
+  private _EventRoom(userData: userData, roomIDs: number[]) {
     roomIDs.forEach((roomID) => {
-      Tools.XHR(`${this.heartUrl}/live/getInfo?roomid=${roomID}`)
+      let getInfo: request.Options = { uri: `${rootOrigin}/live/getInfo?roomid=${roomID}` }
+      tools.XHR<string>(getInfo)
         .then((resolve) => {
-          let roomInfo = <roomInfo>JSON.parse(resolve.toString())
-          let masterID = roomInfo.data.MASTERID
-          return Tools.XHR(`${this.heartUrl}/eventRoom/index?ruid=${masterID}`, userData.cookie)
+          let roomInfoResponse: roomInfoResponse = JSON.parse(resolve)
+          let index: request.Options = {
+            uri: `${rootOrigin}/eventRoom/index?ruid=${roomInfoResponse.data.MASTERID}`,
+            jar: userData.jar
+          }
+          return tools.XHR<string>(index)
         })
         .then((resolve) => {
-          let eventRoom = <eventRoom>JSON.parse(resolve.toString())
-          if (eventRoom.code === 0 && eventRoom.data.heart) {
-            let heartTime = eventRoom.data.heartTime * 1000
+          let eventRoomResponse: eventRoomResponse = JSON.parse(resolve)
+          if (eventRoomResponse.code === 0 && eventRoomResponse.data.heart) {
+            let heartTime = eventRoomResponse.data.heartTime * 1000
             setTimeout(() => {
               this._EventRoomHeart(userData, heartTime, roomID)
             }, heartTime)
           }
         })
+        .catch((reject) => { tools.Log(userData.nickname, reject) })
     })
   }
   /**
    * 发送活动心跳包
    * 
    * @private
-   * @param {app.userData} userData
+   * @param {userData} userData
    * @param {number} heartTime
    * @param {number} roomID
    * @memberOf Online
    */
-  private _EventRoomHeart(userData: app.userData, heartTime: number, roomID: number) {
-    Tools.XHR(`${this.heartUrl}/eventRoom/heart?roomid=${roomID}`, userData.cookie, 'POST')
+  private _EventRoomHeart(userData: userData, heartTime: number, roomID: number) {
+    let heart: request.Options = {
+      method: 'POST',
+      uri: `${rootOrigin}/eventRoom/heart?roomid=${roomID}`,
+      jar: userData.jar
+    }
+    tools.XHR<string>(heart)
       .then((resolve) => {
-        let eventRoomHeart = <eventRoomHeart>JSON.parse(resolve.toString())
-        if (eventRoomHeart.code === 0 && eventRoomHeart.data.heart) {
+        let eventRoomHeartResponse: eventRoomHeartResponse = JSON.parse(resolve)
+        if (eventRoomHeartResponse.data.heart) {
           setTimeout(() => {
             this._EventRoomHeart(userData, heartTime, roomID)
           }, heartTime)
         }
       })
+      .catch((reject) => { tools.Log(userData.nickname, reject) })
   }
 }
 /**
  * 签到信息
  * 
  * @export
- * @interface signInfo
+ * @interface signInfoResponse
  */
-interface signInfo {
+interface signInfoResponse {
   code: number
   msg: string
-  data: signInfoData
+  data: signInfoResponseData
 }
-interface signInfoData {
+interface signInfoResponseData {
   text: string
   status: number
   allDays: string
@@ -371,23 +298,23 @@ interface signInfoData {
 /**
  * 在线心跳返回
  * 
- * @interface userOnlineHeart
+ * @interface userOnlineHeartResponse
  */
-interface userOnlineHeart {
+interface userOnlineHeartResponse {
   code: number
   msg: string
 }
 /**
  * 在线领瓜子宝箱
  * 
- * @interface currentTask
+ * @interface currentTaskResponse
  */
-interface currentTask {
+interface currentTaskResponse {
   code: number
   msg: string
-  data: currentTaskData
+  data: currentTaskResponseData
 }
-interface currentTaskData {
+interface currentTaskResponseData {
   minute: number
   silver: number
   time_start: number
@@ -396,14 +323,14 @@ interface currentTaskData {
 /**
  * 领瓜子答案提交返回
  * 
- * @interface award
+ * @interface awardResponse
  */
-interface award {
+interface awardResponse {
   code: number
   msg: string
-  data: awardData
+  data: awardResponseData
 }
-interface awardData {
+interface awardResponseData {
   silver: number
   awardSilver: number
   isEnd: number
@@ -411,19 +338,19 @@ interface awardData {
 /**
  * 活动信息
  * 
- * @interface eventRoom
+ * @interface eventRoomResponse
  */
-interface eventRoom {
+interface eventRoomResponse {
   code: number
   msg: string
-  data: eventRoomData
+  data: eventRoomResponseData
 }
-interface eventRoomData {
-  eventList: eventRoomDataEventList[]
+interface eventRoomResponseData {
+  eventList: eventRoomResponseDataEventList[]
   heart: boolean
   heartTime: number
 }
-interface eventRoomDataEventList {
+interface eventRoomResponseDataEventList {
   status: boolean
   score: number
   giftId: number
@@ -442,22 +369,22 @@ interface eventRoomDataEventList {
 /**
  * 活动心跳返回
  * 
- * @interface eventRoomHeart
+ * @interface eventRoomHeartResponse
  */
-interface eventRoomHeart {
+interface eventRoomHeartResponse {
   code: number
   msg: string
-  data: eventRoomHeartData
+  data: eventRoomHeartResponseData
 }
-interface eventRoomHeartData {
+interface eventRoomHeartResponseData {
   uid: number
-  gift: eventRoomHeartDataGift
+  gift: eventRoomHeartResponseDataGift
   heart: boolean
 }
-interface eventRoomHeartDataGift {
-  '43': eventRoomHeartDataGiftOrange; // 命格转盘
+interface eventRoomHeartResponseDataGift {
+  '43': eventRoomHeartResponseDataGiftOrange; // 命格转盘
 }
-interface eventRoomHeartDataGiftOrange {
+interface eventRoomHeartResponseDataGiftOrange {
   num: number
   bagId: number
   dayNum: number
@@ -465,14 +392,14 @@ interface eventRoomHeartDataGiftOrange {
 /**
  * 房间信息
  * 
- * @interface roomInfo
+ * @interface roomInfoResponse
  */
-interface roomInfo {
+interface roomInfoResponse {
   code: number
   msg: string
-  data: roomInfoData
+  data: roomInfoResponseData
 }
-interface roomInfoData {
+interface roomInfoResponseData {
   UID: number
   IS_NEWBIE: number
   ISATTENTION: number
@@ -497,13 +424,13 @@ interface roomInfoData {
   COVER: string
   LIVE_TIMELINE: number
   FANS_COUNT: number
-  GIFT_TOP: roomInfoDataGiftTop[]
+  GIFT_TOP: roomInfoResponseDataGiftTop[]
   RCOST: number
   MEDAL: any[]
   IS_STAR: boolean
   starRank: number
-  TITLE: roomInfoDataTitle
-  USER_LEVEL: roomInfoDataUserLevel[]
+  TITLE: roomInfoResponseDataTitle
+  USER_LEVEL: roomInfoResponseDataUserLevel[]
   IS_RED_BAG: boolean
   IS_HAVE_VT: boolean
   ACTIVITY_ID: number
@@ -511,16 +438,16 @@ interface roomInfoData {
   MI_ACTIVITY: number
   PENDANT: string
 }
-interface roomInfoDataGiftTop {
+interface roomInfoResponseDataGiftTop {
   uid: number
   uname: string
   coin: number
   isSelf: number
 }
-interface roomInfoDataTitle {
+interface roomInfoResponseDataTitle {
   title: string
 }
-interface roomInfoDataUserLevel {
+interface roomInfoResponseDataUserLevel {
   level: number
   rank: number
 }

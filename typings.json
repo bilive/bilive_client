@@ -1,9 +1,11 @@
 {
   "globalDependencies": {
-    "node": "registry:dt/node#6.0.0+20160720070758",
-    "nodemailer": "registry:dt/nodemailer#1.3.2+20160720064428",
-    "nodemailer-direct-transport": "registry:dt/nodemailer-direct-transport#0.0.0+20160317120654",
-    "nodemailer-smtp-transport": "registry:dt/nodemailer-smtp-transport#0.0.0+20160317120654",
-    "nodemailer-types": "registry:dt/nodemailer-types#0.0.0+20160317120654"
+    "node": "registry:dt/node#7.0.0+20170124134802"
+  },
+  "dependencies": {
+    "bluebird": "registry:dt/bluebird#3.0.0+20161229155504",
+    "form-data": "registry:dt/form-data#0.0.0+20161115134730",
+    "request": "registry:dt/request#0.0.0+20161230173603",
+    "ws": "registry:dt/ws#0.0.0+20170123022058"
   }
 }

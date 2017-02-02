@@ -1,6 +1,7 @@
-import {Socket}  from 'net'
-import {EventEmitter}  from 'events'
-import * as Tools from '../../lib/tools'
+import { Socket } from 'net'
+import { EventEmitter } from 'events'
+import * as tools from './tools'
+import { rootOrigin } from '../index'
 /**
  * 弹幕客户端, 用于连接弹幕服务器和发送弹幕事件
  * 
@@ -13,13 +14,13 @@ export class CommentClient extends EventEmitter {
    * 创建一个 CommentClient 实例
    * 
    * @param {number} [roomID=23058] 哔哩哔哩音乐台
-   * @param {number} [userID=null]
+   * @param {number} [userID]
    * @memberOf CommentClient
    */
-  constructor(roomID: number = 23058, userID: number = null) {
+  constructor(roomID: number = 23058, userID?: number) {
     super()
     this.roomID = roomID
-    this.userID = userID
+    if (userID != null) this.userID = userID
   }
   /**
    * 用户UID
@@ -27,14 +28,14 @@ export class CommentClient extends EventEmitter {
    * @type {number}
    * @memberOf CommentClient
    */
-  public userID: number = null
+  public userID: number
   /**
    * 房间号, 注意不要短号
    * 
    * @type {number}
    * @memberOf CommentClient
    */
-  public roomID: number = null
+  public roomID: number
   /**
    * 弹幕服务器
    * 
@@ -42,28 +43,28 @@ export class CommentClient extends EventEmitter {
    * @type {string}
    * @memberOf CommentClient
    */
-  private _server: string = null
+  private _server: string
   /**
    * 服务器端口, 目前为788
    * 
    * @type {number}
    * @memberOf CommentClient
    */
-  public port = 788
+  public port: number = 788
   /**
    * 客户端版本, 目前为1
    * 
    * @type {number}
    * @memberOf CommentClient
    */
-  public version = 1
+  public version: number = 1
   /**
-   * 重连次数, 以十次为阈值
+   * 重连次数, 以五次为阈值
    * 
    * @type {number}
    * @memberOf CommentClient
    */
-  public reConnectTime = 0
+  public reConnectTime: number = 0
   /**
    * 是否已经连接到服务器
    * 
@@ -71,7 +72,7 @@ export class CommentClient extends EventEmitter {
    * @type {boolean}
    * @memberOf CommentClient
    */
-  private _connected = false
+  private _connected: boolean = false
   /**
    * 模仿客户端与服务器进行通讯
    * 
@@ -79,7 +80,7 @@ export class CommentClient extends EventEmitter {
    * @type {Socket}
    * @memberOf CommentClient
    */
-  private _Client: Socket = null
+  private _Client: Socket
   /**
    * 全局计时器, 确保只有一个定时任务
    * 
@@ -87,7 +88,7 @@ export class CommentClient extends EventEmitter {
    * @type {NodeJS.Timer}
    * @memberOf CommentClient
    */
-  private _Timer: NodeJS.Timer = null
+  private _Timer: NodeJS.Timer
   /**
    * 当前连接的弹幕服务器
    * 
@@ -95,7 +96,7 @@ export class CommentClient extends EventEmitter {
    * @type {string}
    * @memberOf CommentClient
    */
-  public get server() {
+  public get server(): string {
     return this._server
   }
   /**
@@ -105,7 +106,7 @@ export class CommentClient extends EventEmitter {
    * @type {boolean}
    * @memberOf CommentClient
    */
-  public get connected() {
+  public get connected(): boolean {
     return this._connected
   }
   /**
@@ -117,15 +118,17 @@ export class CommentClient extends EventEmitter {
   public Connect(server?: string) {
     if (this._connected) return
     clearTimeout(this._Timer)
-    if (server === undefined) {
+    if (server == null) {
       // 动态获取服务器地址, 防止B站临时更换
-      Tools.XHR(`http://live.bilibili.com/api/player?id=cid:${this.roomID}&ts=${Date.now().toString(16)}`)
+      let options = { uri: `${rootOrigin}/api/player?id=cid:${this.roomID}&ts=${Date.now().toString(16)}` }
+      tools.XHR<string>(options)
         .then((resolve) => {
-          this._server = resolve.toString().match(/<server>(.+)<\/server>/)[1]
+          let server = resolve.match(/<server>(.+)<\/server>/)
+          this._server = server == null ? 'livecmt-2.bilibili.com' : server[1]
           this._ClientConnect()
         })
         .catch(() => {
-          this._server = 'livecmt-1.bilibili.com'
+          this._server = 'livecmt-2.bilibili.com'
           this._ClientConnect()
         })
     }
@@ -140,13 +143,12 @@ export class CommentClient extends EventEmitter {
    * @memberOf CommentClient
    */
   public Close() {
-    this._connected = false
     clearTimeout(this._Timer)
-    if (this._Client === null) return
+    if (!this._connected) return
     this._Client.end()
     this._Client.destroy()
     this._Client.removeAllListeners()
-    this._Client = null
+    this._connected = false
   }
   /**
    * 重新连接到服务器
@@ -169,7 +171,7 @@ export class CommentClient extends EventEmitter {
     this.Close()
     this._Timer = setTimeout(() => {
       this.Connect()
-    }, 3e4) // 5分钟
+    }, 3e5) // 5分钟
   }
   /**
    * 客户端连接
@@ -209,11 +211,11 @@ export class CommentClient extends EventEmitter {
    * 客户端错误重连
    * 
    * @private
-   * @param {Error} err
+   * @param {Error} error
    * @memberOf CommentClient
    */
-  private _ClientErrorHandler(err: Error) {
-    this.emit('clientError', err)
+  private _ClientErrorHandler(error: Error) {
+    this.emit('clientError', error)
     this._ClientReConnect()
   }
   /**
@@ -295,15 +297,18 @@ export class CommentClient extends EventEmitter {
     let packageLen = data.readUInt32BE(0)
     while (dataLen - packageIndex >= packageLen) {
       switch (data.readUInt32BE(packageIndex + 8)) {
+        case 1:
+        case 2:
         case 3:
           this.emit('commentInLine', data.readUInt32BE(packageIndex + 16))
           break
+        case 4:
         case 5:
           try {
             let dataJson: danmuJson = JSON.parse(data.toString('utf8', packageIndex + 16, packageIndex + packageLen))
             this._ParseClientData(dataJson)
           }
-          catch (err) {
+          catch (error) {
             this.emit('commentError', '意外的弹幕信息')
           }
           break
@@ -330,6 +335,7 @@ export class CommentClient extends EventEmitter {
    * @memberOf CommentClient
    */
   private _ParseClientData(dataJson: danmuJson) {
+    dataJson._roomid = this.roomID
     switch (dataJson.cmd) {
       case 'DANMU_MSG':
         this.emit('DANMU_MSG', dataJson)
@@ -339,6 +345,9 @@ export class CommentClient extends EventEmitter {
         break
       case 'WELCOME':
         this.emit('WELCOME', dataJson)
+        break
+      case 'WELCOME_GUARD':
+        this.emit('WELCOME_GUARD', dataJson)
         break
       case 'SYS_MSG':
         this.emit('SYS_MSG', dataJson)
@@ -353,7 +362,37 @@ export class CommentClient extends EventEmitter {
         this.emit('ROOM_BLOCK_MSG', dataJson)
         break
       case 'ROOM_SILENT_ON':
-        this.emit('ROOM_BLOCK_MSG', dataJson)
+        this.emit('ROOM_SILENT_ON', dataJson)
+        break
+      case 'ROOM_SILENT_OFF':
+        this.emit('ROOM_SILENT_OFF', dataJson)
+        break
+      case 'PREPARING':
+        this.emit('PREPARING', dataJson)
+        break
+      case 'LIVE':
+        this.emit('LIVE', dataJson)
+        break
+      case 'MOBILE_LIVE':
+        this.emit('MOBILE_LIVE', dataJson)
+        break
+      case 'CUT_OFF':
+        this.emit('CUT_OFF', dataJson)
+        break
+      case 'TV_START':
+        this.emit('TV_START', dataJson)
+        break
+      case 'TV_END':
+        this.emit('TV_END', dataJson)
+        break
+      case 'RAFFLE_START':
+        this.emit('RAFFLE_START', dataJson)
+        break
+      case 'RAFFLE_END':
+        this.emit('RAFFLE_END', dataJson)
+        break
+      case 'ROOM_ADMINS':
+        this.emit('ROOM_ADMINS', dataJson)
         break
       default:
         this.emit('OTHER', dataJson)
@@ -369,6 +408,8 @@ export class CommentClient extends EventEmitter {
  */
 export interface danmuJson {
   cmd: string
+  roomid: number
+  _roomid: number
 }
 /**
  * 弹幕消息
@@ -402,7 +443,7 @@ export interface DANMU_MSG extends danmuJson {
     ],
     [
       number, // 徽章等级
-      string, // 徽章名
+      string, // 勋章名
       string, // 主播名
       number, // 直播间
       number
@@ -447,9 +488,8 @@ export interface SEND_GIFT extends danmuJson {
     title?: string // 新头衔
     newMedalName?: string // 新徽章名
     capsule?: any[]
-    specialGift?: boolean
-  },
-  roomid: number
+    specialGift?: SPECIAL_GIFT_Data | boolean // 特殊礼物
+  }
 }
 export interface SEND_GIFT_top_list {
   uid: number // 用户uid
@@ -470,7 +510,6 @@ export interface SEND_GIFT_medal {
  */
 export interface WELCOME extends danmuJson {
   data: WELCOME_Data
-  roomid: number
 }
 export interface WELCOME_Data {
   uid: number // 用户uid
@@ -478,6 +517,21 @@ export interface WELCOME_Data {
   isadmin: number // 管理员
   vip?: number // 月费老爷
   svip?: number // 年费老爷
+}
+/**
+ * 欢迎消息-舰队
+ * 
+ * @export
+ * @interface WELCOME_GUARD
+ * @extends {danmuJson}
+ */
+export interface WELCOME_GUARD extends danmuJson {
+  data: WELCOME_GUARD_Data
+}
+export interface WELCOME_GUARD_Data {
+  uid: number // 用户uid
+  uname: string // 用户名
+  guard_level: number // 舰队等级
 }
 /**
  * 系统消息
@@ -491,8 +545,9 @@ export interface SYS_MSG extends danmuJson {
   rep: number
   styleType?: number // 2为小电视通知
   url: string // 点击跳转的地址
+  real_roomid?: number // 原始房间号
   rnd?: number
-  roomid: number
+  tv_id?: number // 小电视编号
 }
 /**
  * 系统礼物消息
@@ -508,7 +563,6 @@ export interface SYS_GIFT extends danmuJson {
   msgTips: number
   url: string // 点击跳转的地址
   rnd: number
-  roomid: number
 }
 /**
  * 特殊礼物消息
@@ -519,7 +573,6 @@ export interface SYS_GIFT extends danmuJson {
  */
 export interface SPECIAL_GIFT extends danmuJson {
   data: SPECIAL_GIFT_Data
-  roomid: number
 }
 export interface SPECIAL_GIFT_Data {
   '39': SPECIAL_GIFT_Data_BeatStorm // 节奏风暴
@@ -542,7 +595,6 @@ export interface SPECIAL_GIFT_Data_BeatStorm {
 export interface ROOM_BLOCK_MSG extends danmuJson {
   uid: number // 用户uid
   uname: string // 用户名
-  roomid: number
 }
 /**
  * 房间开启禁言
@@ -554,5 +606,120 @@ export interface ROOM_BLOCK_MSG extends danmuJson {
 export interface ROOM_SILENT_ON extends danmuJson {
   countdown: number // 禁言时间
   type: number // -1为全局, 其他为等级
-  roomid: number
+}
+/**
+ * 房间禁言结束
+ * 
+ * @export
+ * @interface ROOM_SILENT_OFF
+ * @extends {danmuJson}
+ */
+export interface ROOM_SILENT_OFF extends danmuJson { }
+/**
+ * 准备直播
+ * 
+ * @export
+ * @interface PREPARING
+ * @extends {danmuJson}
+ */
+export interface PREPARING extends danmuJson {
+  round?: number
+}
+/**
+ * 开始直播
+ * 
+ * @export
+ * @interface LIVE
+ * @extends {danmuJson}
+ */
+export interface LIVE extends danmuJson { }
+/**
+ * 开始手机直播
+ * 
+ * @export
+ * @interface MOBILE_LIVE
+ * @extends {danmuJson}
+ */
+export interface MOBILE_LIVE extends danmuJson {
+  type: number
+}
+/**
+ * 直播强制切断
+ * 
+ * @export
+ * @interface CUT_OFF
+ * @extends {danmuJson}
+ */
+export interface CUT_OFF extends danmuJson {
+  msg: string // 切断原因
+}
+/**
+ * 小电视抽奖开始
+ * 
+ * @export
+ * @interface TV_START
+ * @extends {danmuJson}
+ */
+export interface TV_START extends danmuJson {
+  data: TV_START_Data
+}
+export interface TV_START_Data extends danmuJson {
+  id: number // 小电视编号
+  dtime: number // 持续时间
+  msg: SYS_MSG
+}
+/**
+ * 小电视抽奖结束
+ * 
+ * @export
+ * @interface TV_END
+ * @extends {danmuJson}
+ */
+export interface TV_END extends danmuJson {
+  data: TV_END_Data
+}
+export interface TV_END_Data extends danmuJson {
+  id: number // 小电视编号
+  uname: string // 中奖者
+  sname: string // 赠送者
+  giftName: string // 10W瓜子|抱枕
+}
+/**
+ * 抽奖开始
+ * 
+ * @export
+ * @interface RAFFLE_START
+ * @extends {danmuJson}
+ */
+export interface RAFFLE_START extends danmuJson {
+  data: RAFFLE_START_Data
+}
+export interface RAFFLE_START_Data extends danmuJson {
+  raffleId: number // 编号
+  lotteryType: string // 文案
+  time: number // 持续时间
+}
+/**
+ * 抽奖结束
+ * 
+ * @export
+ * @interface RAFFLE_END
+ * @extends {danmuJson}
+ */
+export interface RAFFLE_END extends danmuJson {
+  data: RAFFLE_END_Data
+}
+export interface RAFFLE_END_Data extends danmuJson {
+  raffleId: number // 编号
+  lotteryType: string // 文案
+}
+/**
+ * 管理员变更
+ * 
+ * @export
+ * @interface ROOM_ADMINS
+ * @extends {danmuJson}
+ */
+export interface ROOM_ADMINS extends danmuJson {
+  uids: number[] // 管理员列表
 }

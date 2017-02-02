@@ -1,7 +1,7 @@
 {
-  "name": "always_online",
+  "name": "bilive_client",
   "version": "0.1.0",
-  "description": "基于Node.JS的网站挂机系统",
+  "description": "基于Node.JS的bilibili直播挂机系统",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -10,7 +10,9 @@
   "license": "Apache-2.0",
   "devDependencies": {},
   "dependencies": {
+    "bluebird": "^3.4.7",
     "jpeg-js": "^0.2.0",
-    "nodemailer": "^2.5.0"
+    "request": "^2.79.0",
+    "ws": "^1.1.1"
   }
 }

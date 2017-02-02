@@ -1,20 +1,20 @@
 {
-  "defaultUserID": 1,
-  "defaultRoomID": 5082,
+  "defaultUserID": null,
+  "defaultRoomID": 23058,
   "eventRooms": [
-    5082
+    23058
   ],
   "beatStormBlackList": [
     10101
   ],
-  "beatStormLiveTop": 5,
   "usersData": {
     "0": {
-      "userName": "admin",
-      "email": "admin@example.com",
-      "failure": 0,
+      "nickname": "admin",
+      "userName": "bishi",
+      "passWord": "password",
+      "accessToken": "",
+      "cookie": "",
       "status": true,
-      "cookie": "DedeUserID=; DedeUserID__ckMd5=; SESSDATA=",
       "doSign": true,
       "treasureBox": true,
       "eventRoom": true,
@@ -23,11 +23,12 @@
       "beatStorm": true
     },
     "1": {
-      "userName": "user",
-      "email": "user@example.com",
-      "failure": 0,
+      "nickname": "user",
+      "userName": "碧诗",
+      "passWord": "password",
+      "accessToken": "",
+      "cookie": "",
       "status": false,
-      "cookie": "DedeUserID=; DedeUserID__ckMd5=; SESSDATA=",
       "doSign": true,
       "treasureBox": true,
       "eventRoom": true,

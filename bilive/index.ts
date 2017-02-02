@@ -1,6 +1,9 @@
-import * as Tools from '../lib/tools'
-import {Online} from './online'
-import {Lottery} from './lottery'
+import * as bluebird from 'bluebird'
+import * as request from 'request'
+import * as tools from './lib/tools'
+import { Online } from './online'
+import { Lottery } from './lottery'
+import { AppClient } from './lib/app_client'
 /**
  * 主程序
  * 
@@ -16,8 +19,18 @@ export class BiLive {
    * @memberOf BiLive
    */
   public Start() {
-    this.Online()
-    this.Lottery()
+    tools.UserInfo()
+      .then((resolve) => {
+        options = resolve
+        let usersData = options.usersData
+        for (let uid in usersData) {
+          let userData = usersData[uid]
+          userData.jar = tools.SetCookie(userData.cookie, rootOrigin)
+        }
+        this.Online()
+        this.Lottery()
+      })
+      .catch((reject) => { tools.Log(reject) })
   }
   /**
    * 在线挂机
@@ -27,8 +40,8 @@ export class BiLive {
   public Online() {
     const SOnline = new Online()
     SOnline
-      .on('cookieInfo', this._CookieInfoHandler.bind(this))
-      .on('signInfo', (userData: userData) => { Tools.Log(appName, `${userData.userName} 正在签到`) })
+      .on('cookieError', this._CookieErrorHandler.bind(this))
+      .on('tokenError', this._TokenErrorHandler.bind(this))
       .Start()
   }
   /**
@@ -38,44 +51,7 @@ export class BiLive {
    */
   public Lottery() {
     const SLottery = new Lottery()
-    SLottery
-      .on('smalltv', this._SmallTVHandler.bind(this))
-      .on('lottery', this._LotteryHandler.bind(this))
-      .on('serverError', this._ServerErrorHandler.bind(this))
-      .Start()
-  }
-  /**
-   * 监听小电视事件
-   * 
-   * @private
-   * @param {userData} userData
-   * @memberOf BiLive
-   */
-  private _SmallTVHandler(userData: userData) {
-    Tools.Log(appName, `${userData.userName} 获得 1 个大号小电视`)
-    Tools.SendMail(appName, '小电视已收入囊中', `<p>${userData.userName}, 你™居然中了个小电视, 滚去<a href="http://live.bilibili.com/i/awards">http://live.bilibili.com/i/awards</a>领取</p>`, userData)
-      .catch(() => { Tools.Log(appName, `${userData.userName} 的大号小电视通知发出失败`) })
-  }
-  /**
-   * 监听抽奖事件
-   * 
-   * @private
-   * @param {userData} userData
-   * @param {string} giftName
-   * @memberOf BiLive
-   */
-  private _LotteryHandler(userData: userData, giftName: string) {
-    Tools.Log(appName, `${userData.userName} 获得了 ${giftName}`)
-  }
-  /**
-   * 监听服务器连接异常事件
-   * 
-   * @private
-   * @memberOf BiLive
-   */
-  private _ServerErrorHandler() {
-    Tools.Log(appName, '弹幕服务器连接中断5分钟')
-    Tools.SendMail(appName, '弹幕服务器连接中断', '<p>弹幕服务器连接中断5分钟， 请及时检查网络配置</p>')
+    SLottery.Start()
   }
   /**
    * 监听cookie失效事件
@@ -84,31 +60,71 @@ export class BiLive {
    * @param {userData} userData
    * @memberOf BiLive
    */
-  private _CookieInfoHandler(userData: userData) {
-    Tools.Log(appName, `${userData.userName} Cookie已失效`)
-    Tools.SendMail(appName, 'Cookie 已失效', `<p>${userData.userName} Cookie失效了, 无法继续享受服务, 但是网站还在建设中, 无法提供自主更新...所以忍着吧</p>`, userData)
-      .catch(() => { Tools.Log(appName, `${userData.userName} Cookie 已失效通知发出失败`) })
+  private _CookieErrorHandler([uid, userData]: [string, userData]) {
+    tools.Log(`${userData.nickname} Cookie已失效`)
+    AppClient.GetCookie(userData.accessToken)
+      .then((resolve) => {
+        userData.cookie = resolve
+        tools.UserInfo(uid, userData)
+        userData.jar = tools.SetCookie(userData.cookie, rootOrigin)
+        tools.Log(`${userData.nickname} Cookie已更新`)
+      })
+      .catch((reject) => {
+        this._TokenErrorHandler([uid, userData])
+      })
+  }
+  /**
+   * 监听token失效事件
+   * 
+   * @private
+   * @param {userData} userData
+   * @memberOf BiLive
+   */
+  private _TokenErrorHandler([uid, userData]: [string, userData]) {
+    tools.Log(userData.nickname, 'Token已失效')
+    AppClient.GetToken({
+      userName: userData.userName,
+      passWord: userData.passWord
+    })
+      .then((resolve) => {
+        userData.accessToken = resolve
+        tools.UserInfo(uid, userData)
+        tools.Log(`${userData.nickname} Token已更新`)
+      })
+      .catch((reject) => {
+        userData.status = false
+        tools.UserInfo(uid, userData)
+        tools.Log(userData.nickname, '密码错误')
+      })
   }
 }
-export const appName = 'BiLive'
+export let rootOrigin = 'https://api.live.bilibili.com'
+export let options: config
 /**
  * 应用设置
  * 
  * @export
  * @interface config
- * @extends {Tools.config}
  */
-export interface config extends Tools.config {
+export interface config {
   defaultUserID: number
   defaultRoomID: number
+  eventRooms: number[]
   beatStormBlackList: number[]
   beatStormLiveTop: number
   usersData: usersData
 }
-export interface usersData extends Tools.usersData {
+export interface usersData {
   [index: string]: userData
 }
-export interface userData extends Tools.userData {
+export interface userData {
+  nickname: string
+  userName: string
+  passWord: string
+  accessToken: string
+  cookie: string
+  jar: request.CookieJar
+  status: boolean
   doSign: boolean
   treasureBox: boolean
   eventRoom: boolean
