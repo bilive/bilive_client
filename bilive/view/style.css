@@ -1,3 +1,6 @@
-body {
-  width: 100%
+.inline {
+  display: inline
+}
+.hide {
+  display: none
 }

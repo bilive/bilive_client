@@ -8,8 +8,83 @@
   <script async src="/view/script.js"></script>
 </head>
 
-<body>
-  <input type="button" name="test" id="test" value="test">
+<body class="hide">
+  <div>
+    <div>
+      <div>
+        <span>默认监听UID</span>
+        <input type="text" id="defaultUserID">
+      </div>
+      <div>
+        <span>默认监听RoomID</span>
+        <input type="text" id="defaultRoomID">
+      </div>
+      <div>
+        <span>挂机活动房间以,分隔</span>
+        <input type="text" id="eventRooms">
+      </div>
+      <div>
+        <span>节奏风暴黑名单以,分隔</span>
+        <input type="text" id="beatStormBlackList">
+      </div>
+    </div>
+    <div>
+      <select name="selectUser" id="select" class="inline"></select>
+      <input type="button" id="save" class="inline" value="保存">
+      <input type="button" id="add" class="inline" value="添加">
+      <input type="button" id="delete" class="inline" value="删除">
+    </div>
+    <div>
+      <div>
+        <span>昵称</span>
+        <input type="text" id="nickname">
+      </div>
+      <div>
+        <span>用户名</span>
+        <input type="text" id="userName">
+      </div>
+      <div>
+        <span>密码</span>
+        <input type="text" id="passWord">
+      </div>
+      <div>
+        <span>Token</span>
+        <input type="text" id="accessToken">
+      </div>
+      <div>
+        <span>Cookie</span>
+        <input type="text" id="cookie">
+      </div>
+      <div>
+        <span>总开关</span>
+        <input type="checkbox" id="status">
+      </div>
+      <div>
+        <span>每日签到</span>
+        <input type="checkbox" id="doSign">
+      </div>
+      <div>
+        <span>每日宝箱</span>
+        <input type="checkbox" id="treasureBox">
+      </div>
+      <div>
+        <span>参与活动</span>
+        <input type="checkbox" id="eventRoom">
+      </div>
+      <div>
+        <span>小电视</span>
+        <input type="checkbox" id="smallTV">
+      </div>
+      <div>
+        <span>参与抽奖</span>
+        <input type="checkbox" id="lottery">
+      </div>
+      <div>
+        <span>节奏风暴</span>
+        <input type="checkbox" id="beatStorm">
+      </div>
+    </div>
+  </div>
 </body>
 
 </html>
