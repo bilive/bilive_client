@@ -17,7 +17,7 @@ export class CommentClient extends EventEmitter {
    * @param {number} [userID]
    * @memberOf CommentClient
    */
-  constructor(roomID: number = 23058, userID?: number) {
+  constructor(roomID: number = 23058, userID?: number | null) {
     super()
     this.roomID = roomID
     if (userID != null) this.userID = userID
@@ -547,7 +547,7 @@ export interface SYS_MSG extends danmuJson {
   url: string // 点击跳转的地址
   real_roomid?: number // 原始房间号
   rnd?: number
-  tv_id?: number // 小电视编号
+  tv_id?: string // 小电视编号
 }
 /**
  * 系统礼物消息

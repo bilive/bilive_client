@@ -64,12 +64,12 @@ export class Lottery extends EventEmitter {
     let usersData = options.usersData
     for (let uid in usersData) {
       let userData = usersData[uid]
-      if (userData.smallTV) {
+      if (userData.status && userData.smallTV) {
         let join: request.Options = {
           uri: `${this.smallTVUrl}/join?roomid=${roomID}&id=${joinID}`,
           jar: userData.jar
         }
-        this._SmallTVjoin(join, userData, joinID)
+        this._SmallTVjoin(join, userData, parseInt(joinID))
       }
     }
   }
@@ -165,7 +165,7 @@ export class Lottery extends EventEmitter {
     let usersData = options.usersData
     for (let uid in usersData) {
       let userData = usersData[uid]
-      if (userData.lottery) {
+      if (userData.status && userData.lottery) {
         let check: request.Options = {
           uri: `${this.lotteryUrl}/check?roomid=${roomID}`,
           jar: userData.jar

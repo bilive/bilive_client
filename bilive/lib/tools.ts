@@ -14,7 +14,10 @@ export function XHR<T>(options: request.Options): bluebird<T> {
   // 开启gzip压缩
   options.gzip = true
   // 添加头信息
-  let headers = { 'user-agent': 'Mozilla/5.0 BiliDroid/4.34.0 (bbcallen@gmail.com)' }
+  let headers = {
+    'user-agent': 'Mozilla/5.0 BiliDroid/4.34.0 (bbcallen@gmail.com)',
+    'referer': 'https://live.bilibili.com/'
+  }
   if (options.method === 'POST') headers['content-type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
   if (options.headers == null) options.headers = headers
   else Object.assign(options.headers, headers)
@@ -45,36 +48,27 @@ export function SetCookie(cookieString: string, url: string): request.CookieJar 
  * 操作数据文件, 为了可以快速应用不使用数据库
  * 
  * @export
- * @param {string} [uid]
- * @param {userData} [userData]
+ * @param {config} [options]
  * @returns {bluebird<config>}
  */
-export function UserInfo(uid?: string, userData?: userData): bluebird<config> {
+export function UserInfo(options?: config): bluebird<config> {
   return new bluebird<config>((resolve, reject) => {
-    fs.readFile(`${__dirname}/../options.json`, (error, data) => {
-      if (error == null) {
-        let appConfig = <config>JSON.parse(data.toString())
-        if (userData == null) {
-          let usersData = appConfig.usersData
-          let canUsersData: usersData = {}
-          for (let uid in usersData) {
-            if (usersData[uid].status) Object.assign(canUsersData, { [uid]: usersData[uid] })
-          }
-          appConfig.usersData = canUsersData
-          resolve(appConfig)
+    if (options == null) {
+      fs.readFile(`${__dirname}/../options.json`, (error, data) => {
+        if (error == null) {
+          let config = <config>JSON.parse(data.toString())
+          resolve(config)
         }
-        else if (uid != null && userData != null) {
-          delete userData.jar
-          Object.assign(appConfig.usersData, { [uid]: userData })
-          let jsonStr = JSON.stringify(appConfig)
-          fs.writeFile(`${__dirname}/../options.json`, jsonStr, (error) => {
-            if (error == null) resolve()
-            else reject(error)
-          })
-        }
-      }
-      else reject(error)
-    })
+        else reject(error)
+      })
+    }
+    else {
+      let config = JSON.stringify(options)
+      fs.writeFile(`${__dirname}/../options.json`, config, (error) => {
+        if (error == null) resolve(options)
+        else reject(error)
+      })
+    }
   })
 }
 /**

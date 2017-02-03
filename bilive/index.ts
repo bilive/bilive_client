@@ -2,6 +2,7 @@ import * as bluebird from 'bluebird'
 import * as request from 'request'
 import * as tools from './lib/tools'
 import { Online } from './online'
+import { Options } from './options'
 import { Lottery } from './lottery'
 import { AppClient } from './lib/app_client'
 /**
@@ -27,10 +28,25 @@ export class BiLive {
           let userData = usersData[uid]
           userData.jar = tools.SetCookie(userData.cookie, rootOrigin)
         }
+        this.Options()
         this.Online()
         this.Lottery()
       })
       .catch((reject) => { tools.Log(reject) })
+  }
+  /**
+   * 用户设置
+   * 
+   * @memberOf BiLive
+   */
+  public Options() {
+    const SOptions = new Options()
+    SOptions
+      .on('changeOptions', (config: config) => {
+        options = config
+        tools.UserInfo(options)
+      })
+      .Start()
   }
   /**
    * 在线挂机
@@ -40,8 +56,8 @@ export class BiLive {
   public Online() {
     const SOnline = new Online()
     SOnline
-      .on('cookieError', this._CookieErrorHandler.bind(this))
-      .on('tokenError', this._TokenErrorHandler.bind(this))
+      .on('cookieError', this._CookieError.bind(this))
+      .on('tokenError', this._TokenError.bind(this))
       .Start()
   }
   /**
@@ -57,43 +73,45 @@ export class BiLive {
    * 监听cookie失效事件
    * 
    * @private
-   * @param {userData} userData
+   * @param {string} uid
    * @memberOf BiLive
    */
-  private _CookieErrorHandler([uid, userData]: [string, userData]) {
+  private _CookieError(uid: string) {
+    let userData = options.usersData[uid]
     tools.Log(`${userData.nickname} Cookie已失效`)
     AppClient.GetCookie(userData.accessToken)
       .then((resolve) => {
-        userData.cookie = resolve
-        tools.UserInfo(uid, userData)
-        userData.jar = tools.SetCookie(userData.cookie, rootOrigin)
+        options.usersData[uid].jar = resolve
+        options.usersData[uid].cookie = resolve.getCookieString(rootOrigin)
+        tools.UserInfo(options)
         tools.Log(`${userData.nickname} Cookie已更新`)
       })
       .catch((reject) => {
-        this._TokenErrorHandler([uid, userData])
+        this._TokenError(uid)
       })
   }
   /**
    * 监听token失效事件
    * 
    * @private
-   * @param {userData} userData
+   * @param {string} uid
    * @memberOf BiLive
    */
-  private _TokenErrorHandler([uid, userData]: [string, userData]) {
+  private _TokenError(uid: string) {
+    let userData = options.usersData[uid]
     tools.Log(userData.nickname, 'Token已失效')
     AppClient.GetToken({
       userName: userData.userName,
       passWord: userData.passWord
     })
       .then((resolve) => {
-        userData.accessToken = resolve
-        tools.UserInfo(uid, userData)
+        options.usersData[uid].accessToken = resolve
+        tools.UserInfo(options)
         tools.Log(`${userData.nickname} Token已更新`)
       })
       .catch((reject) => {
-        userData.status = false
-        tools.UserInfo(uid, userData)
+        options.usersData[uid].status = false
+        tools.UserInfo(options)
         tools.Log(userData.nickname, '密码错误')
       })
   }
@@ -107,7 +125,7 @@ export let options: config
  * @interface config
  */
 export interface config {
-  defaultUserID: number
+  defaultUserID: number | null
   defaultRoomID: number
   eventRooms: number[]
   beatStormBlackList: number[]
@@ -123,7 +141,7 @@ export interface userData {
   passWord: string
   accessToken: string
   cookie: string
-  jar: request.CookieJar
+  jar?: request.CookieJar
   status: boolean
   doSign: boolean
   treasureBox: boolean

@@ -120,10 +120,10 @@ export class AppClient {
    * 
    * @static
    * @param {string} accessToken
-   * @returns {bluebird<string>}
+   * @returns {bluebird<request.CookieJar>}
    * @memberOf AppClient
    */
-  public static GetCookie(accessToken: string): bluebird<string> {
+  public static GetCookie(accessToken: string): bluebird<request.CookieJar> {
     let ssoOrigin = 'https://passport.bilibili.com/api/login/sso'
     let ssoQuery = `access_key=${accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}&gourl=${encodeURIComponent(rootOrigin)}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}`
     let jar = request.jar()
@@ -134,8 +134,8 @@ export class AppClient {
     return tools.XHR<string>(sso)
       .then((resolve) => {
         let cookie = jar.getCookieString(rootOrigin)
-        if (cookie.includes('SESSDATA')) return cookie
-        else return bluebird.reject(cookie)
+        if (cookie.includes('SESSDATA')) return jar
+        else return bluebird.reject(jar)
       })
   }
 }

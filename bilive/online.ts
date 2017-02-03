@@ -35,31 +35,33 @@ export class Online extends EventEmitter {
     let usersData = options.usersData
     for (let uid in usersData) {
       let userData = usersData[uid]
-      // PC
-      let online = {
-        method: 'POST',
-        uri: `${rootOrigin}/User/userOnlineHeart`,
-        jar: userData.jar
+      if (userData.status) {
+        // PC
+        let online = {
+          method: 'POST',
+          uri: `${rootOrigin}/User/userOnlineHeart`,
+          jar: userData.jar
+        }
+        tools.XHR<string>(online)
+          .then((resolve) => {
+            let userOnlineHeartResponse: userOnlineHeartResponse = JSON.parse(resolve)
+            if (userOnlineHeartResponse.code === -101) this.emit('cookieError', uid)
+          })
+          .catch((reject) => { tools.Log(userData.nickname, reject) })
+        // 客户端
+        let heartbeatQuery = `access_key=${userData.accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}`
+        let heartbeat = {
+          method: 'POST',
+          uri: `${rootOrigin}/mobile/userOnlineHeart?${AppClient.ParamsSign(heartbeatQuery)}`,
+          body: `room_id=${roomID}&scale=xxhdpi&`
+        }
+        tools.XHR<string>(heartbeat)
+          .then((resolve) => {
+            let userOnlineHeartResponse: userOnlineHeartResponse = JSON.parse(resolve)
+            if (userOnlineHeartResponse.code === -101) this.emit('tokenError', uid)
+          })
+          .catch((reject) => { tools.Log(userData.nickname, reject) })
       }
-      tools.XHR<string>(online)
-        .then((resolve) => {
-          let userOnlineHeartResponse: userOnlineHeartResponse = JSON.parse(resolve)
-          if (userOnlineHeartResponse.code === -101) this.emit('cookieError', [uid, userData])
-        })
-        .catch((reject) => { tools.Log(userData.nickname, reject) })
-      // 客户端
-      let heartbeatQuery = `access_key=${userData.accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}`
-      let heartbeat = {
-        method: 'POST',
-        uri: `${rootOrigin}/mobile/userOnlineHeart?${AppClient.ParamsSign(heartbeatQuery)}`,
-        body: `room_id=${roomID}&scale=xxhdpi&`
-      }
-      tools.XHR<string>(heartbeat)
-        .then((resolve) => {
-          let userOnlineHeartResponse: userOnlineHeartResponse = JSON.parse(resolve)
-          if (userOnlineHeartResponse.code === -101) this.emit('tokenError', [uid, userData])
-        })
-        .catch((reject) => { tools.Log(userData.nickname, reject) })
     }
     setTimeout(() => {
       this.OnlineHeart()
@@ -76,11 +78,11 @@ export class Online extends EventEmitter {
     for (let uid in usersData) {
       let userData = usersData[uid]
       // 每日签到
-      if (userData.doSign) this._DoSign(userData)
+      if (userData.status && userData.doSign) this._DoSign(userData)
       // 每日宝箱
-      if (userData.treasureBox) this._TreasureBox(userData)
+      if (userData.status && userData.treasureBox) this._TreasureBox(userData)
       // 日常活动
-      if (userData.eventRoom && eventRooms.length > 0) this._EventRoom(userData, eventRooms)
+      if (userData.status && userData.eventRoom && eventRooms.length > 0) this._EventRoom(userData, eventRooms)
     }
     setTimeout(() => {
       this.DoLoop()
