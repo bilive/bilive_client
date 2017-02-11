@@ -184,7 +184,8 @@ export class Online extends EventEmitter {
       .then((resolve) => {
         currentTaskResponse = JSON.parse(resolve)
         if (currentTaskResponse.code === 0) return tools.Sleep(currentTaskResponse.data.minute * 6e4)
-        else return bluebird.reject('已领取所有宝箱')
+        else if (currentTaskResponse.code === -10017) return bluebird.reject('已领取所有宝箱')
+        else return bluebird.reject('获取宝箱状态出错')
       })
       .then((resolve) => {
         let getCaptcha: request.Options = {

@@ -578,11 +578,14 @@ export interface SPECIAL_GIFT_Data {
   '39': SPECIAL_GIFT_Data_BeatStorm // 节奏风暴
 }
 export interface SPECIAL_GIFT_Data_BeatStorm {
-  id?: string // 参与id
-  num?: number // 节奏数量
-  time?: number // 节奏持续时间
-  content?: string // 节奏内容
-  hadJoin?: number // 是否已经参与
+  id: string // 参与id
+  num: number // 节奏数量
+  time: number // 节奏持续时间
+  content: string // 节奏内容
+  hadJoin: number // 是否已经参与
+  action: string // start|end
+}
+export interface SPECIAL_GIFT_Data_BeatStorm {
   action: string // start|end
 }
 /**

@@ -8,6 +8,8 @@ class Options {
   private _D = document
   private _inputDefaultUserID = <HTMLInputElement>this._D.querySelector('#defaultUserID')
   private _inputDefaultRoomID = <HTMLInputElement>this._D.querySelector('#defaultRoomID')
+  private _inputApiOrigin = <HTMLInputElement>this._D.querySelector('#apiOrigin')
+  private _inputApiKey = <HTMLInputElement>this._D.querySelector('#apiKey')
   private _inputEventRooms = <HTMLInputElement>this._D.querySelector('#eventRooms')
   private _inputBeatStormBlackList = <HTMLInputElement>this._D.querySelector('#beatStormBlackList')
   private _selectUser = <HTMLSelectElement>document.querySelector('#select')
@@ -38,7 +40,7 @@ class Options {
    */
   public Start() {
     // WebSocket与客户端通讯
-    this._ws = new WebSocket('ws://127.0.0.1:10788')
+    this._ws = new WebSocket('ws://127.0.0.1:10080')
     this._ws.addEventListener('open', () => {
       this._D.body.classList.remove('hide')
     })
@@ -116,6 +118,8 @@ class Options {
   private _SetOption() {
     this._inputDefaultUserID.value = this._options.defaultUserID == null ? 'null' : this._options.defaultUserID.toString()
     this._inputDefaultRoomID.value = this._options.defaultRoomID.toString()
+    this._inputApiOrigin.value = this._options.apiOrigin
+    this._inputApiKey.value = this._options.apiKey
     let eventRooms = this._options.eventRooms
     this._inputEventRooms.value = eventRooms.join()
     let beatStormBlackList = this._options.beatStormBlackList
@@ -216,6 +220,9 @@ class Options {
     let defaultUserID = this._inputDefaultUserID.value === 'null' ? null : parseInt(this._inputDefaultUserID.value)
     let defaultRoomID = parseInt(this._inputDefaultRoomID.value)
 
+    let apiOrigin = this._inputApiOrigin.value
+    let apiKey = this._inputApiKey.value
+
     let eventRoom = this._inputEventRooms.value
     let eventRooms: number[] = []
     eventRoom.split(',').forEach((value) => { eventRooms.push(parseInt(value)) })
@@ -225,6 +232,8 @@ class Options {
 
     this._options.defaultUserID = defaultUserID
     this._options.defaultRoomID = defaultRoomID
+    this._options.apiOrigin = apiOrigin
+    this._options.apiKey = apiKey
     this._options.eventRooms = eventRooms
     this._options.beatStormBlackList = beatStormBlackList
 

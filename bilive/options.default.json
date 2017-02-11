@@ -1,6 +1,8 @@
 {
   "defaultUserID": null,
   "defaultRoomID": 23058,
+  "apiOrigin": "",
+  "apiKey": "",
   "eventRooms": [
     23058
   ],

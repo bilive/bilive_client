@@ -4,6 +4,7 @@ import * as tools from './lib/tools'
 import { Online } from './online'
 import { Options } from './options'
 import { Lottery } from './lottery'
+import { BeatStorm } from './beatstorm'
 import { AppClient } from './lib/app_client'
 /**
  * 主程序
@@ -31,6 +32,7 @@ export class BiLive {
         this.Options()
         this.Online()
         this.Lottery()
+        this.BeatStorm()
       })
       .catch((reject) => { tools.Log(reject) })
   }
@@ -68,6 +70,15 @@ export class BiLive {
   public Lottery() {
     const SLottery = new Lottery()
     SLottery.Start()
+  }
+  /**
+   * 节奏风暴
+   * 
+   * @memberOf BiLive
+   */
+  public BeatStorm() {
+    const SBeatStorm = new BeatStorm()
+    SBeatStorm.Start()
   }
   /**
    * 监听cookie失效事件
@@ -127,6 +138,8 @@ export let options: config
 export interface config {
   defaultUserID: number | null
   defaultRoomID: number
+  apiOrigin: string
+  apiKey: string
   eventRooms: number[]
   beatStormBlackList: number[]
   beatStormLiveTop: number

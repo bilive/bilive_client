@@ -5,7 +5,13 @@ import * as fs from 'fs'
 import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
 import { config, usersData, userData, rootOrigin, options } from './index'
-
+/**
+ * 程序设置
+ * 
+ * @export
+ * @class Options
+ * @extends {EventEmitter}
+ */
 export class Options extends EventEmitter {
   constructor() {
     super()
@@ -13,35 +19,44 @@ export class Options extends EventEmitter {
   private _wsServer: ws.Server
   private _wsClient: ws
   private _http: http.Server
+  /**
+   * 启动HTTP以及WebSocket服务
+   * 
+   * @memberOf Options
+   */
   public Start() {
-    this._WebSocketServer()
     this._HttpServer()
+    this._WebSocketServer()
   }
+  /**
+   * WebSocket服务
+   * 
+   * @private
+   * @memberOf Options
+   */
   private _WebSocketServer() {
-    this._wsServer = new ws.Server({
-      host: '127.0.0.1',
-      port: 10788
-    })
+    this._wsServer = new ws.Server({ server: this._http })
     this._wsServer.on('connection', (client) => {
       if (this._wsClient != null) this._wsClient.close(1001, JSON.stringify({ cmd: 'close', msg: 'to many connection' }))
+      client
+        .on('error', (error) => { tools.Log(error) })
+        .on('message', (message) => {
+          let msg: message = JSON.parse(message)
+          if (msg.cmd === 'save' && msg.data != null) {
+            let config = <config>msg.data
+            this.emit('changeOptions', config)
+          }
+        })
+        .send(JSON.stringify({ cmd: 'options', data: options }))
       this._wsClient = client
-      this._WebSocketClient()
     })
   }
-  private _WebSocketClient() {
-    this._wsClient
-      .on('message', (message) => {
-        let msg: message = JSON.parse(message)
-        if (msg.cmd === 'save' && msg.data != null) {
-          let config = <config>msg.data
-          this.emit('changeOptions', config)
-        }
-      })
-      .on('error', (error) => {
-        tools.Log(error)
-      })
-      .send(JSON.stringify({ cmd: 'options', data: options }))
-  }
+  /**
+   * HTTP服务
+   * 
+   * @private
+   * @memberOf Options
+   */
   private _HttpServer() {
     this._http = http.createServer((req, res) => {
       let path = url.parse(<string>req.url).path
@@ -74,6 +89,11 @@ export class Options extends EventEmitter {
     })
   }
 }
+/**
+ * 消息格式
+ * 
+ * @interface message
+ */
 interface message {
   cmd: string
   msg?: string
