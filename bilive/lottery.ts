@@ -1,19 +1,56 @@
 import * as request from 'request'
 import * as tools from './lib/tools'
-import { EventEmitter } from 'events'
-import { CommentClient, SYS_MSG, SYS_GIFT } from './lib/comment_client'
-import { usersData, userData, rootOrigin, options } from './index'
+import { rootOrigin } from './index'
 /**
  * 自动参与抽奖
  * 
  * @export
  * @class Lottery
- * @extends {EventEmitter}
  */
-export class Lottery extends EventEmitter {
-  constructor() {
-    super()
+export class Lottery {
+  /**
+   * 创建一个 Lottery 实例
+   * @param {lotteryOptions} lotteryOptions
+   * @memberOf Lottery
+   */
+  constructor(lotteryOptions: lotteryOptions) {
+    this._raffleId = lotteryOptions.raffleId
+    this._roomID = lotteryOptions.roomID
+    this._jar = lotteryOptions.jar
+    this._nickname = lotteryOptions.nickname
   }
+  /**
+   * 参与ID
+   * 
+   * @private
+   * @type {number}
+   * @memberOf Lottery
+   */
+  private _raffleId: number
+  /**
+   * 房间号
+   * 
+   * @private
+   * @type {number}
+   * @memberOf Lottery
+   */
+  private _roomID: number
+  /**
+   * CookieJar
+   * 
+   * @private
+   * @type {request.CookieJar}
+   * @memberOf Lottery
+   */
+  private _jar: request.CookieJar
+  /**
+   * 昵称
+   * 
+   * @private
+   * @type {string}
+   * @memberOf Lottery
+   */
+  private _nickname: string
   /**
    * 小电视抽奖地址
    * 
@@ -22,103 +59,54 @@ export class Lottery extends EventEmitter {
    */
   public smallTVUrl: string = `${rootOrigin}/SmallTV`
   /**
-   * 特殊道具抽奖地址
+   * 抽奖地址
    * 
    * @type {string}
    * @memberOf Lottery
    */
   public lotteryUrl: string = `${rootOrigin}/eventRoom`
   /**
-   * 用于接收系统消息
-   * 
-   * @private
-   * @type {CommentClient}
+   * 活动地址
+   * @type {string}
    * @memberOf Lottery
    */
-  private _CommentClient: CommentClient
+  public lightenUrl: string = `${rootOrigin}/activity/v1/lighten`
   /**
-   * 开始监听系统消息
+   * 参与小电视抽奖
    * 
    * @memberOf Lottery
    */
-  public Start() {
-    this._CommentClient = new CommentClient(options.defaultRoomID, options.defaultUserID)
-    this._CommentClient
-      .on('SYS_MSG', this._SmallTVHandler.bind(this))
-      .on('SYS_GIFT', this._LotteryHandler.bind(this))
-      .on('serverError', (error) => { tools.Log('与弹幕服务器断开五分钟', error) })
-      .Connect()
-  }
-  /**
-   * 监听小电视消息
-   * 
-   * @private
-   * @param {SYS_MSG} dataJson
-   * @memberOf Lottery
-   */
-  private _SmallTVHandler(dataJson: SYS_MSG) {
-    if (dataJson.real_roomid == null || dataJson.tv_id == null) return
-    let roomID = dataJson.real_roomid
-    let joinID = dataJson.tv_id
-    tools.Log(`房间 ${roomID} 赠送了第 ${joinID} 个小电视`)
-    let usersData = options.usersData
-    for (let uid in usersData) {
-      let userData = usersData[uid]
-      if (userData.status && userData.smallTV) {
-        let join: request.Options = {
-          uri: `${this.smallTVUrl}/join?roomid=${roomID}&id=${joinID}`,
-          jar: userData.jar
-        }
-        this._SmallTVjoin(join, userData, parseInt(joinID))
-      }
+  public SmallTV() {
+    let join: request.Options = {
+      uri: `${this.smallTVUrl}/join?roomid=${this._roomID}&id=${this._raffleId}`,
+      jar: this._jar
     }
-  }
-  /**
-   * 参加小电视抽奖
-   * 
-   * @private
-   * @param {request.Options} join
-   * @param {userData} userData
-   * @param {number} joinID
-   * @memberOf Lottery
-   */
-  private _SmallTVjoin(join: request.Options, userData: userData, joinID: number) {
     tools.XHR<string>(join)
       .then((resolve) => {
         let smallTVJoinResponse: smallTVJoinResponse = JSON.parse(resolve)
-        if (smallTVJoinResponse.code === 0) {
-          setTimeout(() => {
-            let reward: request.Options = {
-              uri: `${this.smallTVUrl}/getReward?id=${joinID}`,
-              jar: userData.jar
-            }
-            this._SmallTVReward(reward, userData)
-          }, 2e5) // 200秒
-        }
+        if (smallTVJoinResponse.code === 0) setTimeout(this._SmallTVReward.bind(this), 2e5) // 200秒
       })
-      .catch((reject) => { tools.Log(userData.nickname, reject) })
+      .catch((reject) => { tools.Log(this._nickname, reject) })
   }
   /**
    * 获取小电视中奖结果
    * 
    * @private
-   * @param {request.Options} reward
-   * @param {userData} userData
    * @memberOf Lottery
    */
-  private _SmallTVReward(reward: request.Options, userData: userData) {
+  private _SmallTVReward() {
+    let reward: request.Options = {
+      uri: `${this.smallTVUrl}/getReward?id=${this._raffleId}`,
+      jar: this._jar
+    }
     tools.XHR<string>(reward)
       .then((resolve) => {
         let smallTVRewardResponse: smallTVRewardResponse = JSON.parse(resolve)
         if (smallTVRewardResponse.code === 0) {
-          if (smallTVRewardResponse.data.status === 2) {
-            setTimeout(() => {
-              this._SmallTVReward(reward, userData)
-            }, 3e4) // 30秒
-          }
+          if (smallTVRewardResponse.data.status === 2) setTimeout(this._SmallTVReward.bind(this), 3e4) // 30秒
           else if (smallTVRewardResponse.data.status === 0) {
-            let winGift = smallTVRewardResponse.data.reward
-            let gift: string
+            let winGift = smallTVRewardResponse.data.reward,
+              gift: string
             switch (winGift.id) {
               case 1:
                 gift = '小电视'
@@ -145,110 +133,50 @@ export class Lottery extends EventEmitter {
                 gift = '空虚'
                 break
             }
-            tools.Log(userData.nickname, `获得 ${winGift.num} 个${gift}`)
+            tools.Log(this._nickname, `获得 ${winGift.num} 个${gift}`)
           }
         }
       })
-      .catch((reject) => { tools.Log(userData.nickname, reject) })
-  }
-  /**
-   * 监听特殊礼物抽奖消息
-   * 
-   * @private
-   * @param {SYS_GIFT} dataJson
-   * @memberOf Lottery
-   */
-  private _LotteryHandler(dataJson: SYS_GIFT) {
-    if (dataJson.rep !== 1 || dataJson.url === '') return
-    let roomID = dataJson.roomid
-    tools.Log(`房间 ${roomID} 开启了抽奖`)
-    let usersData = options.usersData
-    for (let uid in usersData) {
-      let userData = usersData[uid]
-      if (userData.status && userData.lottery) {
-        let check: request.Options = {
-          uri: `${this.lotteryUrl}/check?roomid=${roomID}`,
-          jar: userData.jar
-        }
-        this._LotteryCheck(check, userData, roomID)
-      }
-    }
-  }
-  /**
-   * 获取房间抽奖信息
-   * 
-   * @private
-   * @param {request.Options} check
-   * @param {userData} userData
-   * @param {number} roomID
-   * @memberOf Lottery
-   */
-  private _LotteryCheck(check: request.Options, userData: userData, roomID: number) {
-    tools.XHR<string>(check)
-      .then((resolve) => {
-        let lotteryCheckResponse: lotteryCheckResponse = JSON.parse(resolve)
-        if (lotteryCheckResponse.code === 0 && lotteryCheckResponse.data.length > 0) {
-          let unjoins = lotteryCheckResponse.data
-          unjoins.forEach((unjoin) => {
-            if (unjoin.status === false) {
-              let joinID = unjoin.raffleId
-              let join: request.Options = {
-                method: 'POST',
-                uri: `${this.lotteryUrl}/join?roomid=${roomID}&raffleId=${joinID}`,
-                jar: userData.jar
-              }
-              this._LotteryJoin(join, userData, joinID, roomID)
-            }
-          })
-        }
-      })
-      .catch((reject) => { tools.Log(userData.nickname, reject) })
+      .catch((reject) => { tools.Log(this._nickname, reject) })
   }
   /**
    * 参与抽奖
    * 
-   * @private
-   * @param {request.Options} join
-   * @param {userData} userData
-   * @param {number} joinID
-   * @param {number} roomID
    * @memberOf Lottery
    */
-  private _LotteryJoin(join: request.Options, userData: userData, joinID: number, roomID: number) {
-    tools.XHR<string>(join)
-      .then((resolve) => {
-        let lotteryJoinResponse: lotteryJoinResponse = JSON.parse(resolve)
-        if (lotteryJoinResponse.code === 0) {
-          setTimeout(() => {
-            let reward: request.Options = {
-              uri: `${this.lotteryUrl}/notice?roomid=${roomID}&raffleId=${joinID}`,
-              jar: userData.jar
-            }
-            this._LotteryReward(reward, userData)
-          }, 2e5) // 200秒
-        }
-      })
-      .catch((reject) => { tools.Log(userData.nickname, reject) })
+  public Lottery() {
   }
   /**
-   * 获取中奖结果
+   * 参与活动
    * 
-   * @private
-   * @param {request.Options} reward
-   * @param {userData} userData
    * @memberOf Lottery
    */
-  private _LotteryReward(reward: request.Options, userData: userData) {
-    tools.XHR<string>(reward)
+  public Lighten() {
+    let getCoin: request.Options = {
+      method: 'POST',
+      uri: `${this.lightenUrl}/getCoin`,
+      body: `roomid=${this._roomID}&lightenId=${this._raffleId}`,
+      jar: this._jar
+    }
+    tools.XHR<string>(getCoin)
       .then((resolve) => {
-        let lotteryRewardResponse: lotteryRewardResponse = JSON.parse(resolve)
-        if (lotteryRewardResponse.code === 0 && lotteryRewardResponse.data.giftName !== '') {
-          let winGift = lotteryRewardResponse.data
-          tools.Log(userData.nickname, `获得 ${winGift.giftNum} 个 ${winGift.giftName}`)
-        }
+        let lightenRewardResponse: lightenRewardResponse = JSON.parse(resolve)
+        if (lightenRewardResponse.code === 0) tools.Log(this._nickname, lightenRewardResponse.msg)
       })
-      .catch((reject) => { tools.Log(userData.nickname, reject) })
+      .catch((reject) => { tools.Log(this._nickname, reject) })
   }
+}
+/**
+ * 抽奖设置
+ * 
+ * @export
+ * @interface lotteryOptions
+ */
+export interface lotteryOptions {
+  raffleId: number
+  roomID: number
+  jar: request.CookieJar
+  nickname: string
 }
 /**
  * 房间小电视抽奖信息
@@ -306,44 +234,13 @@ interface smallTVRewardResponseDataReward {
   num: number
 }
 /**
- * 房间抽奖信息
+ * 活动抽奖结果信息
  * 
- * @interface lotteryCheckResponse
+ * @interface lightenRewardResponse
  */
-interface lotteryCheckResponse {
+interface lightenRewardResponse {
   code: number
   msg: string
-  data: lotteryCheckResponseData[]
-}
-interface lotteryCheckResponseData {
-  type: string
-  raffleId: number
-  time: number
-  status: boolean
-}
-/**
- * 参与抽奖信息
- * 
- * @interface lotteryJoinResponse
- */
-interface lotteryJoinResponse {
-  code: number
-  msg: string
-  data: any[]
-}
-/**
- * 抽奖结果信息
- * 
- * @interface lotteryRewardResponse
- */
-interface lotteryRewardResponse {
-  code: number
-  msg: string
-  data: lotteryRewardResponseData
-}
-interface lotteryRewardResponseData {
-  giftName: string
-  giftNum: number
-  giftId: number | string
-  raffleId: number
+  message: string
+  data: [number]
 }

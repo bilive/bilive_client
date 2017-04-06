@@ -1,8 +1,6 @@
 import * as request from 'request'
-import * as ws from 'ws'
 import * as tools from './lib/tools'
-import { BiliveClient, message, beatStormInfo } from './lib/bilive_client'
-import { usersData, userData, rootOrigin, options } from './index'
+import { rootOrigin } from './index'
 /**
  * 自动参与节奏风暴
  * 
@@ -11,92 +9,102 @@ import { usersData, userData, rootOrigin, options } from './index'
  */
 export class BeatStorm {
   /**
-   * BiliveClient
-   * 
-   * @private
-   * @type {BiliveClient}
+   * 创建一个 BeatStorm 实例
+   * @param {beatStormOptions} beatStormOptions
    * @memberOf BeatStorm
    */
-  private _Client: BiliveClient
-  /**
-   * 开始挂机
-   * 
-   * @memberOf BeatStorm
-   */
-  public Start() {
-    let apiOrigin = options.apiOrigin, apiKey = options.apiKey
-    if (apiOrigin == null || apiKey == null) return
-    this._Client = new BiliveClient(apiOrigin, apiKey)
-    this._Client
-      .on('serverError', (error) => { tools.Log('与监听服务器断开五分钟', error) })
-      .on('sysmsg', (message: message) => { tools.Log('公告:', message.msg) })
-      .on('beatStorm', this._BeatStormHandler.bind(this))
-      .Connect()
+  constructor(beatStormOptions: beatStormOptions) {
+    this._content = beatStormOptions.content
+    this._roomID = beatStormOptions.roomID
+    this._jar = beatStormOptions.jar
+    this._nickname = beatStormOptions.nickname
+    this._SendMsg()
   }
   /**
-   * 监听节奏风暴消息
+   * 弹幕
    * 
    * @private
-   * @param {message} message
+   * @type {string}
    * @memberOf BeatStorm
    */
-  private _BeatStormHandler(message: message) {
-    let beatStormInfo = <beatStormInfo>message.data
-    let roomID = beatStormInfo.roomID
-    if (options.beatStormBlackList.indexOf(roomID) > -1) return
-    tools.Log(`房间 ${roomID} 赠送了第 ${beatStormInfo.id} 个节奏风暴`)
-    let usersData = options.usersData
-    for (let uid in usersData) {
-      let userData = usersData[uid]
-      if (userData.status && userData.beatStorm) {
-        this._SendMsg(beatStormInfo.content, userData, roomID)
-      }
-    }
-  }
+  private _content: string
+  /**
+   * 房间号
+   * 
+   * @private
+   * @type {number}
+   * @memberOf BeatStorm
+   */
+  private _roomID: number
+  /**
+   * CookieJar
+   * 
+   * @private
+   * @type {request.CookieJar}
+   * @memberOf BeatStorm
+   */
+  private _jar: request.CookieJar
+  /**
+   * 昵称
+   * 
+   * @private
+   * @type {string}
+   * @memberOf BeatStorm
+   */
+  private _nickname: string
   /**
    * 指定直播间发送消息
    * 
    * @private
-   * @param {string} msg
-   * @param {userData} userData
-   * @param {number} roomID
    * @memberOf BeatStorm
    */
-  private _SendMsg(msg: string, userData: userData, roomID: number) {
-    let rnd = Math.floor(Date.now() / 1000 - 60 - 300 * Math.random())
-    let sendMsg: request.Options = {
-      method: 'POST',
-      uri: `${rootOrigin}/msg/send`,
-      body: `color=16777215&fontsize=25&mode=1&msg=${encodeURIComponent(msg)}&rnd=${rnd}&roomid=${roomID}`,
-      jar: userData.jar
-    }
+  private _SendMsg() {
+    let rnd = Math.floor(Date.now() / 1000 - 60 - 300 * Math.random()),
+      sendMsg: request.Options = {
+        method: 'POST',
+        uri: `${rootOrigin}/msg/send`,
+        body: `color=16777215&fontsize=25&mode=1&msg=${encodeURIComponent(this._content)}&rnd=${rnd}&roomid=${this._roomID}`,
+        jar: this._jar
+      }
     tools.XHR<string>(sendMsg)
       .then((resolve) => {
-        let beatStormResponse: BeatStormResponse = JSON.parse(resolve)
+        let beatStormResponse: beatStormResponse = JSON.parse(resolve)
         if (beatStormResponse.data.cmd === 'SPECIAL_TIPS') {
-          let content = beatStormResponse.data.tips.content
-          let gift = content.match(/恭喜你(.*)</)
-          if (gift != null) tools.Log(userData.nickname, gift[1])
+          let content = beatStormResponse.data.tips.content,
+            gift = content.match(/恭喜你(.*)</)
+          if (gift != null) tools.Log(this._nickname, gift[1])
         }
       })
       .catch((error) => { tools.Log(error) })
   }
 }
 /**
+ * 节奏风暴设置
+ * 
+ * @export
+ * @interface beatStormOptions
+ */
+export interface beatStormOptions {
+  content: string
+  roomID: number
+  jar: request.CookieJar
+  nickname: string
+}
+/**
  * 节奏跟风返回值
  * 
  * @interface BeatStormResponse
  */
-interface BeatStormResponse {
+interface beatStormResponse {
   code: number
   msg: string
-  data: BeatStormResponseData
+  data: beatStormResponseData
 }
-interface BeatStormResponseData {
+interface beatStormResponseData {
   cmd: string
-  tips: BeatStormResponseDataTips
+  tips: beatStormResponseDataTips
 }
-interface BeatStormResponseDataTips {
+interface beatStormResponseDataTips {
   gift_id: number
   title: string
   content: string

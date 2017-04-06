@@ -3,7 +3,6 @@
     "node": "registry:dt/node#7.0.0+20170204020307"
   },
   "dependencies": {
-    "bluebird": "registry:dt/bluebird#3.0.0+20161229155504",
     "form-data": "registry:dt/form-data#0.0.0+20161115134730",
     "request": "registry:dt/request#0.0.0+20161230173603",
     "ws": "registry:dt/ws#0.0.0+20170123022058"

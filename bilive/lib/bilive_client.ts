@@ -1,7 +1,7 @@
 import * as ws from 'ws'
 import * as tools from './tools'
 import { EventEmitter } from 'events'
-import { SPECIAL_GIFT, SYS_MSG } from './comment_client'
+import { SPECIAL_GIFT, SYS_MSG, LIGHTEN_START } from './comment_client'
 /**
  * Blive客户端, 用于服务器和发送事件
  * 
@@ -54,12 +54,21 @@ export class BiliveClient extends EventEmitter {
    */
   private _wsClient: ws
   /**
+   * 全局计时器, 确保只有一个定时任务
+   * 
+   * @private
+   * @type {NodeJS.Timer}
+   * @memberOf CommentClient
+   */
+  private _Timer: NodeJS.Timer
+  /**
    * 连接到指定服务器
    * 
    * @memberOf BiliveClient
    */
   public Connect() {
     if (this._wsClient != null && this._wsClient.readyState === ws.OPEN) return
+    clearTimeout(this._Timer)
     this._wsClient = new ws(this._server, [this._apiKey])
     this._wsClient
       .on('error', this._ClientErrorHandler.bind(this))
@@ -72,6 +81,7 @@ export class BiliveClient extends EventEmitter {
    * @memberOf BiliveClient
    */
   public Close() {
+    clearTimeout(this._Timer)
     if (this._wsClient.readyState !== ws.OPEN) return
     this._wsClient.close()
     this._wsClient.removeAllListeners()
@@ -94,7 +104,7 @@ export class BiliveClient extends EventEmitter {
   private _DelayReConnect() {
     this.emit('serverError', '尝试重新连接服务器失败')
     this.Close()
-    setTimeout(() => {
+    this._Timer = setTimeout(() => {
       this.Connect()
     }, 3e5) // 5分钟
   }
@@ -106,7 +116,7 @@ export class BiliveClient extends EventEmitter {
    */
   private _ClientReConnect() {
     this.Close()
-    setTimeout(() => {
+    this._Timer = setTimeout(() => {
       if (this.reConnectTime >= 5) {
         this.reConnectTime = 0
         this._DelayReConnect()
@@ -160,6 +170,9 @@ export class BiliveClient extends EventEmitter {
         case 'beatStorm':
           this.emit('beatStorm', message)
           break
+        case 'lighten':
+          this.emit('lighten', message)
+          break
         default:
           break
       }
@@ -174,7 +187,7 @@ export class BiliveClient extends EventEmitter {
 export interface message {
   cmd: string
   msg?: string
-  data?: smallTVInfo | beatStormInfo
+  data?: smallTVInfo | beatStormInfo | lightenInfo
 }
 /**
  * 小电视信息
@@ -198,4 +211,15 @@ export interface beatStormInfo {
   content: string
   id: number
   rawData: SPECIAL_GIFT
+}
+/**
+ * 快速抽奖信息
+ * 
+ * @export
+ * @interface LightenInfo
+ */
+export interface lightenInfo {
+  roomID: number
+  id: number
+  rawData: LIGHTEN_START
 }

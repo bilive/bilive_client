@@ -1,11 +1,13 @@
-import * as bluebird from 'bluebird'
+import * as fs from 'fs'
 import * as request from 'request'
 import * as tools from './lib/tools'
 import { Online } from './online'
 import { Options } from './options'
-import { Lottery } from './lottery'
-import { BeatStorm } from './beatstorm'
+import { Listener } from './listener'
 import { AppClient } from './lib/app_client'
+import { Lottery, lotteryOptions } from './lottery'
+import { BeatStorm, beatStormOptions } from './beatstorm'
+import { beatStormInfo, smallTVInfo, lightenInfo } from './lib/bilive_client'
 /**
  * 主程序
  * 
@@ -21,20 +23,46 @@ export class BiLive {
    * @memberOf BiLive
    */
   public Start() {
-    tools.UserInfo()
+    this._SetOptionsFile()
+      .then<config>(() => {
+        return tools.UserInfo()
+      })
       .then((resolve) => {
         options = resolve
         let usersData = options.usersData
         for (let uid in usersData) {
           let userData = usersData[uid]
-          userData.jar = tools.SetCookie(userData.cookie, rootOrigin)
+          cookieJar[uid] = tools.SetCookie(userData.cookie, rootOrigin)
         }
         this.Options()
         this.Online()
-        this.Lottery()
-        this.BeatStorm()
+        this.Listener()
       })
       .catch((reject) => { tools.Log(reject) })
+  }
+  /**
+   * 初始化设置文件
+   * 
+   * @private
+   * @returns {Promise<{}>} 
+   * @memberOf BiLive
+   */
+  private _SetOptionsFile(): Promise<{}> {
+    return new Promise((resolve, reject) => {
+      fs.exists(`${__dirname}/options.json`, exists => {
+        if (exists) resolve()
+        else {
+          fs.createReadStream(`${__dirname}/options.default.json`)
+            .pipe(fs.createWriteStream(`${__dirname}/options.json`))
+            .on('error', (error) => {
+              reject(error)
+            })
+            .on('close', () => {
+              resolve()
+            })
+        }
+      })
+    })
   }
   /**
    * 用户设置
@@ -63,22 +91,92 @@ export class BiLive {
       .Start()
   }
   /**
-   * 挂机抽奖
+   * 监听
    * 
    * @memberOf BiLive
    */
-  public Lottery() {
-    const SLottery = new Lottery()
-    SLottery.Start()
+  public Listener() {
+    const SListener = new Listener()
+    SListener
+      .on('smallTV', this._SmallTV.bind(this))
+      .on('beatStorm', this._BeatStorm.bind(this))
+      .on('lighten', this._Lighten.bind(this))
+      .Start()
+  }
+  /**
+   * 参与小电视抽奖
+   * 
+   * @private
+   * @memberOf BiLive
+   */
+  private _SmallTV(smallTVInfo: smallTVInfo) {
+    let usersData = options.usersData
+    for (let uid in usersData) {
+      let userData = usersData[uid], jar = cookieJar[uid]
+      if (userData.status && userData.smallTV) {
+        let lotteryOptions: lotteryOptions = {
+          raffleId: smallTVInfo.id,
+          roomID: smallTVInfo.roomID,
+          jar,
+          nickname: userData.nickname
+        }
+        new Lottery(lotteryOptions).SmallTV()
+      }
+    }
+  }
+  /**
+   * 参与抽奖
+   * 
+   * @private
+   * @memberOf BiLive
+   */
+  private _Lottery() {
+  }
+  /**
+   * 活动
+   * 
+   * @private
+   * @param {lightenInfo} lightenInfo
+   * @memberOf BiLive
+   */
+  private _Lighten(lightenInfo: lightenInfo) {
+    let usersData = options.usersData
+    for (let uid in usersData) {
+      let userData = usersData[uid], jar = cookieJar[uid]
+      if (userData.status && userData.lottery) {
+        let lotteryOptions: lotteryOptions = {
+          raffleId: lightenInfo.id,
+          roomID: lightenInfo.roomID,
+          jar,
+          nickname: userData.nickname
+        }
+        new Lottery(lotteryOptions).Lighten()
+      }
+    }
   }
   /**
    * 节奏风暴
    * 
+   * @private
+   * @param {beatStormInfo} beatStormInfo
    * @memberOf BiLive
    */
-  public BeatStorm() {
-    const SBeatStorm = new BeatStorm()
-    SBeatStorm.Start()
+  private _BeatStorm(beatStormInfo: beatStormInfo) {
+    if (options.beatStormBlackList.indexOf(beatStormInfo.roomID) > -1) return
+    let usersData = options.usersData
+    for (let uid in usersData) {
+      let userData = usersData[uid],
+        jar = cookieJar[uid]
+      if (userData.status && userData.beatStorm) {
+        let beatStormOptions: beatStormOptions = {
+          content: beatStormInfo.content,
+          roomID: beatStormInfo.roomID,
+          jar,
+          nickname: userData.nickname
+        }
+        new BeatStorm(beatStormOptions)
+      }
+    }
   }
   /**
    * 监听cookie失效事件
@@ -92,7 +190,7 @@ export class BiLive {
     tools.Log(`${userData.nickname} Cookie已失效`)
     AppClient.GetCookie(userData.accessToken)
       .then((resolve) => {
-        options.usersData[uid].jar = resolve
+        cookieJar[uid] = resolve
         options.usersData[uid].cookie = resolve.getCookieString(rootOrigin)
         tools.UserInfo(options)
         tools.Log(`${userData.nickname} Cookie已更新`)
@@ -123,12 +221,13 @@ export class BiLive {
       .catch((reject) => {
         options.usersData[uid].status = false
         tools.UserInfo(options)
-        tools.Log(userData.nickname, '密码错误')
+        tools.Log(userData.nickname, 'Token更新失败', reject)
       })
   }
 }
-export let rootOrigin = 'https://api.live.bilibili.com'
-export let options: config
+export let rootOrigin = 'https://api.live.bilibili.com',
+  cookieJar: cookieJar = {},
+  options: config
 /**
  * 应用设置
  * 
@@ -154,7 +253,6 @@ export interface userData {
   passWord: string
   accessToken: string
   cookie: string
-  jar?: request.CookieJar
   status: boolean
   doSign: boolean
   treasureBox: boolean
@@ -162,4 +260,8 @@ export interface userData {
   smallTV: boolean
   lottery: boolean
   beatStorm: boolean
+}
+
+export interface cookieJar {
+  [index: string]: request.CookieJar
 }

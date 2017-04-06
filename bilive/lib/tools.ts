@@ -1,6 +1,5 @@
 import * as fs from 'fs'
 import * as request from 'request'
-import * as bluebird from 'bluebird'
 import { config, usersData, userData } from '../index'
 /**
  * 添加request头信息
@@ -8,9 +7,9 @@ import { config, usersData, userData } from '../index'
  * @export
  * @template T
  * @param {request.Options} options
- * @returns {bluebird<T>}
+ * @returns {Promise<T>}
  */
-export function XHR<T>(options: request.Options): bluebird<T> {
+export function XHR<T>(options: request.Options): Promise<T> {
   // 开启gzip压缩
   options.gzip = true
   // 添加头信息
@@ -22,7 +21,7 @@ export function XHR<T>(options: request.Options): bluebird<T> {
   if (options.headers == null) options.headers = headers
   else Object.assign(options.headers, headers)
   // 返回异步request
-  return new bluebird<T>((resolve, reject) => {
+  return new Promise<T>((resolve, reject) => {
     request(options, (error, response, body) => {
       if (error == null) resolve(body)
       else reject(error)
@@ -49,10 +48,10 @@ export function SetCookie(cookieString: string, url: string): request.CookieJar 
  * 
  * @export
  * @param {config} [options]
- * @returns {bluebird<config>}
+ * @returns {Promise<config>}
  */
-export function UserInfo(options?: config): bluebird<config> {
-  return new bluebird<config>((resolve, reject) => {
+export function UserInfo(options?: config): Promise<config> {
+  return new Promise<config>((resolve, reject) => {
     if (options == null) {
       fs.readFile(`${__dirname}/../options.json`, (error, data) => {
         if (error == null) {
@@ -86,10 +85,10 @@ export function Log(message?: any, ...optionalParams: any[]) {
  * 
  * @export
  * @param {number} ms
- * @returns {bluebird<{}>}
+ * @returns {Promise<{}>}
  */
-export function Sleep(ms: number): bluebird<{}> {
-  return new bluebird((resolve, reject) => {
+export function Sleep(ms: number): Promise<{}> {
+  return new Promise((resolve, reject) => {
     setTimeout(resolve, ms, 'sleep')
   })
 }

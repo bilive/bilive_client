@@ -274,7 +274,7 @@ export class CommentClient extends EventEmitter {
    * @memberOf CommentClient
    */
   private _ClientSendData(totalLen: number, headLen: number, version: number, param4: number, param5 = 1, data?: string): boolean {
-    var bufferData = new Buffer(totalLen)
+    var bufferData = Buffer.alloc(totalLen)
     bufferData.writeUInt32BE(totalLen, 0)
     bufferData.writeUInt16BE(headLen, 4)
     bufferData.writeUInt16BE(version, 6)
@@ -346,6 +346,9 @@ export class CommentClient extends EventEmitter {
       case 'WELCOME':
         this.emit('WELCOME', dataJson)
         break
+      case 'GUARD_BUY':
+        this.emit('GUARD_BUY', dataJson)
+        break
       case 'WELCOME_GUARD':
         this.emit('WELCOME_GUARD', dataJson)
         break
@@ -354,6 +357,15 @@ export class CommentClient extends EventEmitter {
         break
       case 'SYS_GIFT':
         this.emit('SYS_GIFT', dataJson)
+        break
+      case 'EVENT_CMD':
+        this.emit('EVENT_CMD', dataJson)
+        break
+      case 'LIGHTEN_START':
+        this.emit('LIGHTEN_START', dataJson)
+        break
+      case 'LIGHTEN_END':
+        this.emit('LIGHTEN_END', dataJson)
         break
       case 'SPECIAL_GIFT':
         this.emit('SPECIAL_GIFT', dataJson)
@@ -393,6 +405,9 @@ export class CommentClient extends EventEmitter {
         break
       case 'ROOM_ADMINS':
         this.emit('ROOM_ADMINS', dataJson)
+        break
+      case 'CHANGE_ROOM_INFO':
+        this.emit('CHANGE_ROOM_INFO', dataJson)
         break
       default:
         this.emit('OTHER', dataJson)
@@ -438,6 +453,7 @@ export interface DANMU_MSG extends danmuJson {
       string, // 用户名
       number, // 月费老爷
       number, // 年费老爷
+      number, // 舰队
       number,
       number
     ],
@@ -455,7 +471,8 @@ export interface DANMU_MSG extends danmuJson {
       number | string// 等级排名
     ],
     [
-      string // 头衔
+      string, // 头衔
+      string
     ]
   ]
 }
@@ -467,36 +484,36 @@ export interface DANMU_MSG extends danmuJson {
  * @extends {danmuJson}
  */
 export interface SEND_GIFT extends danmuJson {
-  data:
-  {
-    giftName: string // 道具文案
-    num: number // 数量
-    uname: string // 用户名
-    rcost: number
-    uid: number // 用户uid
-    top_list: SEND_GIFT_top_list[], // 更新排行榜
-    timestamp: number
-    giftId: number // 礼物id
-    giftType: number // 礼物类型(活动)
-    action: string // 喂食|赠送
-    super: number // 连击
-    price: number // 价值
-    rnd: number
-    newMedal: number // 是否获取到新徽章
-    newTitle?: number // 是否获取到新头衔
-    medal: number | SEND_GIFT_medal // 新徽章
-    title?: string // 新头衔
-    newMedalName?: string // 新徽章名
-    capsule?: any[]
-    specialGift?: SPECIAL_GIFT_Data | boolean // 特殊礼物
-  }
+  data: SEND_GIFT_Data
 }
-export interface SEND_GIFT_top_list {
+export interface SEND_GIFT_Data {
+  giftName: string // 道具文案
+  num: number // 数量
+  uname: string // 用户名
+  rcost: number
+  uid: number // 用户uid
+  top_list: SEND_GIFT_Data_top_list[], // 更新排行榜
+  timestamp: number
+  giftId: number // 礼物id
+  giftType: number // 礼物类型(活动)
+  action: string // 喂食|赠送
+  super: number // 连击
+  price: number // 价值
+  rnd: number
+  newMedal: number // 是否获取到新徽章
+  newTitle?: number // 是否获取到新头衔
+  medal: number | SEND_GIFT_Data_medal // 新徽章
+  title?: string // 新头衔
+  newMedalName?: string // 新徽章名
+  capsule?: any[]
+  specialGift?: SPECIAL_GIFT_Data | boolean // 特殊礼物
+}
+export interface SEND_GIFT_Data_top_list {
   uid: number // 用户uid
   uname: string // 用户名
   coin: number // 投喂总数
 }
-export interface SEND_GIFT_medal {
+export interface SEND_GIFT_Data_medal {
   medalId: number // 徽章id
   medalName: string // 徽章名
   level: number // 徽章等级
@@ -515,8 +532,42 @@ export interface WELCOME_Data {
   uid: number // 用户uid
   uname: string // 用户名
   isadmin: number // 管理员
-  vip?: number // 月费老爷
-  svip?: number // 年费老爷
+  vip: number // 月费老爷
+}
+export interface WELCOME_Data {
+  uid: number // 用户uid
+  uname: string // 用户名
+  isadmin: number // 管理员
+  svip: number // 年费老爷
+}
+/**
+ * 舰队购买
+ * 
+ * @export
+ * @interface GUARD_BUY
+ * @extends {danmuJson}
+ */
+export interface GUARD_BUY extends danmuJson {
+  data: GUARD_BUY_Data
+}
+export interface GUARD_BUY_Data {
+  uid: number // 用户uid
+  username: string // 用户名
+  guard_level: number // 舰队等级
+  num: number // 购买数量
+}
+/**
+ * 舰队消息
+ * 
+ * @export
+ * @interface GUARD_MSG
+ * @extends {danmuJson}
+ */
+export interface GUARD_MSG extends danmuJson {
+  data: GUARD_MSG_Data
+}
+export interface GUARD_MSG_Data {
+  msg: string // 消息内容
 }
 /**
  * 欢迎消息-舰队
@@ -534,7 +585,7 @@ export interface WELCOME_GUARD_Data {
   guard_level: number // 舰队等级
 }
 /**
- * 系统消息
+ * 系统消息, 广播
  * 
  * @export
  * @interface SYS_MSG
@@ -543,14 +594,19 @@ export interface WELCOME_GUARD_Data {
 export interface SYS_MSG extends danmuJson {
   msg: string // 消息内容
   rep: number
-  styleType?: number // 2为小电视通知
   url: string // 点击跳转的地址
-  real_roomid?: number // 原始房间号
-  rnd?: number
-  tv_id?: string // 小电视编号
+}
+export interface SYS_MSG extends danmuJson {
+  msg: string // 消息内容
+  rep: number
+  styleType: number // 2为小电视通知
+  url: string // 点击跳转的地址
+  real_roomid: number // 原始房间号
+  rnd: number
+  tv_id: string // 小电视编号
 }
 /**
- * 系统礼物消息
+ * 系统礼物消息, 广播
  * 
  * @export
  * @interface SYS_GIFT
@@ -558,11 +614,59 @@ export interface SYS_MSG extends danmuJson {
  */
 export interface SYS_GIFT extends danmuJson {
   msg: string // 消息内容
+  rnd: number
+  uid: number
+}
+export interface SYS_GIFT extends danmuJson {
+  msg: string // 消息内容
   tips: string // 聊天窗口tip
   rep: number // 1为活动消息
   msgTips: number
   url: string // 点击跳转的地址
   rnd: number
+}
+/**
+ * 活动快捷参与
+ * 
+ * @export
+ * @interface EVENT_CMD
+ * @extends {danmuJson}
+ */
+export interface EVENT_CMD extends danmuJson {
+  data: EVENT_CMD_Data
+}
+export interface EVENT_CMD_Data extends danmuJson {
+  event_type: string // 活动标识
+  event_img: string // 显示图片
+}
+/**
+ * 活动快捷参与
+ * 
+ * @export
+ * @interface LIGHTEN_START
+ * @extends {danmuJson}
+ */
+export interface LIGHTEN_START extends danmuJson {
+  data: LIGHTEN_START_Data
+}
+export interface LIGHTEN_START_Data extends danmuJson {
+  type: string // 活动标识
+  lightenId: number // 参与id
+  time: number // 持续时间
+}
+/**
+ * 活动快捷参与结束
+ * 
+ * @export
+ * @interface LIGHTEN_END
+ * @extends {danmuJson}
+ */
+export interface LIGHTEN_END extends danmuJson {
+  data: LIGHTEN_END_Data
+}
+export interface LIGHTEN_END_Data extends danmuJson {
+  type: string // 活动标识
+  lightenId: number // 参与id
 }
 /**
  * 特殊礼物消息
@@ -607,8 +711,9 @@ export interface ROOM_BLOCK_MSG extends danmuJson {
  * @extends {danmuJson}
  */
 export interface ROOM_SILENT_ON extends danmuJson {
-  countdown: number // 禁言时间
   type: number // -1为全局, 其他为等级
+  level: number // 禁言等级
+  second: number //禁言时间, -1为本次
 }
 /**
  * 房间禁言结束
@@ -686,6 +791,7 @@ export interface TV_END_Data extends danmuJson {
   uname: string // 中奖者
   sname: string // 赠送者
   giftName: string // 10W瓜子|抱枕
+  mobileTips: string // 中奖消息
 }
 /**
  * 抽奖开始
@@ -725,4 +831,14 @@ export interface RAFFLE_END_Data extends danmuJson {
  */
 export interface ROOM_ADMINS extends danmuJson {
   uids: number[] // 管理员列表
+}
+/**
+ * 房间设置变更
+ * 
+ * @export
+ * @interface CHANGE_ROOM_INFO
+ * @extends {danmuJson}
+ */
+export interface CHANGE_ROOM_INFO extends danmuJson {
+  background: string // 背景图片
 }

@@ -26,7 +26,6 @@ export class Options extends EventEmitter {
    */
   public Start() {
     this._HttpServer()
-    this._WebSocketServer()
   }
   /**
    * WebSocket服务
@@ -36,20 +35,22 @@ export class Options extends EventEmitter {
    */
   private _WebSocketServer() {
     this._wsServer = new ws.Server({ server: this._http })
-    this._wsServer.on('connection', (client) => {
-      if (this._wsClient != null) this._wsClient.close(1001, JSON.stringify({ cmd: 'close', msg: 'to many connection' }))
-      client
-        .on('error', (error) => { tools.Log(error) })
-        .on('message', (message) => {
-          let msg: message = JSON.parse(message)
-          if (msg.cmd === 'save' && msg.data != null) {
-            let config = <config>msg.data
-            this.emit('changeOptions', config)
-          }
-        })
-        .send(JSON.stringify({ cmd: 'options', data: options }))
-      this._wsClient = client
-    })
+    this._wsServer
+      .on('error', (error) => { tools.Log(error) })
+      .on('connection', (client) => {
+        if (this._wsClient != null) this._wsClient.close(1001, JSON.stringify({ cmd: 'close', msg: 'to many connection' }))
+        client
+          .on('error', (error) => { tools.Log(error) })
+          .on('message', (message) => {
+            let msg: message = JSON.parse(message)
+            if (msg.cmd === 'save' && msg.data != null) {
+              let config = <config>msg.data
+              this.emit('changeOptions', config)
+            }
+          })
+          .send(JSON.stringify({ cmd: 'options', data: options }))
+        this._wsClient = client
+      })
   }
   /**
    * HTTP服务
@@ -85,8 +86,10 @@ export class Options extends EventEmitter {
       })
     })
     this._http.listen(10080, '127.0.0.1', () => {
+      this._WebSocketServer()
       tools.Log(`浏览器打开 http://127.0.0.1:10080 进行设置`)
     })
+      .on('error', (error) => { tools.Log(error) })
   }
 }
 /**

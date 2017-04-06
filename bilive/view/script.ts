@@ -1,4 +1,3 @@
-import { config, usersData, userData } from './../index'
 /**
  * 设置
  * 
@@ -45,8 +44,12 @@ class Options {
       this._D.body.classList.remove('hide')
     })
     this._ws.addEventListener('close', (message) => {
-      let msg: message = JSON.parse(message.reason)
-      this._D.body.innerText = <string>msg.msg
+      try {
+        let msg: message = JSON.parse(message.reason)
+        this._D.body.innerText = <string>msg.msg
+      } catch (error) {
+        this._D.body.innerText = 'connection error'
+      }
     })
     this._ws.addEventListener('error', () => {
       this._D.body.innerText = 'connection error'
@@ -258,4 +261,32 @@ interface message {
   cmd: string
   msg?: string
   data?: any
+}
+
+interface config {
+  defaultUserID: number | null
+  defaultRoomID: number
+  apiOrigin: string
+  apiKey: string
+  eventRooms: number[]
+  beatStormBlackList: number[]
+  beatStormLiveTop: number
+  usersData: usersData
+}
+interface usersData {
+  [index: string]: userData
+}
+interface userData {
+  nickname: string
+  userName: string
+  passWord: string
+  accessToken: string
+  cookie: string
+  status: boolean
+  doSign: boolean
+  treasureBox: boolean
+  eventRoom: boolean
+  smallTV: boolean
+  lottery: boolean
+  beatStorm: boolean
 }

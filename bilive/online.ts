@@ -1,10 +1,9 @@
-import * as bluebird from 'bluebird'
 import * as request from 'request'
 import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
 import { AppClient } from './lib/app_client'
 import { DeCaptcha } from './lib/boxcaptcha'
-import { usersData, userData, rootOrigin, options } from './index'
+import { usersData, userData, rootOrigin, options, cookieJar } from './index'
 /**
  * 挂机得经验
  * 
@@ -31,8 +30,8 @@ export class Online extends EventEmitter {
    * @memberOf Online
    */
   public OnlineHeart() {
-    let roomID = options.defaultRoomID
-    let usersData = options.usersData
+    let roomID = options.defaultRoomID,
+      usersData = options.usersData
     for (let uid in usersData) {
       let userData = usersData[uid]
       if (userData.status) {
@@ -40,7 +39,7 @@ export class Online extends EventEmitter {
         let online = {
           method: 'POST',
           uri: `${rootOrigin}/User/userOnlineHeart`,
-          jar: userData.jar
+          jar: cookieJar[uid]
         }
         tools.XHR<string>(online)
           .then((resolve) => {
@@ -49,12 +48,12 @@ export class Online extends EventEmitter {
           })
           .catch((reject) => { tools.Log(userData.nickname, reject) })
         // 客户端
-        let heartbeatQuery = `access_key=${userData.accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}`
-        let heartbeat = {
-          method: 'POST',
-          uri: `${rootOrigin}/mobile/userOnlineHeart?${AppClient.ParamsSign(heartbeatQuery)}`,
-          body: `room_id=${roomID}&scale=xxhdpi&`
-        }
+        let heartbeatQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`,
+          heartbeat = {
+            method: 'POST',
+            uri: `${rootOrigin}/mobile/userOnlineHeart?${AppClient.ParamsSign(heartbeatQuery)}`,
+            body: `room_id=${roomID}&scale=xxhdpi&`
+          }
         tools.XHR<string>(heartbeat)
           .then((resolve) => {
             let userOnlineHeartResponse: userOnlineHeartResponse = JSON.parse(resolve)
@@ -73,16 +72,16 @@ export class Online extends EventEmitter {
    * @memberOf Online
    */
   public DoLoop() {
-    let eventRooms = options.eventRooms
-    let usersData = options.usersData
+    let eventRooms = options.eventRooms,
+      usersData = options.usersData
     for (let uid in usersData) {
       let userData = usersData[uid]
       // 每日签到
-      if (userData.status && userData.doSign) this._DoSign(userData)
+      if (userData.status && userData.doSign) this._DoSign(uid)
       // 每日宝箱
-      if (userData.status && userData.treasureBox) this._TreasureBox(userData)
+      if (userData.status && userData.treasureBox) this._TreasureBox(uid)
       // 日常活动
-      if (userData.status && userData.eventRoom && eventRooms.length > 0) this._EventRoom(userData, eventRooms)
+      if (userData.status && userData.eventRoom && eventRooms.length > 0) this._EventRoom(uid, eventRooms)
     }
     setTimeout(() => {
       this.DoLoop()
@@ -92,12 +91,13 @@ export class Online extends EventEmitter {
    * 每日签到
    * 
    * @private
-   * @param {userData} userData
+   * @param {string} uid
    * @memberOf Online
    */
-  private _DoSign(userData: userData) {
-    let signQuery = `access_key=${userData.accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}&scale=xxhdpi`
-    let sign: request.Options = { uri: `${rootOrigin}/AppUser/getSignInfo?${AppClient.ParamsSign(signQuery)}` }
+  private _DoSign(uid: string) {
+    let userData = options.usersData[uid],
+      signQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`,
+      sign: request.Options = { uri: `${rootOrigin}/AppUser/getSignInfo?${AppClient.ParamsSign(signQuery)}` }
     tools.XHR<string>(sign)
       .then((resolve) => {
         let signInfoResponse: signInfoResponse = JSON.parse(resolve)
@@ -109,22 +109,22 @@ export class Online extends EventEmitter {
    * 每日签到PC
    * 
    * @private
-   * @param {userData} userData
+   * @param {string} uid
    * @memberOf Online
    */
-  private _DoSignPC(userData: userData) {
-    let sign: request.Options = {
-      uri: `${rootOrigin}/sign/GetSignInfo`,
-      jar: userData.jar
-    }
+  private _DoSignPC(uid: string) {
+    let userData = options.usersData[uid],
+      sign: request.Options = {
+        uri: `${rootOrigin}/sign/GetSignInfo`,
+        jar: cookieJar[uid]
+      }
     tools.XHR<string>(sign)
       .then((resolve) => {
         let signInfoResponse: signInfoResponse = JSON.parse(resolve)
         if (signInfoResponse.data.status === 0) {
-          this.emit('signInfo', userData)
           let doSign: request.Options = {
             uri: `${rootOrigin}/sign/doSign`,
-            jar: userData.jar
+            jar: cookieJar[uid]
           }
           tools.XHR(doSign).catch((reject) => { tools.Log(userData.nickname, reject) })
         }
@@ -135,34 +135,36 @@ export class Online extends EventEmitter {
    * 每日宝箱
    * 
    * @private
-   * @param {userData} userData
+   * @param {string} uid
    * @memberOf Online
    */
-  private _TreasureBox(userData: userData) {
-    // 获取宝箱状态,换房间会重新冷却
-    let currentTaskResponse: currentTaskResponse
-    let currentTaskUrl = `${rootOrigin}/mobile/freeSilverCurrentTask`
-    let currentTaskQuery = `access_key=${userData.accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}&ts=${AppClient.TS * 1000}`
-    let currentTask: request.Options = { uri: `${currentTaskUrl}?${AppClient.ParamsSign(currentTaskQuery)}` }
+  private _TreasureBox(uid: string) {
+    let userData = options.usersData[uid],
+      // 获取宝箱状态,换房间会重新冷却
+      currentTaskResponse: currentTaskResponse,
+      currentTaskUrl = `${rootOrigin}/mobile/freeSilverCurrentTask`,
+      currentTaskQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`,
+      currentTask: request.Options = { uri: `${currentTaskUrl}?${AppClient.ParamsSign(currentTaskQuery)}` }
     tools.XHR<string>(currentTask)
       .then((resolve) => {
         currentTaskResponse = JSON.parse(resolve)
         if (currentTaskResponse.code === 0) return tools.Sleep(currentTaskResponse.data.minute * 6e4)
-        else return bluebird.reject('已领取所有宝箱')
+        else if (currentTaskResponse.code === -10017) return Promise.reject('已领取所有宝箱')
+        else return Promise.reject('获取宝箱状态出错')
       })
       .then<string>((resolve) => {
-        let awardUrl = `${rootOrigin}/mobile/freeSilverAward`
-        let awardQuery = `access_key=${userData.accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}&ts=${AppClient.TS * 1000}`
-        let award: request.Options = { uri: `${awardUrl}?${AppClient.ParamsSign(awardQuery)}` }
+        let awardUrl = `${rootOrigin}/mobile/freeSilverAward`,
+          awardQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`,
+          award: request.Options = { uri: `${awardUrl}?${AppClient.ParamsSign(awardQuery)}` }
         return tools.XHR<string>(award)
       })
-      .then((resolve) => {
+      .then<never | undefined>((resolve) => {
         let awardResponse: awardResponse = JSON.parse(resolve)
-        if (awardResponse.code === 0) this._TreasureBox(userData)
-        else return bluebird.reject('error')
+        if (awardResponse.code === 0) this._TreasureBox(uid)
+        else return Promise.reject('error')
       })
       .catch((reject) => {
-        if (reject === 'error') this._TreasureBox(userData)
+        if (reject === 'error') this._TreasureBox(uid)
         else tools.Log(userData.nickname, reject)
       })
   }
@@ -170,28 +172,29 @@ export class Online extends EventEmitter {
    * 每日宝箱PC
    * 
    * @private
-   * @param {userData} userData
+   * @param {string} uid
    * @memberOf Online
    */
-  private _TreasureBoxPC(userData: userData) {
-    // 获取宝箱状态,换房间会重新冷却
-    let currentTaskResponse: currentTaskResponse
-    let getCurrentTask: request.Options = {
-      uri: `${rootOrigin}/FreeSilver/getCurrentTask?_=${Date.now()}`,
-      jar: userData.jar
-    }
+  private _TreasureBoxPC(uid: string) {
+    let userData = options.usersData[uid],
+      // 获取宝箱状态,换房间会重新冷却
+      currentTaskResponse: currentTaskResponse,
+      getCurrentTask: request.Options = {
+        uri: `${rootOrigin}/FreeSilver/getCurrentTask?_=${Date.now()}`,
+        jar: cookieJar[uid]
+      }
     tools.XHR<string>(getCurrentTask)
       .then((resolve) => {
         currentTaskResponse = JSON.parse(resolve)
         if (currentTaskResponse.code === 0) return tools.Sleep(currentTaskResponse.data.minute * 6e4)
-        else if (currentTaskResponse.code === -10017) return bluebird.reject('已领取所有宝箱')
-        else return bluebird.reject('获取宝箱状态出错')
+        else if (currentTaskResponse.code === -10017) return Promise.reject('已领取所有宝箱')
+        else return Promise.reject('获取宝箱状态出错')
       })
       .then((resolve) => {
         let getCaptcha: request.Options = {
           uri: `${rootOrigin}/freeSilver/getCaptcha?ts=${Date.now()}`,
           encoding: null,
-          jar: userData.jar
+          jar: cookieJar[uid]
         }
         return tools.XHR<Buffer>(getCaptcha)
       })
@@ -200,22 +203,22 @@ export class Online extends EventEmitter {
         if (captcha > -1) {
           let getAward: request.Options = {
             uri: `${rootOrigin}/FreeSilver/getAward?time_start=${currentTaskResponse.data.time_start}&time_end=${currentTaskResponse.data.time_end}&captcha=${captcha}&_=${Date.now()}`,
-            jar: userData.jar
+            jar: cookieJar[uid]
           }
           return tools.XHR<string>(getAward)
         }
-        else return bluebird.reject('error')
+        else return Promise.reject('error')
       })
       .then((resolve) => {
         let awardResponse: awardResponse = JSON.parse(resolve)
         if (awardResponse.code === 0) {
-          this._TreasureBoxPC(userData)
-          return bluebird.resolve('ok')
+          this._TreasureBoxPC(uid)
+          return Promise.resolve('ok')
         }
-        else return bluebird.reject('error')
+        else return Promise.reject('error')
       })
       .catch((reject) => {
-        if (reject === 'error') this._TreasureBoxPC(userData)
+        if (reject === 'error') this._TreasureBoxPC(uid)
         else tools.Log(userData.nickname, reject)
       })
   }
@@ -223,20 +226,21 @@ export class Online extends EventEmitter {
    * 日常活动
    * 
    * @private
-   * @param {userData} userData
+   * @param {string} uid
    * @param {number[]} roomIDs
    * @memberOf Online
    */
-  private _EventRoom(userData: userData, roomIDs: number[]) {
+  private _EventRoom(uid: string, roomIDs: number[]) {
+    let userData = options.usersData[uid]
     roomIDs.forEach((roomID) => {
       let getInfo: request.Options = { uri: `${rootOrigin}/live/getInfo?roomid=${roomID}` }
       tools.XHR<string>(getInfo)
         .then((resolve) => {
-          let roomInfoResponse: roomInfoResponse = JSON.parse(resolve)
-          let index: request.Options = {
-            uri: `${rootOrigin}/eventRoom/index?ruid=${roomInfoResponse.data.MASTERID}`,
-            jar: userData.jar
-          }
+          let roomInfoResponse: roomInfoResponse = JSON.parse(resolve),
+            index: request.Options = {
+              uri: `${rootOrigin}/eventRoom/index?ruid=${roomInfoResponse.data.MASTERID}`,
+              jar: cookieJar[uid]
+            }
           return tools.XHR<string>(index)
         })
         .then((resolve) => {
@@ -244,7 +248,7 @@ export class Online extends EventEmitter {
           if (eventRoomResponse.code === 0 && eventRoomResponse.data.heart) {
             let heartTime = eventRoomResponse.data.heartTime * 1000
             setTimeout(() => {
-              this._EventRoomHeart(userData, heartTime, roomID)
+              this._EventRoomHeart(uid, heartTime, roomID)
             }, heartTime)
           }
         })
@@ -255,23 +259,24 @@ export class Online extends EventEmitter {
    * 发送活动心跳包
    * 
    * @private
-   * @param {userData} userData
+   * @param {string} uid
    * @param {number} heartTime
    * @param {number} roomID
    * @memberOf Online
    */
-  private _EventRoomHeart(userData: userData, heartTime: number, roomID: number) {
-    let heart: request.Options = {
-      method: 'POST',
-      uri: `${rootOrigin}/eventRoom/heart?roomid=${roomID}`,
-      jar: userData.jar
-    }
+  private _EventRoomHeart(uid: string, heartTime: number, roomID: number) {
+    let userData = options.usersData[uid],
+      heart: request.Options = {
+        method: 'POST',
+        uri: `${rootOrigin}/eventRoom/heart?roomid=${roomID}`,
+        jar: cookieJar[uid]
+      }
     tools.XHR<string>(heart)
       .then((resolve) => {
         let eventRoomHeartResponse: eventRoomHeartResponse = JSON.parse(resolve)
         if (eventRoomHeartResponse.data.heart) {
           setTimeout(() => {
-            this._EventRoomHeart(userData, heartTime, roomID)
+            this._EventRoomHeart(uid, heartTime, roomID)
           }, heartTime)
         }
       })
