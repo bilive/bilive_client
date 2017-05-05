@@ -4,13 +4,15 @@ import * as tools from './tools'
 import { rootOrigin } from '../index'
 
 export class AppClient {
-  private static readonly _secretKey: string = '560c52ccd288fed045859ed18bffd973'
-  public static readonly appKey: string = '1d8b6e7d45233436'
-  public static readonly build: string = '434000'
-  // public static readonly ulv: string = '10000'
-  // public static readonly hwid: string = '12f957357901e986'
-  // public static readonly device: string = 'android'
-  public static readonly mobiApp: string = 'android'
+  // private static readonly _secretKey: string = '560c52ccd288fed045859ed18bffd973'
+  // public static readonly appKey: string = '1d8b6e7d45233436'
+  // public static readonly build: string = '434000'
+  // public static readonly mobiApp: string = 'android'
+  // public static readonly platform: string = 'android'
+  private static readonly _secretKey: string = 'e988e794d4d4b6dd43bc0e89d6e90c43'
+  public static readonly appKey: string = '37207f2beaebf8d7'
+  public static readonly build: string = '26030'
+  public static readonly mobiApp: string = 'biliLink'
   public static readonly platform: string = 'android'
   /**
    * 谜一样的TS
@@ -21,7 +23,8 @@ export class AppClient {
    * @memberOf AppClient
    */
   public static get TS(): number {
-    return Math.floor(Date.now() / 1000) * 1000
+    // return Math.floor(Date.now() / 1000) * 1000
+    return Math.floor(Date.now() / 1000)
   }
   public static readonly baseQuery = `appkey=${AppClient.appKey}&build=${AppClient.build}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}&ts=${AppClient.TS}`
   /**

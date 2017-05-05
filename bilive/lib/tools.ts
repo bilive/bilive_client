@@ -14,7 +14,7 @@ export function XHR<T>(options: request.Options): Promise<T> {
   options.gzip = true
   // 添加头信息
   let headers = {
-    'user-agent': 'Mozilla/5.0 BiliDroid/4.34.0 (bbcallen@gmail.com)',
+    'user-agent': 'Mozilla/5.0 BiliLiveDroid/2.0.0 bililive',
     'referer': 'https://live.bilibili.com/'
   }
   if (options.method === 'POST') headers['content-type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
