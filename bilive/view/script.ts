@@ -29,6 +29,7 @@ class Options {
   private _inputSmallTV = <HTMLInputElement>this._D.querySelector('#smallTV')
   private _inputLottery = <HTMLInputElement>this._D.querySelector('#lottery')
   private _inputBeatStorm = <HTMLInputElement>this._D.querySelector('#beatStorm')
+  private _inputDebug = <HTMLInputElement>this._D.querySelector('#debug')
   private _ws: WebSocket
   private _options: config
   private _UID: string
@@ -48,7 +49,7 @@ class Options {
         let msg: message = JSON.parse(message.reason)
         this._D.body.innerText = <string>msg.msg
       } catch (error) {
-        this._D.body.innerText = 'connection error'
+        this._D.body.innerText = 'connection closed'
       }
     })
     this._ws.addEventListener('error', () => {
@@ -94,6 +95,9 @@ class Options {
     })
     this._inputBeatStorm.addEventListener('change', () => {
       this._options.usersData[this._UID].beatStorm = this._inputBeatStorm.checked
+    })
+    this._inputDebug.addEventListener('change', () => {
+      this._options.usersData[this._UID].debug = this._inputDebug.checked
     })
   }
   /**
@@ -165,6 +169,7 @@ class Options {
         this._inputSmallTV.checked = usersData[this._UID].smallTV
         this._inputLottery.checked = usersData[this._UID].lottery
         this._inputBeatStorm.checked = usersData[this._UID].beatStorm
+        this._inputDebug.checked = usersData[this._UID].debug
       }
     }
   }
@@ -194,6 +199,7 @@ class Options {
       smallTV: false,
       lottery: false,
       beatStorm: false,
+      debug: false
     }
     this._options.usersData[UID] = userData
     this._AddOptionElement()
@@ -264,29 +270,50 @@ interface message {
 }
 
 interface config {
-  defaultUserID: number | null
-  defaultRoomID: number
-  apiOrigin: string
-  apiKey: string
-  eventRooms: number[]
-  beatStormBlackList: number[]
-  beatStormLiveTop: number
+  defaultUserID: configNumber | null
+  defaultRoomID: configNumber
+  apiOrigin: configString
+  apiKey: configString
+  eventRooms: configNumberArray
+  beatStormBlackList: configNumberArray
+  beatStormLiveTop: configNumber
   usersData: usersData
 }
 interface usersData {
   [index: string]: userData
 }
 interface userData {
-  nickname: string
-  userName: string
-  passWord: string
-  accessToken: string
-  cookie: string
-  status: boolean
-  doSign: boolean
-  treasureBox: boolean
-  eventRoom: boolean
-  smallTV: boolean
-  lottery: boolean
-  beatStorm: boolean
+  nickname: configString
+  userName: configString
+  passWord: configString
+  accessToken: configString
+  cookie: configString
+  status: configBoolean
+  doSign: configBoolean
+  treasureBox: configBoolean
+  eventRoom: configBoolean
+  smallTV: configBoolean
+  lottery: configBoolean
+  beatStorm: configBoolean
+  debug: configBoolean
+}
+interface configNumber {
+  description: string
+  type: string
+  value: number
+}
+interface configNumberArray {
+  description: string
+  type: string
+  value: number[]
+}
+interface configString {
+  description: string
+  type: string
+  value: string
+}
+interface configBoolean {
+  description: string
+  type: string
+  value: boolean
 }

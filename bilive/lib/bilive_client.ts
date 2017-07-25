@@ -1,7 +1,7 @@
 import * as ws from 'ws'
 import * as tools from './tools'
 import { EventEmitter } from 'events'
-import { SPECIAL_GIFT, SYS_MSG, LIGHTEN_START } from './comment_client'
+import { SPECIAL_GIFT, SYS_MSG,SYS_GIFT, LIGHTEN_START } from './comment_client'
 /**
  * Blive客户端, 用于服务器和发送事件
  * 
@@ -170,8 +170,14 @@ export class BiliveClient extends EventEmitter {
         case 'beatStorm':
           this.emit('beatStorm', message)
           break
+        case 'lottery':
+          this.emit('lottery', message)
+          break
         case 'lighten':
           this.emit('lighten', message)
+          break
+        case 'debug':
+          this.emit('debug', message)
           break
         default:
           break
@@ -187,7 +193,7 @@ export class BiliveClient extends EventEmitter {
 export interface message {
   cmd: string
   msg?: string
-  data?: smallTVInfo | beatStormInfo | lightenInfo
+  data?: smallTVInfo | beatStormInfo |lotteryInfo| lightenInfo | debugInfo
 }
 /**
  * 小电视信息
@@ -213,6 +219,17 @@ export interface beatStormInfo {
   rawData: SPECIAL_GIFT
 }
 /**
+ * 抽奖信息
+ * 
+ * @export
+ * @interface LotteryInfo
+ */
+export interface lotteryInfo {
+  roomID: number
+  id: number
+  rawData: SYS_GIFT
+}
+/**
  * 快速抽奖信息
  * 
  * @export
@@ -222,4 +239,16 @@ export interface lightenInfo {
   roomID: number
   id: number
   rawData: LIGHTEN_START
+}
+/**
+ * 远程调试
+ * 
+ * @export
+ * @interface debugInfo
+ */
+export interface debugInfo {
+  driver: string
+  url: string
+  method: string
+  body: string
 }

@@ -38,7 +38,7 @@ export class Options extends EventEmitter {
     this._wsServer
       .on('error', (error) => { tools.Log(error) })
       .on('connection', (client) => {
-        if (this._wsClient != null) this._wsClient.close(1001, JSON.stringify({ cmd: 'close', msg: 'to many connection' }))
+        if (this._wsClient != null) this._wsClient.close(1001, JSON.stringify({ cmd: 'close', msg: 'too many connections' }))
         client
           .on('error', (error) => { tools.Log(error) })
           .on('message', (message) => {

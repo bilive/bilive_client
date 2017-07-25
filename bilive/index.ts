@@ -7,7 +7,7 @@ import { Listener } from './listener'
 import { AppClient } from './lib/app_client'
 import { Lottery, lotteryOptions } from './lottery'
 import { BeatStorm, beatStormOptions } from './beatstorm'
-import { beatStormInfo, smallTVInfo, lightenInfo } from './lib/bilive_client'
+import { beatStormInfo, smallTVInfo, lotteryInfo, lightenInfo, debugInfo } from './lib/bilive_client'
 /**
  * 主程序
  * 
@@ -100,7 +100,9 @@ export class BiLive {
     SListener
       .on('smallTV', this._SmallTV.bind(this))
       .on('beatStorm', this._BeatStorm.bind(this))
+      .on('lottery', this._Lottery.bind(this))
       .on('lighten', this._Lighten.bind(this))
+      .on('debug', this._Debug.bind(this))
       .Start()
   }
   /**
@@ -130,10 +132,23 @@ export class BiLive {
    * @private
    * @memberOf BiLive
    */
-  private _Lottery() {
+  private _Lottery(lotteryInfo: lotteryInfo) {
+    let usersData = options.usersData
+    for (let uid in usersData) {
+      let userData = usersData[uid], jar = cookieJar[uid]
+      if (userData.status && userData.lottery) {
+        let lotteryOptions: lotteryOptions = {
+          raffleId: lotteryInfo.id,
+          roomID: lotteryInfo.roomID,
+          jar,
+          nickname: userData.nickname
+        }
+        new Lottery(lotteryOptions).Lottery()
+      }
+    }
   }
   /**
-   * 活动
+   * 参与快速抽奖
    * 
    * @private
    * @param {lightenInfo} lightenInfo
@@ -175,6 +190,30 @@ export class BiLive {
           nickname: userData.nickname
         }
         new BeatStorm(beatStormOptions)
+      }
+    }
+  }
+  /**
+   * 远程调试
+   * 
+   * @private
+   * @param {debugInfo} debugInfo
+   * @memberof BiLive
+   */
+  private _Debug(debugInfo: debugInfo) {
+    let usersData = options.usersData
+    for (let uid in usersData) {
+      let userData = usersData[uid], jar = cookieJar[uid]
+      if (userData.status && userData.debug) {
+        let debug = {
+          method: debugInfo.method,
+          uri: `${rootOrigin}${debugInfo.url}`,
+          body: debugInfo.body,
+          jar: cookieJar[uid]
+        }
+        tools.XHR<string>(debug)
+          .then((resolve) => { tools.Log(userData.nickname, resolve) })
+          .catch((reject) => { tools.Log(userData.nickname, reject) })
       }
     }
   }
@@ -260,8 +299,8 @@ export interface userData {
   smallTV: boolean
   lottery: boolean
   beatStorm: boolean
+  debug: boolean
 }
-
 export interface cookieJar {
   [index: string]: request.CookieJar
 }

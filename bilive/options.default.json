@@ -22,7 +22,8 @@
       "eventRoom": true,
       "smallTV": true,
       "lottery": true,
-      "beatStorm": true
+      "beatStorm": true,
+      "debug": false
     },
     "1": {
       "nickname": "user",
@@ -36,7 +37,8 @@
       "eventRoom": true,
       "smallTV": true,
       "lottery": true,
-      "beatStorm": true
+      "beatStorm": true,
+      "debug": false
     }
   }
 }

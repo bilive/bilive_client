@@ -10,7 +10,7 @@
 
 <body class="hide">
   <div>
-    <div>
+    <div class="options">
       <div>
         <span>默认监听UID</span>
         <input type="text" id="defaultUserID">
@@ -36,13 +36,13 @@
         <input type="text" id="beatStormBlackList">
       </div>
     </div>
-    <div>
+    <div class="usersdata">
       <select name="selectUser" id="select" class="inline"></select>
       <input type="button" id="save" class="inline" value="保存">
       <input type="button" id="add" class="inline" value="添加">
       <input type="button" id="delete" class="inline" value="删除">
     </div>
-    <div>
+    <div class="userdata">
       <div>
         <span>昵称</span>
         <input type="text" id="nickname">
@@ -90,6 +90,10 @@
       <div>
         <span>节奏风暴</span>
         <input type="checkbox" id="beatStorm">
+      </div>
+      <div>
+        <span>调试模式</span>
+        <input type="checkbox" id="debug">
       </div>
     </div>
   </div>

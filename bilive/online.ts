@@ -267,7 +267,7 @@ export class Online extends EventEmitter {
   private _EventRoomHeart(uid: string, heartTime: number, roomID: number) {
     let userData = options.usersData[uid],
       heart: request.Options = {
-        method: 'POST',
+        method: 'GET',
         uri: `${rootOrigin}/eventRoom/heart?roomid=${roomID}`,
         jar: cookieJar[uid]
       }

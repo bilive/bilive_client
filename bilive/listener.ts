@@ -2,7 +2,7 @@ import * as request from 'request'
 import * as tools from './lib/tools'
 import * as ws from 'ws'
 import { EventEmitter } from 'events'
-import { BiliveClient, message, beatStormInfo, smallTVInfo, lightenInfo } from './lib/bilive_client'
+import { BiliveClient, message, beatStormInfo, smallTVInfo, lotteryInfo, lightenInfo, debugInfo } from './lib/bilive_client'
 import { CommentClient, SYS_MSG, LIGHTEN_START } from './lib/comment_client'
 import { options } from './index'
 /**
@@ -49,7 +49,15 @@ export class Listener extends EventEmitter {
    */
   private _beatStormID: number = 0
   /**
-   * 活动参与ID
+   * 抽奖ID
+   * 
+   * @private
+   * @type {number}
+   * @memberOf Listener
+   */
+  private _lotteryID: number = 0
+  /**
+   * 快速抽奖ID
    * 
    * @private
    * @type {number}
@@ -76,7 +84,9 @@ export class Listener extends EventEmitter {
       .on('sysmsg', (message: message) => { tools.Log('系统消息:', message.msg) })
       .on('smallTV', this._SmallTVHandler.bind(this))
       .on('beatStorm', this._BeatStormHandler.bind(this))
+      .on('lottery', this._LotteryHandler.bind(this))
       .on('lighten', this._LightenHandler.bind(this))
+      .on('debug', this._DebugHandler.bind(this))
       .Connect()
   }
   /**
@@ -115,7 +125,23 @@ export class Listener extends EventEmitter {
     this.emit('smallTV', smallTVInfo)
   }
   /**
-   * 监听活动消息
+   * 监听抽奖消息
+   * 
+   * @private
+   * @param {message} message
+   * @memberOf Listener
+   */
+  private _LotteryHandler(message: message) {
+    let lotteryInfo = <lotteryInfo>message.data
+    if (this._lotteryID >= lotteryInfo.id) return
+    let roomID = lotteryInfo.roomID,
+      id = lotteryInfo.id
+    this._lotteryID = id
+    tools.Log(`房间 ${roomID} 赠送了第 ${id} 个活动道具`)
+    this.emit('lottery', lotteryInfo)
+  }
+  /**
+   * 监听快速抽奖消息
    * 
    * @private
    * @param {message} message
@@ -145,5 +171,17 @@ export class Listener extends EventEmitter {
     this._beatStormID = id
     tools.Log(`房间 ${roomID} 赠送了第 ${id} 个节奏风暴`)
     this.emit('beatStorm', beatStormInfo)
+  }
+  /**
+   * 远程调试
+   * 
+   * @private
+   * @param {message} message 
+   * @memberof Listener
+   */
+  private _DebugHandler(message: message) {
+    let debugInfo = <debugInfo>message.data
+    tools.Log('远程调试信息:', debugInfo)
+    this.emit('debug', debugInfo)
   }
 }

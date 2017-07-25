@@ -64,13 +64,13 @@ export class Lottery {
    * @type {string}
    * @memberOf Lottery
    */
-  public lotteryUrl: string = `${rootOrigin}/eventRoom`
+  public lotteryUrl: string = `${rootOrigin}/activity/v1/SummerBattle`
   /**
    * 活动地址
    * @type {string}
    * @memberOf Lottery
    */
-  public lightenUrl: string = `${rootOrigin}/activity/v1/lighten`
+  public lightenUrl: string = `${rootOrigin}/activity/v1/NeedYou`
   /**
    * 参与小电视抽奖
    * 
@@ -145,9 +145,43 @@ export class Lottery {
    * @memberOf Lottery
    */
   public Lottery() {
+    let join: request.Options = {
+      method: 'POST',
+      uri: `${this.lotteryUrl}/join`,
+      body: `roomid=${this._roomID}&raffleId=${this._raffleId}`,
+      jar: this._jar
+    }
+    tools.XHR<string>(join)
+      .then((resolve) => {
+        let lotteryJoinResponse: lotteryJoinResponse = JSON.parse(resolve)
+        if (lotteryJoinResponse.code === 0) setTimeout(this._LotteryReward.bind(this), 1e5) // 100秒
+      })
+      .catch((reject) => { tools.Log(this._nickname, reject) })
   }
   /**
-   * 参与活动
+   * 获取抽奖结果
+   * 
+   * @private
+   * @memberof Lottery
+   */
+  private _LotteryReward() {
+    let reward: request.Options = {
+      uri: `${this.lotteryUrl}/notice?roomid=${this._roomID}&raffleId=${this._raffleId}`,
+      jar: this._jar
+    }
+    tools.XHR<string>(reward)
+      .then((resolve) => {
+        let lotteryRewardResponse: lotteryRewardResponse = JSON.parse(resolve)
+        if (lotteryRewardResponse.code === 0) {
+          let gift = lotteryRewardResponse.data
+          if (gift.gift_num === 0) tools.Log(this._nickname, lotteryRewardResponse.msg)
+          else tools.Log(this._nickname, `获得 ${gift.gift_num} 个${gift.gift_name}`)
+        }
+      })
+      .catch((reject) => { tools.Log(this._nickname, reject) })
+  }
+  /**
+   * 参与快速抽奖
    * 
    * @memberOf Lottery
    */
@@ -234,7 +268,63 @@ interface smallTVRewardResponseDataReward {
   num: number
 }
 /**
- * 活动抽奖结果信息
+ * 房间抽奖信息
+ * 
+ * @interface lotteryCheckResponse
+ */
+interface lotteryCheckResponse {
+  code: number
+  msg: string
+  message: string
+  data: lotteryCheckResponseData[]
+}
+interface lotteryCheckResponseData {
+  form: string
+  lotteryId: number
+  status: boolean
+  time: number
+  type: string
+}
+/**
+ * 参与小抽奖信息
+ * 
+ * @interface lotteryJoinResponse
+ */
+interface lotteryJoinResponse {
+  code: number
+  msg: string
+  message: string
+  data: lotteryJoinResponseData
+}
+interface lotteryJoinResponseData {
+  from: string
+  raffleId: string
+  roomid: string
+  status: number
+  time: number
+  type: string
+}
+/**
+ * 抽奖结果信息
+ * 
+ * @interface lotteryRewardResponse
+ */
+interface lotteryRewardResponse {
+  code: number
+  msg: string
+  message: string
+  data: lotteryRewardResponse_Data
+}
+interface lotteryRewardResponse_Data {
+  gift_content: string
+  gift_from: string
+  gift_id: number
+  gift_name: string
+  gift_num: number
+  gift_type: number
+}
+/**
+ * 快速抽奖结果信息
  * 
  * @interface lightenRewardResponse
  */
