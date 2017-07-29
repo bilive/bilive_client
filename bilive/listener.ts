@@ -2,9 +2,9 @@ import * as request from 'request'
 import * as tools from './lib/tools'
 import * as ws from 'ws'
 import { EventEmitter } from 'events'
-import { BiliveClient, message, beatStormInfo, smallTVInfo, lotteryInfo, lightenInfo, debugInfo } from './lib/bilive_client'
-import { CommentClient, SYS_MSG, LIGHTEN_START } from './lib/comment_client'
-import { options } from './index'
+import { BiliveClient, message, beatStormInfo, smallTVInfo, raffleInfo, lightenInfo, debugInfo } from './lib/bilive_client'
+import { CommentClient, SYS_MSG, SYS_GIFT, LIGHTEN_START } from './lib/comment_client'
+import { rootOrigin, options } from './index'
 /**
  * 监听服务器消息
  * 
@@ -21,7 +21,7 @@ export class Listener extends EventEmitter {
    * 
    * @private
    * @type {CommentClient}
-   * @memberOf Listener
+   * @memberof Listener
    */
   private _CommentClient: CommentClient
   /**
@@ -29,7 +29,7 @@ export class Listener extends EventEmitter {
    * 
    * @private
    * @type {BiliveClient}
-   * @memberOf Listener
+   * @memberof Listener
    */
   private _Client: BiliveClient
   /**
@@ -37,7 +37,7 @@ export class Listener extends EventEmitter {
    * 
    * @private
    * @type {number}
-   * @memberOf Listener
+   * @memberof Listener
    */
   private _smallTVID: number = 0
   /**
@@ -45,7 +45,7 @@ export class Listener extends EventEmitter {
    * 
    * @private
    * @type {number}
-   * @memberOf Listener
+   * @memberof Listener
    */
   private _beatStormID: number = 0
   /**
@@ -53,27 +53,28 @@ export class Listener extends EventEmitter {
    * 
    * @private
    * @type {number}
-   * @memberOf Listener
+   * @memberof Listener
    */
-  private _lotteryID: number = 0
+  private _raffleID: number = 0
   /**
    * 快速抽奖ID
    * 
    * @private
    * @type {number}
-   * @memberOf Listener
+   * @memberof Listener
    */
   private _lightenID: number = 0
   /**
    * 开始监听
    * 
-   * @memberOf Listener
+   * @memberof Listener
    */
   public Start() {
     this._CommentClient = new CommentClient(options.defaultRoomID, options.defaultUserID)
     this._CommentClient
       .on('serverError', (error) => { tools.Log('与弹幕服务器断开五分钟', error) })
       .on('SYS_MSG', this._SYSMSGHandler.bind(this))
+      .on('SYS_GIFT', this._SYSGiftHandler.bind(this))
       .Connect()
     let apiOrigin = options.apiOrigin,
       apiKey = options.apiKey
@@ -84,7 +85,7 @@ export class Listener extends EventEmitter {
       .on('sysmsg', (message: message) => { tools.Log('系统消息:', message.msg) })
       .on('smallTV', this._SmallTVHandler.bind(this))
       .on('beatStorm', this._BeatStormHandler.bind(this))
-      .on('lottery', this._LotteryHandler.bind(this))
+      .on('raffle', this._RaffleHandler.bind(this))
       .on('lighten', this._LightenHandler.bind(this))
       .on('debug', this._DebugHandler.bind(this))
       .Connect()
@@ -94,7 +95,7 @@ export class Listener extends EventEmitter {
    * 
    * @private
    * @param {SYS_MSG} dataJson
-   * @memberOf Listener
+   * @memberof Listener
    */
   private _SYSMSGHandler(dataJson: SYS_MSG) {
     if (dataJson.real_roomid == null || dataJson.tv_id == null) return
@@ -109,11 +110,60 @@ export class Listener extends EventEmitter {
     this._SmallTVHandler(message)
   }
   /**
+   * 监听系统礼物消息
+   * 
+   * @private
+   * @param {SYS_GIFT} dataJson
+   * @memberof Listener
+   */
+  private _SYSGiftHandler(dataJson: SYS_GIFT) {
+    if (dataJson.roomid == null) return
+    let roomID = dataJson.roomid
+    if (dataJson.msg.includes('一起来打水仗吧')) {
+      let check: request.Options = { uri: `${rootOrigin}/activity/v1/SummerBattle/check?roomid=${roomID}` }
+      tools.XHR<string>(check)
+        .then((resolve) => {
+          let raffleCheck: raffleCheck = JSON.parse(resolve)
+          if (raffleCheck.code === 0 && raffleCheck.data.length > 0) {
+            let message: message = {
+              cmd: 'raffle',
+              data: {
+                roomID,
+                id: raffleCheck.data[0].raffleId,
+                rawData: dataJson
+              }
+            }
+            this._RaffleHandler(message)
+          }
+        })
+        .catch(tools.Log)
+    }
+    else if (dataJson.rep === 1) {
+      let check: request.Options = { uri: `${rootOrigin}/activity/v1/NeedYou/getLiveInfo?roomid=${roomID}` }
+      tools.XHR<string>(check)
+        .then((resolve) => {
+          let lightenCheck: lightenCheck = JSON.parse(resolve)
+          if (lightenCheck.code === 0 && lightenCheck.data.length > 0) {
+            let message: message = {
+              cmd: 'lighten',
+              data: {
+                roomID,
+                id: lightenCheck.data[0].lightenId,
+                rawData: dataJson
+              }
+            }
+            this._LightenHandler(message)
+          }
+        })
+        .catch(tools.Log)
+    }
+  }
+  /**
    * 监听小电视消息
    * 
    * @private
    * @param {message} message
-   * @memberOf Listener
+   * @memberof Listener
    */
   private _SmallTVHandler(message: message) {
     let smallTVInfo = <smallTVInfo>message.data
@@ -129,23 +179,23 @@ export class Listener extends EventEmitter {
    * 
    * @private
    * @param {message} message
-   * @memberOf Listener
+   * @memberof Listener
    */
-  private _LotteryHandler(message: message) {
-    let lotteryInfo = <lotteryInfo>message.data
-    if (this._lotteryID >= lotteryInfo.id) return
-    let roomID = lotteryInfo.roomID,
-      id = lotteryInfo.id
-    this._lotteryID = id
+  private _RaffleHandler(message: message) {
+    let raffleInfo = <raffleInfo>message.data
+    if (this._raffleID >= raffleInfo.id) return
+    let roomID = raffleInfo.roomID,
+      id = raffleInfo.id
+    this._raffleID = id
     tools.Log(`房间 ${roomID} 赠送了第 ${id} 个活动道具`)
-    this.emit('lottery', lotteryInfo)
+    this.emit('raffle', raffleInfo)
   }
   /**
    * 监听快速抽奖消息
    * 
    * @private
    * @param {message} message
-   * @memberOf Listener
+   * @memberof Listener
    */
   private _LightenHandler(message: message) {
     let lightenInfo = <lightenInfo>message.data
@@ -161,7 +211,7 @@ export class Listener extends EventEmitter {
    * 
    * @private
    * @param {message} message
-   * @memberOf Listener
+   * @memberof Listener
    */
   private _BeatStormHandler(message: message) {
     let beatStormInfo = <beatStormInfo>message.data
@@ -184,4 +234,41 @@ export class Listener extends EventEmitter {
     tools.Log('远程调试信息:', debugInfo)
     this.emit('debug', debugInfo)
   }
+}
+/**
+ * 抽奖检查
+ * 
+ * @export
+ * @interface raffleCheck
+ */
+export interface raffleCheck {
+  code: number
+  msg: string
+  message: string
+  data: raffleCheck_Data[]
+}
+export interface raffleCheck_Data {
+  form: string
+  raffleId: number
+  status: boolean
+  time: number
+  type: string
+}
+/**
+ * 快速抽奖检查
+ * 
+ * @export
+ * @interface lightenCheck
+ */
+export interface lightenCheck {
+  code: number
+  msg: string
+  message: string
+  data: lightenCheck_Data[]
+}
+export interface lightenCheck_Data {
+  type: string
+  lightenId: number
+  time: number
+  status: boolean
 }

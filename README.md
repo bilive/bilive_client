@@ -5,6 +5,6 @@
 5. 运行node app.js
 
 TODO:
-1. 本地监听抽奖
-2. HTML优化
+1. HTML优化
+2. 增强SDK
 3. 开放服务器

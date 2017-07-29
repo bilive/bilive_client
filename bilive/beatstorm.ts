@@ -11,7 +11,7 @@ export class BeatStorm {
   /**
    * 创建一个 BeatStorm 实例
    * @param {beatStormOptions} beatStormOptions
-   * @memberOf BeatStorm
+   * @memberof BeatStorm
    */
   constructor(beatStormOptions: beatStormOptions) {
     this._content = beatStormOptions.content
@@ -25,7 +25,7 @@ export class BeatStorm {
    * 
    * @private
    * @type {string}
-   * @memberOf BeatStorm
+   * @memberof BeatStorm
    */
   private _content: string
   /**
@@ -33,7 +33,7 @@ export class BeatStorm {
    * 
    * @private
    * @type {number}
-   * @memberOf BeatStorm
+   * @memberof BeatStorm
    */
   private _roomID: number
   /**
@@ -41,7 +41,7 @@ export class BeatStorm {
    * 
    * @private
    * @type {request.CookieJar}
-   * @memberOf BeatStorm
+   * @memberof BeatStorm
    */
   private _jar: request.CookieJar
   /**
@@ -49,14 +49,14 @@ export class BeatStorm {
    * 
    * @private
    * @type {string}
-   * @memberOf BeatStorm
+   * @memberof BeatStorm
    */
   private _nickname: string
   /**
    * 指定直播间发送消息
    * 
    * @private
-   * @memberOf BeatStorm
+   * @memberof BeatStorm
    */
   private _SendMsg() {
     let rnd = Math.floor(Date.now() / 1000 - 60 - 300 * Math.random()),

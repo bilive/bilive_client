@@ -20,7 +20,7 @@ export class AppClient {
    * @readonly
    * @static
    * @type {number}
-   * @memberOf AppClient
+   * @memberof AppClient
    */
   public static get TS(): number {
     // return Math.floor(Date.now() / 1000) * 1000
@@ -33,7 +33,7 @@ export class AppClient {
    * @static
    * @param {string} params
    * @returns {string}
-   * @memberOf AppClient
+   * @memberof AppClient
    */
   public static ParamsSign(params: string): string {
     let paramsBase = params + AppClient._secretKey,
@@ -48,7 +48,7 @@ export class AppClient {
    * @param {string} passWord
    * @param {getKeyResponseData} publicKey
    * @returns {string}
-   * @memberOf AppClient
+   * @memberof AppClient
    */
   private static _RSAPassWord(passWord: string, publicKey: getKeyResponseData): string {
     let padding = {
@@ -65,7 +65,7 @@ export class AppClient {
    * @private
    * @static
    * @returns {Promise<string>}
-   * @memberOf AppClient
+   * @memberof AppClient
    */
   private static _GetKey(): Promise<string> {
     let getKeyOrigin = 'https://passport.bilibili.com/api/oauth2/getKey',
@@ -84,7 +84,7 @@ export class AppClient {
    * @param {userLogin} userLogin
    * @param {getKeyResponseData} publicKey
    * @returns {Promise<string>}
-   * @memberOf AppClient
+   * @memberof AppClient
    */
   private static _Login(userLogin: userLogin, publicKey: getKeyResponseData): Promise<string> {
     let passWord = AppClient._RSAPassWord(userLogin.passWord, publicKey),
@@ -103,7 +103,7 @@ export class AppClient {
    * @static
    * @param {userLogin} userLogin
    * @returns {Promise<string>}
-   * @memberOf AppClient
+   * @memberof AppClient
    */
   public static GetToken(userLogin: userLogin): Promise<string> {
     return AppClient._GetKey()
@@ -124,7 +124,7 @@ export class AppClient {
    * @static
    * @param {string} accessToken
    * @returns {Promise<request.CookieJar>}
-   * @memberOf AppClient
+   * @memberof AppClient
    */
   public static GetCookie(accessToken: string): Promise<request.CookieJar> {
     let ssoOrigin = 'https://passport.bilibili.com/api/login/sso',

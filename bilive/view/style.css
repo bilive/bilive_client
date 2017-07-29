@@ -1,6 +1,12 @@
+.hide {
+  display: none
+}
 .inline {
   display: inline
 }
-.hide {
+.description + .tip {
   display: none
+}
+.description:hover + .tip {
+  display: inline
 }

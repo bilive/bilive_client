@@ -5,9 +5,9 @@ import { Online } from './online'
 import { Options } from './options'
 import { Listener } from './listener'
 import { AppClient } from './lib/app_client'
-import { Lottery, lotteryOptions } from './lottery'
+import { Raffle, raffleOptions } from './raffle'
 import { BeatStorm, beatStormOptions } from './beatstorm'
-import { beatStormInfo, smallTVInfo, lotteryInfo, lightenInfo, debugInfo } from './lib/bilive_client'
+import { beatStormInfo, smallTVInfo, raffleInfo, lightenInfo, debugInfo } from './lib/bilive_client'
 /**
  * 主程序
  * 
@@ -20,7 +20,7 @@ export class BiLive {
   /**
    * 开始主程序
    * 
-   * @memberOf BiLive
+   * @memberof BiLive
    */
   public Start() {
     this._SetOptionsFile()
@@ -45,7 +45,7 @@ export class BiLive {
    * 
    * @private
    * @returns {Promise<{}>} 
-   * @memberOf BiLive
+   * @memberof BiLive
    */
   private _SetOptionsFile(): Promise<{}> {
     return new Promise((resolve, reject) => {
@@ -67,7 +67,7 @@ export class BiLive {
   /**
    * 用户设置
    * 
-   * @memberOf BiLive
+   * @memberof BiLive
    */
   public Options() {
     const SOptions = new Options()
@@ -81,7 +81,7 @@ export class BiLive {
   /**
    * 在线挂机
    * 
-   * @memberOf BiLive
+   * @memberof BiLive
    */
   public Online() {
     const SOnline = new Online()
@@ -93,14 +93,14 @@ export class BiLive {
   /**
    * 监听
    * 
-   * @memberOf BiLive
+   * @memberof BiLive
    */
   public Listener() {
     const SListener = new Listener()
     SListener
       .on('smallTV', this._SmallTV.bind(this))
       .on('beatStorm', this._BeatStorm.bind(this))
-      .on('lottery', this._Lottery.bind(this))
+      .on('raffle', this._Raffle.bind(this))
       .on('lighten', this._Lighten.bind(this))
       .on('debug', this._Debug.bind(this))
       .Start()
@@ -109,20 +109,20 @@ export class BiLive {
    * 参与小电视抽奖
    * 
    * @private
-   * @memberOf BiLive
+   * @memberof BiLive
    */
   private _SmallTV(smallTVInfo: smallTVInfo) {
     let usersData = options.usersData
     for (let uid in usersData) {
       let userData = usersData[uid], jar = cookieJar[uid]
       if (userData.status && userData.smallTV) {
-        let lotteryOptions: lotteryOptions = {
+        let raffleOptions: raffleOptions = {
           raffleId: smallTVInfo.id,
           roomID: smallTVInfo.roomID,
           jar,
           nickname: userData.nickname
         }
-        new Lottery(lotteryOptions).SmallTV()
+        new Raffle(raffleOptions).SmallTV()
       }
     }
   }
@@ -130,20 +130,20 @@ export class BiLive {
    * 参与抽奖
    * 
    * @private
-   * @memberOf BiLive
+   * @memberof BiLive
    */
-  private _Lottery(lotteryInfo: lotteryInfo) {
+  private _Raffle(raffleInfo: raffleInfo) {
     let usersData = options.usersData
     for (let uid in usersData) {
       let userData = usersData[uid], jar = cookieJar[uid]
-      if (userData.status && userData.lottery) {
-        let lotteryOptions: lotteryOptions = {
-          raffleId: lotteryInfo.id,
-          roomID: lotteryInfo.roomID,
+      if (userData.status && userData.raffle) {
+        let raffleOptions: raffleOptions = {
+          raffleId: raffleInfo.id,
+          roomID: raffleInfo.roomID,
           jar,
           nickname: userData.nickname
         }
-        new Lottery(lotteryOptions).Lottery()
+        new Raffle(raffleOptions).Raffle()
       }
     }
   }
@@ -152,20 +152,20 @@ export class BiLive {
    * 
    * @private
    * @param {lightenInfo} lightenInfo
-   * @memberOf BiLive
+   * @memberof BiLive
    */
   private _Lighten(lightenInfo: lightenInfo) {
     let usersData = options.usersData
     for (let uid in usersData) {
       let userData = usersData[uid], jar = cookieJar[uid]
-      if (userData.status && userData.lottery) {
-        let lotteryOptions: lotteryOptions = {
+      if (userData.status && userData.raffle) {
+        let raffleOptions: raffleOptions = {
           raffleId: lightenInfo.id,
           roomID: lightenInfo.roomID,
           jar,
           nickname: userData.nickname
         }
-        new Lottery(lotteryOptions).Lighten()
+        new Raffle(raffleOptions).Lighten()
       }
     }
   }
@@ -174,7 +174,7 @@ export class BiLive {
    * 
    * @private
    * @param {beatStormInfo} beatStormInfo
-   * @memberOf BiLive
+   * @memberof BiLive
    */
   private _BeatStorm(beatStormInfo: beatStormInfo) {
     if (options.beatStormBlackList.indexOf(beatStormInfo.roomID) > -1) return
@@ -222,7 +222,7 @@ export class BiLive {
    * 
    * @private
    * @param {string} uid
-   * @memberOf BiLive
+   * @memberof BiLive
    */
   private _CookieError(uid: string) {
     let userData = options.usersData[uid]
@@ -243,7 +243,7 @@ export class BiLive {
    * 
    * @private
    * @param {string} uid
-   * @memberOf BiLive
+   * @memberof BiLive
    */
   private _TokenError(uid: string) {
     let userData = options.usersData[uid]
@@ -280,8 +280,8 @@ export interface config {
   apiKey: string
   eventRooms: number[]
   beatStormBlackList: number[]
-  beatStormLiveTop: number
   usersData: usersData
+  info: configInfo
 }
 export interface usersData {
   [index: string]: userData
@@ -297,9 +297,36 @@ export interface userData {
   treasureBox: boolean
   eventRoom: boolean
   smallTV: boolean
-  lottery: boolean
+  raffle: boolean
   beatStorm: boolean
   debug: boolean
+}
+export interface configInfo {
+  defaultUserID: configInfoData
+  defaultRoomID: configInfoData
+  apiOrigin: configInfoData
+  apiKey: configInfoData
+  eventRooms: configInfoData
+  beatStormBlackList: configInfoData
+  beatStormLiveTop: configInfoData
+  nickname: configInfoData
+  userName: configInfoData
+  passWord: configInfoData
+  accessToken: configInfoData
+  cookie: configInfoData
+  status: configInfoData
+  doSign: configInfoData
+  treasureBox: configInfoData
+  eventRoom: configInfoData
+  smallTV: configInfoData
+  raffle: configInfoData
+  beatStorm: configInfoData
+  debug: configInfoData
+}
+export interface configInfoData {
+  description: string
+  tip: string
+  type: string
 }
 export interface cookieJar {
   [index: string]: request.CookieJar

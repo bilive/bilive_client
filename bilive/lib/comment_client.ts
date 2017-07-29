@@ -15,7 +15,7 @@ export class CommentClient extends EventEmitter {
    * 
    * @param {number} [roomID=23058] 哔哩哔哩音乐台
    * @param {number} [userID]
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   constructor(roomID: number = 23058, userID?: number | null) {
     super()
@@ -26,14 +26,14 @@ export class CommentClient extends EventEmitter {
    * 用户UID
    * 
    * @type {number}
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   public userID: number
   /**
    * 房间号, 注意不要短号
    * 
    * @type {number}
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   public roomID: number
   /**
@@ -41,28 +41,28 @@ export class CommentClient extends EventEmitter {
    * 
    * @private
    * @type {string}
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   private _server: string
   /**
    * 服务器端口, 目前为788
    * 
    * @type {number}
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   public port: number = 788
   /**
    * 客户端版本, 目前为1
    * 
    * @type {number}
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   public version: number = 1
   /**
    * 重连次数, 以五次为阈值
    * 
    * @type {number}
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   public reConnectTime: number = 0
   /**
@@ -70,7 +70,7 @@ export class CommentClient extends EventEmitter {
    * 
    * @private
    * @type {boolean}
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   private _connected: boolean = false
   /**
@@ -78,7 +78,7 @@ export class CommentClient extends EventEmitter {
    * 
    * @private
    * @type {Socket}
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   private _Client: Socket
   /**
@@ -86,7 +86,7 @@ export class CommentClient extends EventEmitter {
    * 
    * @private
    * @type {NodeJS.Timer}
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   private _Timer: NodeJS.Timer
   /**
@@ -94,7 +94,7 @@ export class CommentClient extends EventEmitter {
    * 
    * @readonly
    * @type {string}
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   public get server(): string {
     return this._server
@@ -104,7 +104,7 @@ export class CommentClient extends EventEmitter {
    * 
    * @readonly
    * @type {boolean}
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   public get connected(): boolean {
     return this._connected
@@ -113,7 +113,7 @@ export class CommentClient extends EventEmitter {
    * 连接到指定服务器
    * 
    * @param {string} [server] 为了快速连接
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   public Connect(server?: string) {
     if (this._connected) return
@@ -140,7 +140,7 @@ export class CommentClient extends EventEmitter {
   /**
    * 断开与服务器的连接
    * 
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   public Close() {
     clearTimeout(this._Timer)
@@ -154,7 +154,7 @@ export class CommentClient extends EventEmitter {
    * 重新连接到服务器
    * 
    * @param {string} [server]
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   public ReConnect(server?: string) {
     this.Close()
@@ -164,7 +164,7 @@ export class CommentClient extends EventEmitter {
    * 5分钟后重新连接
    * 
    * @private
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   private _DelayReConnect() {
     this.emit('serverError', '尝试重新连接服务器失败')
@@ -177,7 +177,7 @@ export class CommentClient extends EventEmitter {
    * 客户端连接
    * 
    * @private
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   private _ClientConnect() {
     this._Client = new Socket()
@@ -192,7 +192,7 @@ export class CommentClient extends EventEmitter {
    * 客户端连接重试
    * 
    * @private
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   private _ClientReConnect() {
     this.Close()
@@ -212,7 +212,7 @@ export class CommentClient extends EventEmitter {
    * 
    * @private
    * @param {Error} error
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   private _ClientErrorHandler(error: Error) {
     this.emit('clientError', error)
@@ -222,7 +222,7 @@ export class CommentClient extends EventEmitter {
    * 服务器断开重连
    * 
    * @private
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   private _ClientEndHandler() {
     this.emit('clientEnd', '服务器主动断开')
@@ -232,7 +232,7 @@ export class CommentClient extends EventEmitter {
    * 向服务器发送自定义握手数据
    * 
    * @private
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   private _ClientConnectHandler() {
     this._connected = true
@@ -246,7 +246,7 @@ export class CommentClient extends EventEmitter {
    * 心跳包
    * 
    * @private
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   private _ClientTimer() {
     if (!this._connected) return
@@ -271,7 +271,7 @@ export class CommentClient extends EventEmitter {
    * @param {number} [param5=1]
    * @param {string} [data] 数据
    * @returns {boolean} 是否发送成功
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   private _ClientSendData(totalLen: number, headLen: number, version: number, param4: number, param5 = 1, data?: string): boolean {
     var bufferData = Buffer.alloc(totalLen)
@@ -288,7 +288,7 @@ export class CommentClient extends EventEmitter {
    * 
    * @private
    * @param {Buffer} data
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   private _ClientDataHandler(data: Buffer) {
     let dataLen = data.length
@@ -332,7 +332,7 @@ export class CommentClient extends EventEmitter {
    * 
    * @private
    * @param {danmuJson} dataJson
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   private _ParseClientData(dataJson: danmuJson) {
     dataJson._roomid = this.roomID
@@ -805,7 +805,7 @@ export interface RAFFLE_START extends danmuJson {
 }
 export interface RAFFLE_START_Data extends danmuJson {
   raffleId: number // 编号
-  lotteryType: string // 文案
+  raffleType: string // 文案
   time: number // 持续时间
 }
 /**
@@ -820,7 +820,7 @@ export interface RAFFLE_END extends danmuJson {
 }
 export interface RAFFLE_END_Data extends danmuJson {
   raffleId: number // 编号
-  lotteryType: string // 文案
+  raffleType: string // 文案
 }
 /**
  * 管理员变更

@@ -27,7 +27,7 @@ class Options {
   private _inputTreasureBox = <HTMLInputElement>this._D.querySelector('#treasureBox')
   private _inputEventRoom = <HTMLInputElement>this._D.querySelector('#eventRoom')
   private _inputSmallTV = <HTMLInputElement>this._D.querySelector('#smallTV')
-  private _inputLottery = <HTMLInputElement>this._D.querySelector('#lottery')
+  private _inputRaffle = <HTMLInputElement>this._D.querySelector('#raffle')
   private _inputBeatStorm = <HTMLInputElement>this._D.querySelector('#beatStorm')
   private _inputDebug = <HTMLInputElement>this._D.querySelector('#debug')
   private _ws: WebSocket
@@ -36,7 +36,7 @@ class Options {
   /**
    * 载入页面
    * 
-   * @memberOf Options
+   * @memberof Options
    */
   public Start() {
     // WebSocket与客户端通讯
@@ -44,7 +44,7 @@ class Options {
     this._ws.addEventListener('open', () => {
       this._D.body.classList.remove('hide')
     })
-    this._ws.addEventListener('close', (message) => {
+    this._ws.addEventListener('close', message => {
       try {
         let msg: message = JSON.parse(message.reason)
         this._D.body.innerText = <string>msg.msg
@@ -90,8 +90,8 @@ class Options {
     this._inputSmallTV.addEventListener('change', () => {
       this._options.usersData[this._UID].smallTV = this._inputSmallTV.checked
     })
-    this._inputLottery.addEventListener('change', () => {
-      this._options.usersData[this._UID].lottery = this._inputLottery.checked
+    this._inputRaffle.addEventListener('change', () => {
+      this._options.usersData[this._UID].raffle = this._inputRaffle.checked
     })
     this._inputBeatStorm.addEventListener('change', () => {
       this._options.usersData[this._UID].beatStorm = this._inputBeatStorm.checked
@@ -105,7 +105,7 @@ class Options {
    * 
    * @private
    * @param {MessageEvent} message
-   * @memberOf Options
+   * @memberof Options
    */
   private _WSMessage(message: MessageEvent) {
     let msg: message = JSON.parse(message.data)
@@ -120,7 +120,7 @@ class Options {
    * 添加全局设置
    * 
    * @private
-   * @memberOf Options
+   * @memberof Options
    */
   private _SetOption() {
     this._inputDefaultUserID.value = this._options.defaultUserID == null ? 'null' : this._options.defaultUserID.toString()
@@ -136,7 +136,7 @@ class Options {
    * 添加选择菜单
    * 
    * @private
-   * @memberOf Options
+   * @memberof Options
    */
   private _AddOptionElement() {
     let usersData = this._options.usersData
@@ -148,7 +148,7 @@ class Options {
    * 添加用户设置
    * 
    * @private
-   * @memberOf Options
+   * @memberof Options
    */
   private _SetUser() {
     let usersData = this._options.usersData
@@ -167,7 +167,7 @@ class Options {
         this._inputTreasureBox.checked = usersData[this._UID].treasureBox
         this._inputEventRoom.checked = usersData[this._UID].eventRoom
         this._inputSmallTV.checked = usersData[this._UID].smallTV
-        this._inputLottery.checked = usersData[this._UID].lottery
+        this._inputRaffle.checked = usersData[this._UID].raffle
         this._inputBeatStorm.checked = usersData[this._UID].beatStorm
         this._inputDebug.checked = usersData[this._UID].debug
       }
@@ -177,7 +177,7 @@ class Options {
    * 添加用户
    * 
    * @private
-   * @memberOf Options
+   * @memberof Options
    */
   private _AddUser() {
     let usersData = this._options.usersData
@@ -187,19 +187,19 @@ class Options {
     }
     let UID = newUID.toString()
     let userData: userData = {
-      nickname: '新用户',
-      userName: 'bishi',
-      passWord: 'password',
-      accessToken: '',
-      cookie: '',
-      status: false,
-      doSign: false,
-      treasureBox: false,
-      eventRoom: false,
-      smallTV: false,
-      lottery: false,
-      beatStorm: false,
-      debug: false
+      "nickname": "新用户",
+      "userName": "bishi",
+      "passWord": "password",
+      "accessToken": "",
+      "cookie": "",
+      "status": false,
+      "doSign": false,
+      "treasureBox": false,
+      "eventRoom": false,
+      "smallTV": false,
+      "raffle": false,
+      "beatStorm": false,
+      "debug": false
     }
     this._options.usersData[UID] = userData
     this._AddOptionElement()
@@ -209,7 +209,7 @@ class Options {
    * 删除用户
    * 
    * @private
-   * @memberOf Options
+   * @memberof Options
    */
   private _DeleteUser() {
     for (let optionUserData of this._optionUserData) {
@@ -223,7 +223,7 @@ class Options {
    * 保存设置
    * 
    * @private
-   * @memberOf Options
+   * @memberof Options
    */
   private _SaveOptions() {
     let defaultUserID = this._inputDefaultUserID.value === 'null' ? null : parseInt(this._inputDefaultUserID.value)
@@ -254,7 +254,7 @@ class Options {
    * @private
    * @param {Object} object
    * @returns {boolean}
-   * @memberOf Options
+   * @memberof Options
    */
   private _IsEmptyObject(object: Object): boolean {
     for (let t in object) return false
@@ -263,57 +263,74 @@ class Options {
 }
 const app = new Options()
 app.Start()
+/**
+ * WebSocket消息
+ * 
+ * @interface message
+ */
 interface message {
   cmd: string
   msg?: string
   data?: any
 }
-
+/**
+ * 应用设置
+ * 
+ * @export
+ * @interface config
+ */
 interface config {
-  defaultUserID: configNumber | null
-  defaultRoomID: configNumber
-  apiOrigin: configString
-  apiKey: configString
-  eventRooms: configNumberArray
-  beatStormBlackList: configNumberArray
-  beatStormLiveTop: configNumber
+  defaultUserID: number | null
+  defaultRoomID: number
+  apiOrigin: string
+  apiKey: string
+  eventRooms: number[]
+  beatStormBlackList: number[]
   usersData: usersData
+  info: configInfo
 }
 interface usersData {
   [index: string]: userData
 }
 interface userData {
-  nickname: configString
-  userName: configString
-  passWord: configString
-  accessToken: configString
-  cookie: configString
-  status: configBoolean
-  doSign: configBoolean
-  treasureBox: configBoolean
-  eventRoom: configBoolean
-  smallTV: configBoolean
-  lottery: configBoolean
-  beatStorm: configBoolean
-  debug: configBoolean
+  nickname: string
+  userName: string
+  passWord: string
+  accessToken: string
+  cookie: string
+  status: boolean
+  doSign: boolean
+  treasureBox: boolean
+  eventRoom: boolean
+  smallTV: boolean
+  raffle: boolean
+  beatStorm: boolean
+  debug: boolean
 }
-interface configNumber {
-  description: string
-  type: string
-  value: number
+interface configInfo {
+  defaultUserID: configInfoData
+  defaultRoomID: configInfoData
+  apiOrigin: configInfoData
+  apiKey: configInfoData
+  eventRooms: configInfoData
+  beatStormBlackList: configInfoData
+  beatStormLiveTop: configInfoData
+  nickname: configInfoData
+  userName: configInfoData
+  passWord: configInfoData
+  accessToken: configInfoData
+  cookie: configInfoData
+  status: configInfoData
+  doSign: configInfoData
+  treasureBox: configInfoData
+  eventRoom: configInfoData
+  smallTV: configInfoData
+  raffle: configInfoData
+  beatStorm: configInfoData
+  debug: configInfoData
 }
-interface configNumberArray {
+interface configInfoData {
   description: string
+  tip: string
   type: string
-  value: number[]
-}
-interface configString {
-  description: string
-  type: string
-  value: string
-}
-interface configBoolean {
-  description: string
-  type: string
-  value: boolean
 }

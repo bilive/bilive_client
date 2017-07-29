@@ -5,26 +5,26 @@ import { rootOrigin } from './index'
  * 自动参与抽奖
  * 
  * @export
- * @class Lottery
+ * @class Raffle
  */
-export class Lottery {
+export class Raffle {
   /**
-   * 创建一个 Lottery 实例
-   * @param {lotteryOptions} lotteryOptions
-   * @memberOf Lottery
+   * 创建一个 Raffle 实例
+   * @param {raffleOptions} raffleOptions
+   * @memberof Raffle
    */
-  constructor(lotteryOptions: lotteryOptions) {
-    this._raffleId = lotteryOptions.raffleId
-    this._roomID = lotteryOptions.roomID
-    this._jar = lotteryOptions.jar
-    this._nickname = lotteryOptions.nickname
+  constructor(raffleOptions: raffleOptions) {
+    this._raffleId = raffleOptions.raffleId
+    this._roomID = raffleOptions.roomID
+    this._jar = raffleOptions.jar
+    this._nickname = raffleOptions.nickname
   }
   /**
    * 参与ID
    * 
    * @private
    * @type {number}
-   * @memberOf Lottery
+   * @memberof Raffle
    */
   private _raffleId: number
   /**
@@ -32,7 +32,7 @@ export class Lottery {
    * 
    * @private
    * @type {number}
-   * @memberOf Lottery
+   * @memberof Raffle
    */
   private _roomID: number
   /**
@@ -40,7 +40,7 @@ export class Lottery {
    * 
    * @private
    * @type {request.CookieJar}
-   * @memberOf Lottery
+   * @memberof Raffle
    */
   private _jar: request.CookieJar
   /**
@@ -48,33 +48,33 @@ export class Lottery {
    * 
    * @private
    * @type {string}
-   * @memberOf Lottery
+   * @memberof Raffle
    */
   private _nickname: string
   /**
    * 小电视抽奖地址
    * 
    * @type {string}
-   * @memberOf Lottery
+   * @memberof Raffle
    */
   public smallTVUrl: string = `${rootOrigin}/SmallTV`
   /**
    * 抽奖地址
    * 
    * @type {string}
-   * @memberOf Lottery
+   * @memberof Raffle
    */
-  public lotteryUrl: string = `${rootOrigin}/activity/v1/SummerBattle`
+  public raffleUrl: string = `${rootOrigin}/activity/v1/SummerBattle`
   /**
    * 活动地址
    * @type {string}
-   * @memberOf Lottery
+   * @memberof Raffle
    */
   public lightenUrl: string = `${rootOrigin}/activity/v1/NeedYou`
   /**
    * 参与小电视抽奖
    * 
-   * @memberOf Lottery
+   * @memberof Raffle
    */
   public SmallTV() {
     let join: request.Options = {
@@ -92,7 +92,7 @@ export class Lottery {
    * 获取小电视中奖结果
    * 
    * @private
-   * @memberOf Lottery
+   * @memberof Raffle
    */
   private _SmallTVReward() {
     let reward: request.Options = {
@@ -142,19 +142,19 @@ export class Lottery {
   /**
    * 参与抽奖
    * 
-   * @memberOf Lottery
+   * @memberof Raffle
    */
-  public Lottery() {
+  public Raffle() {
     let join: request.Options = {
       method: 'POST',
-      uri: `${this.lotteryUrl}/join`,
+      uri: `${this.raffleUrl}/join`,
       body: `roomid=${this._roomID}&raffleId=${this._raffleId}`,
       jar: this._jar
     }
     tools.XHR<string>(join)
       .then((resolve) => {
-        let lotteryJoinResponse: lotteryJoinResponse = JSON.parse(resolve)
-        if (lotteryJoinResponse.code === 0) setTimeout(this._LotteryReward.bind(this), 1e5) // 100秒
+        let raffleJoinResponse: raffleJoinResponse = JSON.parse(resolve)
+        if (raffleJoinResponse.code === 0) setTimeout(this._RaffleReward.bind(this), 1e5) // 100秒
       })
       .catch((reject) => { tools.Log(this._nickname, reject) })
   }
@@ -162,19 +162,19 @@ export class Lottery {
    * 获取抽奖结果
    * 
    * @private
-   * @memberof Lottery
+   * @memberof Raffle
    */
-  private _LotteryReward() {
+  private _RaffleReward() {
     let reward: request.Options = {
-      uri: `${this.lotteryUrl}/notice?roomid=${this._roomID}&raffleId=${this._raffleId}`,
+      uri: `${this.raffleUrl}/notice?roomid=${this._roomID}&raffleId=${this._raffleId}`,
       jar: this._jar
     }
     tools.XHR<string>(reward)
       .then((resolve) => {
-        let lotteryRewardResponse: lotteryRewardResponse = JSON.parse(resolve)
-        if (lotteryRewardResponse.code === 0) {
-          let gift = lotteryRewardResponse.data
-          if (gift.gift_num === 0) tools.Log(this._nickname, lotteryRewardResponse.msg)
+        let raffleRewardResponse: raffleRewardResponse = JSON.parse(resolve)
+        if (raffleRewardResponse.code === 0) {
+          let gift = raffleRewardResponse.data
+          if (gift.gift_num === 0) tools.Log(this._nickname, raffleRewardResponse.msg)
           else tools.Log(this._nickname, `获得 ${gift.gift_num} 个${gift.gift_name}`)
         }
       })
@@ -183,7 +183,7 @@ export class Lottery {
   /**
    * 参与快速抽奖
    * 
-   * @memberOf Lottery
+   * @memberof Raffle
    */
   public Lighten() {
     let getCoin: request.Options = {
@@ -204,9 +204,9 @@ export class Lottery {
  * 抽奖设置
  * 
  * @export
- * @interface lotteryOptions
+ * @interface raffleOptions
  */
-export interface lotteryOptions {
+export interface raffleOptions {
   raffleId: number
   roomID: number
   jar: request.CookieJar
@@ -270,17 +270,17 @@ interface smallTVRewardResponseDataReward {
 /**
  * 房间抽奖信息
  * 
- * @interface lotteryCheckResponse
+ * @interface raffleCheckResponse
  */
-interface lotteryCheckResponse {
+interface raffleCheckResponse {
   code: number
   msg: string
   message: string
-  data: lotteryCheckResponseData[]
+  data: raffleCheckResponseData[]
 }
-interface lotteryCheckResponseData {
+interface raffleCheckResponseData {
   form: string
-  lotteryId: number
+  raffleId: number
   status: boolean
   time: number
   type: string
@@ -288,15 +288,15 @@ interface lotteryCheckResponseData {
 /**
  * 参与小抽奖信息
  * 
- * @interface lotteryJoinResponse
+ * @interface raffleJoinResponse
  */
-interface lotteryJoinResponse {
+interface raffleJoinResponse {
   code: number
   msg: string
   message: string
-  data: lotteryJoinResponseData
+  data: raffleJoinResponseData
 }
-interface lotteryJoinResponseData {
+interface raffleJoinResponseData {
   from: string
   raffleId: string
   roomid: string
@@ -307,15 +307,15 @@ interface lotteryJoinResponseData {
 /**
  * 抽奖结果信息
  * 
- * @interface lotteryRewardResponse
+ * @interface raffleRewardResponse
  */
-interface lotteryRewardResponse {
+interface raffleRewardResponse {
   code: number
   msg: string
   message: string
-  data: lotteryRewardResponse_Data
+  data: raffleRewardResponse_Data
 }
-interface lotteryRewardResponse_Data {
+interface raffleRewardResponse_Data {
   gift_content: string
   gift_from: string
   gift_id: number

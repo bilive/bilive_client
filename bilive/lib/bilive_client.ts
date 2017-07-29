@@ -1,7 +1,7 @@
 import * as ws from 'ws'
 import * as tools from './tools'
 import { EventEmitter } from 'events'
-import { SPECIAL_GIFT, SYS_MSG,SYS_GIFT, LIGHTEN_START } from './comment_client'
+import { SPECIAL_GIFT, SYS_MSG, SYS_GIFT, RAFFLE_START, LIGHTEN_START } from './comment_client'
 /**
  * Blive客户端, 用于服务器和发送事件
  * 
@@ -15,7 +15,7 @@ export class BiliveClient extends EventEmitter {
    * 
    * @param {string} server
    * @param {string} apiKey
-   * @memberOf BiliveClient
+   * @memberof BiliveClient
    */
   constructor(server: string, apiKey: string) {
     super()
@@ -27,7 +27,7 @@ export class BiliveClient extends EventEmitter {
    * 
    * @private
    * @type {string}
-   * @memberOf BiliveClient
+   * @memberof BiliveClient
    */
   private _server: string
   /**
@@ -35,14 +35,14 @@ export class BiliveClient extends EventEmitter {
    * 
    * @private
    * @type {string}
-   * @memberOf BiliveClient
+   * @memberof BiliveClient
    */
   private _apiKey: string
   /**
    * 重连次数, 以五次为阈值
    * 
    * @type {number}
-   * @memberOf BiliveClient
+   * @memberof BiliveClient
    */
   public reConnectTime: number = 0
   /**
@@ -50,7 +50,7 @@ export class BiliveClient extends EventEmitter {
    * 
    * @private
    * @type {ws}
-   * @memberOf BiliveClient
+   * @memberof BiliveClient
    */
   private _wsClient: ws
   /**
@@ -58,13 +58,13 @@ export class BiliveClient extends EventEmitter {
    * 
    * @private
    * @type {NodeJS.Timer}
-   * @memberOf CommentClient
+   * @memberof CommentClient
    */
   private _Timer: NodeJS.Timer
   /**
    * 连接到指定服务器
    * 
-   * @memberOf BiliveClient
+   * @memberof BiliveClient
    */
   public Connect() {
     if (this._wsClient != null && this._wsClient.readyState === ws.OPEN) return
@@ -78,7 +78,7 @@ export class BiliveClient extends EventEmitter {
   /**
    * 断开与服务器的连接
    * 
-   * @memberOf BiliveClient
+   * @memberof BiliveClient
    */
   public Close() {
     clearTimeout(this._Timer)
@@ -89,7 +89,7 @@ export class BiliveClient extends EventEmitter {
   /**
    * 重新连接到服务器
    * 
-   * @memberOf BiliveClient
+   * @memberof BiliveClient
    */
   public ReConnect() {
     this.Close()
@@ -99,7 +99,7 @@ export class BiliveClient extends EventEmitter {
    * 5分钟后重新连接
    * 
    * @private
-   * @memberOf BiliveClient
+   * @memberof BiliveClient
    */
   private _DelayReConnect() {
     this.emit('serverError', '尝试重新连接服务器失败')
@@ -112,7 +112,7 @@ export class BiliveClient extends EventEmitter {
    * 客户端连接重试
    * 
    * @private
-   * @memberOf BiliveClient
+   * @memberof BiliveClient
    */
   private _ClientReConnect() {
     this.Close()
@@ -132,7 +132,7 @@ export class BiliveClient extends EventEmitter {
    * 
    * @private
    * @param {Error} error
-   * @memberOf BiliveClient
+   * @memberof BiliveClient
    */
   private _ClientErrorHandler(error: Error) {
     this.emit('clientError', error)
@@ -142,7 +142,7 @@ export class BiliveClient extends EventEmitter {
    * 服务器断开重连
    * 
    * @private
-   * @memberOf BiliveClient
+   * @memberof BiliveClient
    */
   private _ClientCloseHandler() {
     this.emit('clientClose', '服务器主动断开')
@@ -153,7 +153,7 @@ export class BiliveClient extends EventEmitter {
    * 
    * @private
    * @param {string} data
-   * @memberOf BiliveClient
+   * @memberof BiliveClient
    */
   private _MessageHandler(data: string) {
     let message: message | null = null
@@ -170,8 +170,8 @@ export class BiliveClient extends EventEmitter {
         case 'beatStorm':
           this.emit('beatStorm', message)
           break
-        case 'lottery':
-          this.emit('lottery', message)
+        case 'raffle':
+          this.emit('raffle', message)
           break
         case 'lighten':
           this.emit('lighten', message)
@@ -193,7 +193,7 @@ export class BiliveClient extends EventEmitter {
 export interface message {
   cmd: string
   msg?: string
-  data?: smallTVInfo | beatStormInfo |lotteryInfo| lightenInfo | debugInfo
+  data?: smallTVInfo | beatStormInfo | raffleInfo | lightenInfo | debugInfo
 }
 /**
  * 小电视信息
@@ -222,23 +222,23 @@ export interface beatStormInfo {
  * 抽奖信息
  * 
  * @export
- * @interface LotteryInfo
+ * @interface raffleInfo
  */
-export interface lotteryInfo {
+export interface raffleInfo {
   roomID: number
   id: number
-  rawData: SYS_GIFT
+  rawData: SYS_GIFT | RAFFLE_START
 }
 /**
  * 快速抽奖信息
  * 
  * @export
- * @interface LightenInfo
+ * @interface lightenInfo
  */
 export interface lightenInfo {
   roomID: number
   id: number
-  rawData: LIGHTEN_START
+  rawData: SYS_GIFT | LIGHTEN_START
 }
 /**
  * 远程调试

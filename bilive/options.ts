@@ -22,7 +22,7 @@ export class Options extends EventEmitter {
   /**
    * 启动HTTP以及WebSocket服务
    * 
-   * @memberOf Options
+   * @memberof Options
    */
   public Start() {
     this._HttpServer()
@@ -31,7 +31,7 @@ export class Options extends EventEmitter {
    * WebSocket服务
    * 
    * @private
-   * @memberOf Options
+   * @memberof Options
    */
   private _WebSocketServer() {
     this._wsServer = new ws.Server({ server: this._http })
@@ -56,7 +56,7 @@ export class Options extends EventEmitter {
    * HTTP服务
    * 
    * @private
-   * @memberOf Options
+   * @memberof Options
    */
   private _HttpServer() {
     this._http = http.createServer((req, res) => {

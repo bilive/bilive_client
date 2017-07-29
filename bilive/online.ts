@@ -18,7 +18,7 @@ export class Online extends EventEmitter {
   /**
    * 开始挂机
    * 
-   * @memberOf Online
+   * @memberof Online
    */
   public Start() {
     this.DoLoop()
@@ -27,7 +27,7 @@ export class Online extends EventEmitter {
   /**
    * 发送在线心跳包, 检查cookie是否失效
    * 
-   * @memberOf Online
+   * @memberof Online
    */
   public OnlineHeart() {
     let roomID = options.defaultRoomID,
@@ -69,7 +69,7 @@ export class Online extends EventEmitter {
   /**
    * 八小时循环, 用于签到, 宝箱, 日常活动
    * 
-   * @memberOf Online
+   * @memberof Online
    */
   public DoLoop() {
     let eventRooms = options.eventRooms,
@@ -92,7 +92,7 @@ export class Online extends EventEmitter {
    * 
    * @private
    * @param {string} uid
-   * @memberOf Online
+   * @memberof Online
    */
   private _DoSign(uid: string) {
     let userData = options.usersData[uid],
@@ -110,7 +110,7 @@ export class Online extends EventEmitter {
    * 
    * @private
    * @param {string} uid
-   * @memberOf Online
+   * @memberof Online
    */
   private _DoSignPC(uid: string) {
     let userData = options.usersData[uid],
@@ -136,7 +136,7 @@ export class Online extends EventEmitter {
    * 
    * @private
    * @param {string} uid
-   * @memberOf Online
+   * @memberof Online
    */
   private _TreasureBox(uid: string) {
     let userData = options.usersData[uid],
@@ -173,7 +173,7 @@ export class Online extends EventEmitter {
    * 
    * @private
    * @param {string} uid
-   * @memberOf Online
+   * @memberof Online
    */
   private _TreasureBoxPC(uid: string) {
     let userData = options.usersData[uid],
@@ -228,7 +228,7 @@ export class Online extends EventEmitter {
    * @private
    * @param {string} uid
    * @param {number[]} roomIDs
-   * @memberOf Online
+   * @memberof Online
    */
   private _EventRoom(uid: string, roomIDs: number[]) {
     let userData = options.usersData[uid]
@@ -262,7 +262,7 @@ export class Online extends EventEmitter {
    * @param {string} uid
    * @param {number} heartTime
    * @param {number} roomID
-   * @memberOf Online
+   * @memberof Online
    */
   private _EventRoomHeart(uid: string, heartTime: number, roomID: number) {
     let userData = options.usersData[uid],
