@@ -5,6 +5,5 @@
 5. 运行node app.js
 
 TODO:
-1. HTML优化
-2. 增强SDK
-3. 开放服务器
+1. 增强SDK
+2. 开放服务器

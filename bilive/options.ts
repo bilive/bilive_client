@@ -36,12 +36,12 @@ export class Options extends EventEmitter {
   private _WebSocketServer() {
     this._wsServer = new ws.Server({ server: this._http })
     this._wsServer
-      .on('error', (error) => { tools.Log(error) })
-      .on('connection', (client) => {
+      .on('error', error => tools.Log(error))
+      .on('connection', client => {
         if (this._wsClient != null) this._wsClient.close(1001, JSON.stringify({ cmd: 'close', msg: 'too many connections' }))
         client
-          .on('error', (error) => { tools.Log(error) })
-          .on('message', (message) => {
+          .on('error', error => tools.Log(error))
+          .on('message', message => {
             let msg: message = JSON.parse(message)
             if (msg.cmd === 'save' && msg.data != null) {
               let config = <config>msg.data
@@ -89,7 +89,7 @@ export class Options extends EventEmitter {
       this._WebSocketServer()
       tools.Log(`浏览器打开 http://127.0.0.1:10080 进行设置`)
     })
-      .on('error', (error) => { tools.Log(error) })
+      .on('error', error => tools.Log(error))
   }
 }
 /**

@@ -5,8 +5,26 @@
   display: inline
 }
 .description + .tip {
-  display: none
+  display: none;
+  position: absolute;
+  margin: 20px 0;
+  left: 20px;
+  background: lightgrey;
+  z-index: 11
 }
 .description:hover + .tip {
   display: inline
+}
+.userdata {
+  float: left;
+  border: 1px solid gray;
+  margin: 5px 20px 5px 0;
+}
+.relative {
+  position: relative
+}
+.delete {
+  position: absolute;
+  margin: -10px 0 0 210px;
+  z-index: 10;
 }

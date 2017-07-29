@@ -10,7 +10,7 @@
     10101
   ],
   "usersData": {
-    "0": {
+    "15d8f8a437e": {
       "nickname": "admin",
       "userName": "bishi",
       "passWord": "password",
@@ -25,7 +25,7 @@
       "beatStorm": false,
       "debug": false
     },
-    "1": {
+    "15d8f8ec948": {
       "nickname": "user",
       "userName": "碧诗",
       "passWord": "password",
@@ -45,97 +45,97 @@
     "defaultUserID": {
       "description": "默认监听UID",
       "tip": "用来监听系统消息的用户ID, null时为随机",
-      "type": "text"
+      "type": "numberNull"
     },
     "defaultRoomID": {
       "description": "默认监听RoomID",
       "tip": "用来监听系统消息的房间, 默认为23058(官方音乐台)",
-      "type": "text"
+      "type": "number"
     },
     "apiOrigin": {
       "description": "远程服务器地址",
       "tip": "远程服务器地址, 主要用来监听节奏风暴",
-      "type": "text"
+      "type": "string"
     },
     "apiKey": {
       "description": "apiKey",
       "tip": "连接远程服务器所需的apiKey",
-      "type": "text"
+      "type": "string"
     },
     "eventRooms": {
       "description": "挂机活动房间以,分隔",
       "tip": "挂取活动道具的房间, 默认为23058(官方音乐台), 有时活动只有主播报名才可以参加",
-      "type": "text"
+      "type": "numberArray"
     },
     "beatStormBlackList": {
       "description": "节奏风暴黑名单以,分隔",
       "tip": "节奏风暴黑名单, 不抢黑名单内的房间",
-      "type": "text"
+      "type": "numberArray"
     },
     "nickname": {
       "description": "昵称",
       "tip": "用户昵称, 与B站无关",
-      "type": "text"
+      "type": "string"
     },
     "userName": {
       "description": "用户名",
       "tip": "用户名, 最好为邮箱或电话号",
-      "type": "text"
+      "type": "string"
     },
     "passWord": {
       "description": "密码",
       "tip": "密码",
-      "type": "text"
+      "type": "string"
     },
     "accessToken": {
       "description": "Token",
-      "tip": "access token, 一般无用，只读",
-      "type": "text"
+      "tip": "access token, 一般无用",
+      "type": "string"
     },
     "cookie": {
       "description": "Cookie",
-      "tip": "cookie, 一般无用，只读",
-      "type": "text"
+      "tip": "cookie, 一般无用",
+      "type": "string"
     },
     "status": {
       "description": "开关",
       "tip": "用户设置的总开关, 关闭时以下设置全部失效",
-      "type": "checkbox"
+      "type": "boolean"
     },
     "doSign": {
       "description": "签到",
       "tip": "每日签到",
-      "type": "checkbox"
+      "type": "boolean"
     },
     "treasureBox": {
       "description": "宝箱",
       "tip": "宝箱领瓜子",
-      "type": "checkbox"
+      "type": "boolean"
     },
     "eventRoom": {
       "description": "活动道具",
       "tip": "挂取活动道具",
-      "type": "checkbox"
+      "type": "boolean"
     },
     "smallTV": {
       "description": "小电视",
       "tip": "参与小电视",
-      "type": "checkbox"
+      "type": "boolean"
     },
     "raffle": {
       "description": "抽奖",
       "tip": "参与抽奖",
-      "type": "checkbox"
+      "type": "boolean"
     },
     "beatStorm": {
       "description": "节奏风暴",
       "tip": "参与节奏风暴",
-      "type": "checkbox"
+      "type": "boolean"
     },
     "debug": {
       "description": "调试模式",
       "tip": "远程调试, 非常危险, 开启此项远程服务器可以进行更改B站密码, 邮箱, 电话, 清空包裹, 刷广告等等你想得到和想不到的事情",
-      "type": "checkbox"
+      "type": "boolean"
     }
   }
 }
