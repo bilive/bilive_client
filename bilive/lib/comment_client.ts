@@ -1,5 +1,6 @@
 import { Socket } from 'net'
 import { EventEmitter } from 'events'
+import { inflateSync } from 'zlib'
 import * as tools from './tools'
 import { rootOrigin } from '../index'
 /**
@@ -293,6 +294,16 @@ export class CommentClient extends EventEmitter {
   private _ClientDataHandler(data: Buffer) {
     let dataLen = data.length
     if (dataLen < 16 || dataLen > 1048576) return
+    if (dataLen > 20) {
+      try {
+        data = inflateSync(data.slice(16, dataLen))
+        dataLen = data.length
+      }
+      catch (error) {
+        this.emit('commentError', '意外的弹幕信息')
+        return
+      }
+    }
     let packageIndex = 0
     let packageLen = data.readUInt32BE(0)
     while (dataLen - packageIndex >= packageLen) {

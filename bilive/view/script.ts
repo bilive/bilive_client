@@ -70,28 +70,28 @@ class Options {
           case 'numberNull':
             elmInput.type = 'text'
             elmInput.value = (option === null) ? 'null' : option.toString()
-            elmInput.addEventListener('change', () => {
+            elmInput.addEventListener('input', () => {
               this._options[key] = (elmInput.value === 'null') ? null : parseInt(elmInput.value)
             })
             break
           case 'number':
             elmInput.type = 'text'
             elmInput.value = option.toString()
-            elmInput.addEventListener('change', () => {
+            elmInput.addEventListener('input', () => {
               this._options[key] = parseInt(elmInput.value)
             })
             break
           case 'numberArray':
             elmInput.type = 'text'
             elmInput.value = option.join(',')
-            elmInput.addEventListener('change', () => {
+            elmInput.addEventListener('input', () => {
               this._options[key] = elmInput.value.split(',').map(value => { return parseInt(value) })
             })
             break
           case 'string':
             elmInput.type = 'text'
             elmInput.value = option
-            elmInput.addEventListener('change', () => {
+            elmInput.addEventListener('input', () => {
               this._options[key] = elmInput.value
             })
             break
@@ -165,7 +165,7 @@ class Options {
           case 'string':
             elmInput.type = 'text'
             elmInput.value = option
-            elmInput.addEventListener('change', () => {
+            elmInput.addEventListener('input', () => {
               this._options.usersData[uid][key] = elmInput.value
             })
             break
