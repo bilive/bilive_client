@@ -46,12 +46,12 @@ export class CommentClient extends EventEmitter {
    */
   private _server: string
   /**
-   * 服务器端口, 目前为788
+   * 服务器端口
    * 
    * @type {number}
    * @memberof CommentClient
    */
-  public port: number = 788
+  public port: number
   /**
    * 客户端版本, 目前为1
    * 
@@ -123,13 +123,16 @@ export class CommentClient extends EventEmitter {
       // 动态获取服务器地址, 防止B站临时更换
       let options = { uri: `${rootOrigin}/api/player?id=cid:${this.roomID}&ts=${Date.now().toString(16)}` }
       tools.XHR<string>(options)
-        .then((resolve) => {
+        .then(resolve => {
           let server = resolve.match(/<server>(.+)<\/server>/)
+            , port = resolve.match(/<dm_port>(\d+)<\/dm_port>/)
           this._server = server == null ? 'livecmt-2.bilibili.com' : server[1]
+          this.port = port == null ? 2243 : parseInt(port[1])
           this._ClientConnect()
         })
         .catch(() => {
           this._server = 'livecmt-2.bilibili.com'
+          this.port = 2243
           this._ClientConnect()
         })
     }
@@ -238,8 +241,9 @@ export class CommentClient extends EventEmitter {
   private _ClientConnectHandler() {
     this._connected = true
     let roomid = this.roomID
-    let uid = this.userID || 100000000000000 + parseInt((200000000000000 * Math.random()).toFixed(0))
-    let data = JSON.stringify({ uid, roomid })
+      , protover = 2
+      , uid = this.userID || 100000000000000 + parseInt((200000000000000 * Math.random()).toFixed(0))
+      , data = JSON.stringify({ uid, protover, roomid })
     this._ClientSendData(16 + data.length, 16, this.version, 7, 1, data)
     this._ClientTimer()
   }
@@ -275,7 +279,7 @@ export class CommentClient extends EventEmitter {
    * @memberof CommentClient
    */
   private _ClientSendData(totalLen: number, headLen: number, version: number, param4: number, param5 = 1, data?: string): boolean {
-    var bufferData = Buffer.alloc(totalLen)
+    var bufferData = new Buffer(totalLen)
     bufferData.writeUInt32BE(totalLen, 0)
     bufferData.writeUInt16BE(headLen, 4)
     bufferData.writeUInt16BE(version, 6)
@@ -291,21 +295,28 @@ export class CommentClient extends EventEmitter {
    * @param {Buffer} data
    * @memberof CommentClient
    */
-  private _ClientDataHandler(data: Buffer) {
+  private async _ClientDataHandler(data: Buffer) {
     let dataLen = data.length
     if (dataLen < 16 || dataLen > 1048576) return
-    if (dataLen > 20) {
-      try {
-        data = inflateSync(data.slice(16, dataLen))
-        dataLen = data.length
-      }
-      catch (error) {
-        this.emit('commentError', '意外的弹幕信息')
-        return
+    let packageLen = data.readUInt32BE(0)
+    if (dataLen !== packageLen) return
+    // 检查是否压缩
+    if (dataLen > 18) {
+      let compress = data.readUInt16BE(16)
+      if (compress === 30938) {
+        let uncompressData = await tools.Uncompress(data.slice(16, dataLen)).catch(tools.Log)
+        if (uncompressData != null) {
+          data = inflateSync(data.slice(16, dataLen))
+          dataLen = data.length
+          packageLen = data.readUInt32BE(0)
+        }
+        else {
+          this.emit('commentError', '意外的弹幕信息')
+          return
+        }
       }
     }
     let packageIndex = 0
-    let packageLen = data.readUInt32BE(0)
     while (dataLen - packageIndex >= packageLen) {
       switch (data.readUInt32BE(packageIndex + 8)) {
         case 1:
@@ -315,13 +326,9 @@ export class CommentClient extends EventEmitter {
           break
         case 4:
         case 5:
-          try {
-            let dataJson: danmuJson = JSON.parse(data.toString('utf8', packageIndex + 16, packageIndex + packageLen))
-            this._ParseClientData(dataJson)
-          }
-          catch (error) {
-            this.emit('commentError', '意外的弹幕信息')
-          }
+          let dataJson = await tools.JsonParse<danmuJson>(data.toString('UTF-8', packageIndex + 16, packageIndex + packageLen)).catch(tools.Log)
+          if (dataJson != null) this._ParseClientData(dataJson)
+          else this.emit('commentError', '意外的弹幕信息')
           break
         case 8:
           this.emit('serverSuccess', '服务器连接成功')
@@ -419,6 +426,9 @@ export class CommentClient extends EventEmitter {
         break
       case 'CHANGE_ROOM_INFO':
         this.emit('CHANGE_ROOM_INFO', dataJson)
+        break
+      case 'DRAW_UPDATE':
+        this.emit('DRAW_UPDATE', dataJson)
         break
       default:
         this.emit('OTHER', dataJson)
@@ -632,12 +642,13 @@ export interface SYS_GIFT extends danmuJson {
   msg: string // 消息内容
   tips: string // 聊天窗口tip
   rep: number // 1为活动消息
+  giftId: number // 礼物id
   msgTips: number
   url: string // 点击跳转的地址
   rnd: number
 }
 /**
- * 活动快捷参与
+ * 活动相关
  * 
  * @export
  * @interface EVENT_CMD
@@ -651,7 +662,7 @@ export interface EVENT_CMD_Data extends danmuJson {
   event_img: string // 显示图片
 }
 /**
- * 活动快捷参与
+ * 快速抽奖
  * 
  * @export
  * @interface LIGHTEN_START
@@ -852,4 +863,14 @@ export interface ROOM_ADMINS extends danmuJson {
  */
 export interface CHANGE_ROOM_INFO extends danmuJson {
   background: string // 背景图片
+}
+export interface DRAW_UPDATE extends danmuJson {
+  data: DRAW_UPDATE_data
+}
+export interface DRAW_UPDATE_data extends danmuJson {
+  x_min: number
+  x_max: number
+  y_min: number
+  y_max: number
+  color: string
 }

@@ -1,4 +1,5 @@
 import * as fs from 'fs'
+import { inflate } from 'zlib'
 import * as request from 'request'
 import { config, usersData, userData } from '../index'
 /**
@@ -50,7 +51,7 @@ export function SetCookie(cookieString: string, url: string): request.CookieJar 
  * @param {config} [options]
  * @returns {Promise<config>}
  */
-export function UserInfo(options?: config): Promise<config> {
+export function Options(options?: config): Promise<config> {
   return new Promise<config>((resolve, reject) => {
     if (options == null) {
       fs.readFile(`${__dirname}/../options.json`, (error, data) => {
@@ -68,6 +69,38 @@ export function UserInfo(options?: config): Promise<config> {
         else reject(error)
       })
     }
+  })
+}
+/**
+ * 格式化JSON
+ * 
+ * @export
+ * @template T 
+ * @param {string} text 
+ * @param {((key: any, value: any) => any)} [reviver] 
+ * @returns {Promise<T>} 
+ */
+export function JsonParse<T>(text: string, reviver?: ((key: any, value: any) => any)): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    try {
+      let obj = JSON.parse(text, reviver)
+      resolve(obj)
+    } catch (error) { reject(error) }
+  })
+}
+/**
+ * 解压数据
+ * 
+ * @export
+ * @param {Buffer} data 
+ * @returns {Promise<Buffer>} 
+ */
+export function Uncompress(data: Buffer): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    inflate(data, (error, result) => {
+      if (error == null) resolve(result)
+      else reject(error)
+    })
   })
 }
 /**

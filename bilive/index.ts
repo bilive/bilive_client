@@ -25,7 +25,7 @@ export class BiLive {
   public Start() {
     this._SetOptionsFile()
       .then<config>(() => {
-        return tools.UserInfo()
+        return tools.Options()
       })
       .then((resolve) => {
         options = resolve
@@ -74,7 +74,7 @@ export class BiLive {
     SOptions
       .on('changeOptions', (config: config) => {
         options = config
-        tools.UserInfo(options)
+        tools.Options(options)
       })
       .Start()
   }
@@ -231,7 +231,7 @@ export class BiLive {
       .then((resolve) => {
         cookieJar[uid] = resolve
         options.usersData[uid].cookie = resolve.getCookieString(rootOrigin)
-        tools.UserInfo(options)
+        tools.Options(options)
         tools.Log(`${userData.nickname} Cookie已更新`)
       })
       .catch((reject) => {
@@ -254,12 +254,12 @@ export class BiLive {
     })
       .then((resolve) => {
         options.usersData[uid].accessToken = resolve
-        tools.UserInfo(options)
+        tools.Options(options)
         tools.Log(`${userData.nickname} Token已更新`)
       })
       .catch((reject) => {
         options.usersData[uid].status = false
-        tools.UserInfo(options)
+        tools.Options(options)
         tools.Log(userData.nickname, 'Token更新失败', reject)
       })
   }
