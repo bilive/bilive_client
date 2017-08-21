@@ -1,6 +1,5 @@
 import { Socket } from 'net'
 import { EventEmitter } from 'events'
-import { inflateSync } from 'zlib'
 import * as tools from './tools'
 import { rootOrigin } from '../index'
 /**
@@ -306,7 +305,7 @@ export class CommentClient extends EventEmitter {
       if (compress === 30938) {
         let uncompressData = await tools.Uncompress(data.slice(16, dataLen)).catch(tools.Log)
         if (uncompressData != null) {
-          data = inflateSync(data.slice(16, dataLen))
+          data = uncompressData
           dataLen = data.length
           packageLen = data.readUInt32BE(0)
         }
