@@ -16,7 +16,7 @@ export function XHR<T>(options: request.Options): Promise<T> {
   // 添加头信息
   let headers = {
     'user-agent': 'Mozilla/5.0 BiliLiveDroid/2.0.0 bililive',
-    'referer': 'https://live.bilibili.com/'
+    'referer': 'http://live.bilibili.com/'
   }
   if (options.method === 'POST') headers['content-type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
   if (options.headers == null) options.headers = headers
@@ -112,6 +112,16 @@ export function Uncompress(data: Buffer): Promise<Buffer> {
  */
 export function Log(message?: any, ...optionalParams: any[]) {
   console.log(`${new Date().toString().slice(4, 24)} :`, message, ...optionalParams)
+}
+/**
+ * 格式化输出, 配合PM2凑合用
+ * 
+ * @export
+ * @param {*} [message]
+ * @param {...any[]} optionalParams
+ */
+export function Error(message?: any, ...optionalParams: any[]) {
+  console.error(`${new Date().toString().slice(4, 24)} :`, message, ...optionalParams)
 }
 /**
  * sleep

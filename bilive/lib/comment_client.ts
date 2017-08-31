@@ -47,10 +47,11 @@ export class CommentClient extends EventEmitter {
   /**
    * 服务器端口
    * 
+   * @private
    * @type {number}
    * @memberof CommentClient
    */
-  public port: number
+  private _port: number
   /**
    * 客户端版本, 目前为1
    * 
@@ -100,6 +101,16 @@ export class CommentClient extends EventEmitter {
     return this._server
   }
   /**
+   * 当前连接的弹幕服务器端口
+   * 
+   * @readonly
+   * @type {number}
+   * @memberof CommentClient
+   */
+  public get port(): number {
+    return this._port
+  }
+  /**
    * 是否已经连接到服务器
    * 
    * @readonly
@@ -113,12 +124,13 @@ export class CommentClient extends EventEmitter {
    * 连接到指定服务器
    * 
    * @param {string} [server] 为了快速连接
+   * @param {number} [port] 为了快速连接
    * @memberof CommentClient
    */
-  public Connect(server?: string) {
+  public Connect(server?: string, port?: number) {
     if (this._connected) return
     clearTimeout(this._Timer)
-    if (server == null) {
+    if (server == null || port == null) {
       // 动态获取服务器地址, 防止B站临时更换
       let options = { uri: `${rootOrigin}/api/player?id=cid:${this.roomID}&ts=${Date.now().toString(16)}` }
       tools.XHR<string>(options)
@@ -126,17 +138,18 @@ export class CommentClient extends EventEmitter {
           let server = resolve.match(/<server>(.+)<\/server>/)
             , port = resolve.match(/<dm_port>(\d+)<\/dm_port>/)
           this._server = server == null ? 'livecmt-2.bilibili.com' : server[1]
-          this.port = port == null ? 2243 : parseInt(port[1])
+          this._port = port == null ? 2243 : parseInt(port[1])
           this._ClientConnect()
         })
         .catch(() => {
           this._server = 'livecmt-2.bilibili.com'
-          this.port = 2243
+          this._port = 2243
           this._ClientConnect()
         })
     }
     else {
       this._server = server
+      this._port = port
       this._ClientConnect()
     }
   }
@@ -189,7 +202,7 @@ export class CommentClient extends EventEmitter {
       .on('connect', this._ClientConnectHandler.bind(this))
       .on('data', this._ClientDataHandler.bind(this))
       .on('end', this._ClientEndHandler.bind(this))
-      .connect(this.port, this._server)
+      .connect(this._port, this._server)
   }
   /**
    * 客户端连接重试
@@ -303,7 +316,7 @@ export class CommentClient extends EventEmitter {
     if (dataLen > 18) {
       let compress = data.readUInt16BE(16)
       if (compress === 30938) {
-        let uncompressData = await tools.Uncompress(data.slice(16, dataLen)).catch(tools.Log)
+        let uncompressData = await tools.Uncompress(data.slice(16, dataLen)).catch(tools.Error)
         if (uncompressData != null) {
           data = uncompressData
           dataLen = data.length
@@ -325,7 +338,7 @@ export class CommentClient extends EventEmitter {
           break
         case 4:
         case 5:
-          let dataJson = await tools.JsonParse<danmuJson>(data.toString('UTF-8', packageIndex + 16, packageIndex + packageLen)).catch(tools.Log)
+          let dataJson = await tools.JsonParse<danmuJson>(data.toString('UTF-8', packageIndex + 16, packageIndex + packageLen)).catch(tools.Error)
           if (dataJson != null) this._ParseClientData(dataJson)
           else this.emit('commentError', '意外的弹幕信息')
           break

@@ -64,7 +64,7 @@ export class Raffle {
    * @type {string}
    * @memberof Raffle
    */
-  public raffleUrl: string = `${rootOrigin}/activity/v1/SummerBattle`
+  public raffleUrl: string = `${rootOrigin}/activity/v1/SchoolOpen`
   /**
    * 活动地址
    * @type {string}

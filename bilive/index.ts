@@ -264,7 +264,7 @@ export class BiLive {
       })
   }
 }
-export let rootOrigin = 'https://api.live.bilibili.com',
+export let rootOrigin = 'http://api.live.bilibili.com',
   cookieJar: cookieJar = {},
   options: config
 /**

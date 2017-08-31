@@ -119,8 +119,8 @@ export class Listener extends EventEmitter {
   private _SYSGiftHandler(dataJson: SYS_GIFT) {
     if (dataJson.roomid == null) return
     let roomID = dataJson.roomid
-    if (dataJson.msg.includes('一起来打水仗吧')) {
-      let check: request.Options = { uri: `${rootOrigin}/activity/v1/SummerBattle/check?roomid=${roomID}` }
+    if (dataJson.msg.includes('认真学习模式')) {
+      let check: request.Options = { uri: `${rootOrigin}/activity/v1/SchoolOpen/check?roomid=${roomID}` }
       tools.XHR<string>(check)
         .then((resolve) => {
           let raffleCheck: raffleCheck = JSON.parse(resolve)
@@ -136,7 +136,7 @@ export class Listener extends EventEmitter {
             this._RaffleHandler(message)
           }
         })
-        .catch(tools.Log)
+        .catch(tools.Error)
     }
     else if (dataJson.rep === 1) {
       let check: request.Options = { uri: `${rootOrigin}/activity/v1/NeedYou/getLiveInfo?roomid=${roomID}` }
@@ -155,7 +155,7 @@ export class Listener extends EventEmitter {
             this._LightenHandler(message)
           }
         })
-        .catch(tools.Log)
+        .catch(tools.Error)
     }
   }
   /**
