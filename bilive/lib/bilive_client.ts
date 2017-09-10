@@ -216,7 +216,7 @@ export interface beatStormInfo {
 export interface smallTVInfo {
   roomID: number
   id: number
-  url?: string
+  pathname?: string
   rawData: SYS_MSG
 }
 /**
@@ -228,7 +228,7 @@ export interface smallTVInfo {
 export interface raffleInfo {
   roomID: number
   id: number
-  url?: string
+  pathname?: string
   rawData: SYS_GIFT | RAFFLE_START
 }
 /**
@@ -240,7 +240,7 @@ export interface raffleInfo {
 export interface lightenInfo {
   roomID: number
   id: number
-  url?: string
+  pathname?: string
   rawData: SYS_GIFT | LIGHTEN_START
 }
 /**

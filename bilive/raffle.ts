@@ -1,6 +1,6 @@
 import * as request from 'request'
 import * as tools from './lib/tools'
-import { rootOrigin } from './index'
+import { rootOrigin, smallTVPathname, rafflePathname, lightenPathname } from './index'
 /**
  * 自动参与抽奖
  * 
@@ -57,20 +57,20 @@ export class Raffle {
    * @type {string}
    * @memberof Raffle
    */
-  public smallTVUrl: string = `${rootOrigin}/SmallTV`
+  public smallTVUrl: string = rootOrigin + smallTVPathname
   /**
    * 抽奖地址
    * 
    * @type {string}
    * @memberof Raffle
    */
-  public raffleUrl: string = `${rootOrigin}/activity/v1/SchoolOpen`
+  public raffleUrl: string = rootOrigin + rafflePathname
   /**
    * 活动地址
    * @type {string}
    * @memberof Raffle
    */
-  public lightenUrl: string = `${rootOrigin}/activity/v1/NeedYou`
+  public lightenUrl: string = rootOrigin + lightenPathname
   /**
    * 参与小电视抽奖
    * 
@@ -105,8 +105,8 @@ export class Raffle {
         if (smallTVRewardResponse.code === 0) {
           if (smallTVRewardResponse.data.status === 2) setTimeout(this._SmallTVReward.bind(this), 3e4) // 30秒
           else if (smallTVRewardResponse.data.status === 0) {
-            let winGift = smallTVRewardResponse.data.reward,
-              gift: string
+            let winGift = smallTVRewardResponse.data.reward
+              , gift: string
             switch (winGift.id) {
               case 1:
                 gift = '小电视'

@@ -123,7 +123,7 @@ export class BiLive {
           nickname: userData.nickname
         }
         let newRaffle = new Raffle(raffleOptions)
-        if (smallTVInfo.url != null) newRaffle.smallTVUrl = rootOrigin + smallTVInfo.url
+        if (smallTVInfo.pathname != null) newRaffle.smallTVUrl = rootOrigin + smallTVInfo.pathname
         newRaffle.SmallTV()
       }
     }
@@ -146,7 +146,7 @@ export class BiLive {
           nickname: userData.nickname
         }
         let newRaffle = new Raffle(raffleOptions)
-        if (raffleInfo.url != null) newRaffle.raffleUrl = rootOrigin + raffleInfo.url
+        if (raffleInfo.pathname != null) newRaffle.raffleUrl = rootOrigin + raffleInfo.pathname
         newRaffle.Raffle()
       }
     }
@@ -170,7 +170,7 @@ export class BiLive {
           nickname: userData.nickname
         }
         let newRaffle = new Raffle(raffleOptions)
-        if (lightenInfo.url != null) newRaffle.lightenUrl = rootOrigin + lightenInfo.url
+        if (lightenInfo.pathname != null) newRaffle.lightenUrl = rootOrigin + lightenInfo.pathname
         newRaffle.Lighten()
       }
     }
@@ -186,8 +186,8 @@ export class BiLive {
     if (options.beatStormBlackList.indexOf(beatStormInfo.roomID) > -1) return
     let usersData = options.usersData
     for (let uid in usersData) {
-      let userData = usersData[uid],
-        jar = cookieJar[uid]
+      let userData = usersData[uid]
+        , jar = cookieJar[uid]
       if (userData.status && userData.beatStorm) {
         let beatStormOptions: beatStormOptions = {
           content: beatStormInfo.content,
@@ -270,9 +270,12 @@ export class BiLive {
       })
   }
 }
-export let rootOrigin = 'http://api.live.bilibili.com',
-  cookieJar: cookieJar = {},
-  options: config
+export let rootOrigin = 'http://api.live.bilibili.com'
+  , smallTVPathname = '/SmallTV'
+  , rafflePathname = '/activity/v1/SchoolOpen'
+  , lightenPathname = '/activity/v1/NeedYou'
+  , cookieJar: cookieJar = {}
+  , options: config
 /**
  * 应用设置
  * 

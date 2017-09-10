@@ -647,17 +647,29 @@ export interface SYS_MSG extends danmuJson {
  */
 export interface SYS_GIFT extends danmuJson {
   msg: string // 消息内容
+  msg_text: string // 同msg
   rnd: number
   uid: number
 }
 export interface SYS_GIFT extends danmuJson {
   msg: string // 消息内容
+  msg_text: string // 同msg
   tips: string // 聊天窗口tip
   rep: number // 1为活动消息
   giftId: number // 礼物id
   msgTips: number
   url: string // 点击跳转的地址
   rnd: number
+}
+export interface SYS_GIFT extends danmuJson {
+  msg: string // 消息内容
+  msg_text: string // 同msg
+  tips: string // 同msg
+  url: string // 点击跳转的地址
+  roomid: number // 短房间号
+  real_roomid: number // 原始房间号
+  giftId: number // 礼物id
+  msgTips: number
 }
 /**
  * 活动相关

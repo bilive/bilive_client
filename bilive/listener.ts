@@ -4,7 +4,7 @@ import * as ws from 'ws'
 import { EventEmitter } from 'events'
 import { BiliveClient, message, beatStormInfo, smallTVInfo, raffleInfo, lightenInfo, debugInfo } from './lib/bilive_client'
 import { CommentClient, SYS_MSG, SYS_GIFT, LIGHTEN_START } from './lib/comment_client'
-import { rootOrigin, options } from './index'
+import { rootOrigin, rafflePathname, lightenPathname, options } from './index'
 /**
  * 监听服务器消息
  * 
@@ -76,8 +76,8 @@ export class Listener extends EventEmitter {
       .on('SYS_MSG', this._SYSMSGHandler.bind(this))
       .on('SYS_GIFT', this._SYSGiftHandler.bind(this))
       .Connect()
-    let apiOrigin = options.apiOrigin,
-      apiKey = options.apiKey
+    let apiOrigin = options.apiOrigin
+      , apiKey = options.apiKey
     if (apiOrigin === '' || apiKey === '') return
     this._Client = new BiliveClient(apiOrigin, apiKey)
     this._Client
@@ -119,8 +119,9 @@ export class Listener extends EventEmitter {
   private _SYSGiftHandler(dataJson: SYS_GIFT) {
     if (dataJson.roomid == null) return
     let roomID = dataJson.roomid
-    if (dataJson.msg.includes('认真学习模式')) {
-      let check: request.Options = { uri: `${rootOrigin}/activity/v1/SchoolOpen/check?roomid=${roomID}` }
+    if (dataJson.real_roomid != null && dataJson.giftId === 85) {
+      let roomID = dataJson.real_roomid
+        , check: request.Options = { uri: `${rootOrigin}${rafflePathname}/check?roomid=${roomID}` }
       tools.XHR<string>(check)
         .then((resolve) => {
           let raffleCheck: raffleCheck = JSON.parse(resolve)
@@ -139,7 +140,7 @@ export class Listener extends EventEmitter {
         .catch(tools.Error)
     }
     else if (dataJson.rep === 1) {
-      let check: request.Options = { uri: `${rootOrigin}/activity/v1/NeedYou/getLiveInfo?roomid=${roomID}` }
+      let check: request.Options = { uri: `${rootOrigin}${lightenPathname}/getLiveInfo?roomid=${roomID}` }
       tools.XHR<string>(check)
         .then((resolve) => {
           let lightenCheck: lightenCheck = JSON.parse(resolve)
@@ -168,8 +169,8 @@ export class Listener extends EventEmitter {
   private _SmallTVHandler(message: message) {
     let smallTVInfo = <smallTVInfo>message.data
     if (this._smallTVID >= smallTVInfo.id) return
-    let roomID = smallTVInfo.roomID,
-      id = smallTVInfo.id
+    let roomID = smallTVInfo.roomID
+      , id = smallTVInfo.id
     this._smallTVID = id
     tools.Log(`房间 ${roomID} 赠送了第 ${id} 个小电视`)
     this.emit('smallTV', smallTVInfo)
@@ -184,8 +185,8 @@ export class Listener extends EventEmitter {
   private _RaffleHandler(message: message) {
     let raffleInfo = <raffleInfo>message.data
     if (this._raffleID >= raffleInfo.id) return
-    let roomID = raffleInfo.roomID,
-      id = raffleInfo.id
+    let roomID = raffleInfo.roomID
+      , id = raffleInfo.id
     this._raffleID = id
     tools.Log(`房间 ${roomID} 赠送了第 ${id} 个活动道具`)
     this.emit('raffle', raffleInfo)
@@ -200,8 +201,8 @@ export class Listener extends EventEmitter {
   private _LightenHandler(message: message) {
     let lightenInfo = <lightenInfo>message.data
     if (this._lightenID >= lightenInfo.id) return
-    let roomID = lightenInfo.roomID,
-      id = lightenInfo.id
+    let roomID = lightenInfo.roomID
+      , id = lightenInfo.id
     this._lightenID = id
     tools.Log(`房间 ${roomID} 赠送了第 ${id} 个活动道具`)
     this.emit('lighten', lightenInfo)
@@ -216,8 +217,8 @@ export class Listener extends EventEmitter {
   private _BeatStormHandler(message: message) {
     let beatStormInfo = <beatStormInfo>message.data
     if (this._beatStormID >= beatStormInfo.id) return
-    let roomID = beatStormInfo.roomID,
-      id = beatStormInfo.id
+    let roomID = beatStormInfo.roomID
+      , id = beatStormInfo.id
     this._beatStormID = id
     tools.Log(`房间 ${roomID} 赠送了第 ${id} 个节奏风暴`)
     this.emit('beatStorm', beatStormInfo)
