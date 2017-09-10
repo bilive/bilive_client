@@ -122,7 +122,9 @@ export class BiLive {
           jar,
           nickname: userData.nickname
         }
-        new Raffle(raffleOptions).SmallTV()
+        let newRaffle = new Raffle(raffleOptions)
+        if (smallTVInfo.url != null) newRaffle.smallTVUrl = rootOrigin + smallTVInfo.url
+        newRaffle.SmallTV()
       }
     }
   }
@@ -143,7 +145,9 @@ export class BiLive {
           jar,
           nickname: userData.nickname
         }
-        new Raffle(raffleOptions).Raffle()
+        let newRaffle = new Raffle(raffleOptions)
+        if (raffleInfo.url != null) newRaffle.raffleUrl = rootOrigin + raffleInfo.url
+        newRaffle.Raffle()
       }
     }
   }
@@ -165,7 +169,9 @@ export class BiLive {
           jar,
           nickname: userData.nickname
         }
-        new Raffle(raffleOptions).Lighten()
+        let newRaffle = new Raffle(raffleOptions)
+        if (lightenInfo.url != null) newRaffle.lightenUrl = rootOrigin + lightenInfo.url
+        newRaffle.Lighten()
       }
     }
   }

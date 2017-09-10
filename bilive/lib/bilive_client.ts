@@ -196,17 +196,6 @@ export interface message {
   data?: smallTVInfo | beatStormInfo | raffleInfo | lightenInfo | debugInfo
 }
 /**
- * 小电视信息
- * 
- * @export
- * @interface smallTVInfo
- */
-export interface smallTVInfo {
-  roomID: number
-  id: number
-  rawData: SYS_MSG
-}
-/**
  * 节奏风暴信息
  * 
  * @export
@@ -219,6 +208,18 @@ export interface beatStormInfo {
   rawData: SPECIAL_GIFT
 }
 /**
+ * 小电视信息
+ * 
+ * @export
+ * @interface smallTVInfo
+ */
+export interface smallTVInfo {
+  roomID: number
+  id: number
+  url?: string
+  rawData: SYS_MSG
+}
+/**
  * 抽奖信息
  * 
  * @export
@@ -227,6 +228,7 @@ export interface beatStormInfo {
 export interface raffleInfo {
   roomID: number
   id: number
+  url?: string
   rawData: SYS_GIFT | RAFFLE_START
 }
 /**
@@ -238,6 +240,7 @@ export interface raffleInfo {
 export interface lightenInfo {
   roomID: number
   id: number
+  url?: string
   rawData: SYS_GIFT | LIGHTEN_START
 }
 /**
