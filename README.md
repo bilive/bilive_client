@@ -4,6 +4,13 @@
 4. 运行npm install
 5. 运行node app.js
 
+
+十一限时开放全功能 (只是体验, 因为亿圆连我自己都抢不到了)
+
+>远程服务器地址 wss://bilive.halaal.win/clientapi\
+>apiKey eecef037def2c86a5d74798276d80f1a
+
+
 TODO:
 * 增强SDK
 * * 保存用户信息后立即尝试登录
