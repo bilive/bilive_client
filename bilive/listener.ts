@@ -1,10 +1,10 @@
 import * as request from 'request'
 import * as tools from './lib/tools'
-import * as ws from 'ws'
 import { EventEmitter } from 'events'
 import { BiliveClient, message, beatStormInfo, smallTVInfo, raffleInfo, lightenInfo, debugInfo } from './lib/bilive_client'
-import { CommentClient, SYS_MSG, SYS_GIFT, LIGHTEN_START } from './lib/comment_client'
-import { rootOrigin, rafflePathname, lightenPathname, options } from './index'
+import { CommentClient } from './lib/comment_client'
+import { SYS_MSG, SYS_GIFT } from './lib/danmaku.type'
+import { apiLiveOrigin, rafflePathname, lightenPathname, options } from './index'
 /**
  * 监听服务器消息
  * 
@@ -116,47 +116,51 @@ export class Listener extends EventEmitter {
    * @param {SYS_GIFT} dataJson
    * @memberof Listener
    */
-  private _SYSGiftHandler(dataJson: SYS_GIFT) {
+  private async _SYSGiftHandler(dataJson: SYS_GIFT) {
     if (dataJson.roomid == null) return
     let roomID = dataJson.roomid
     if (dataJson.real_roomid != null && dataJson.giftId === 85) {
       let roomID = dataJson.real_roomid
-        , check: request.Options = { uri: `${rootOrigin}${rafflePathname}/check?roomid=${roomID}` }
-      tools.XHR<string>(check)
-        .then((resolve) => {
-          let raffleCheck: raffleCheck = JSON.parse(resolve)
-          if (raffleCheck.code === 0 && raffleCheck.data.length > 0) {
-            let message: message = {
-              cmd: 'raffle',
-              data: {
-                roomID,
-                id: raffleCheck.data[0].raffleId,
-                rawData: dataJson
-              }
-            }
-            this._RaffleHandler(message)
+        , check: request.Options = {
+          uri: `${apiLiveOrigin}${rafflePathname}/check?roomid=${roomID}`,
+          json: true,
+          headers: {
+            'Referer': `http://live.bilibili.com/neptune/${roomID}`
           }
-        })
-        .catch(tools.Error)
+        }
+      let raffleCheck = await tools.XHR<raffleCheck>(check).catch(tools.Error)
+      if (raffleCheck != null && raffleCheck.body.code === 0 && raffleCheck.body.data.length > 0) {
+        let message: message = {
+          cmd: 'raffle',
+          data: {
+            roomID,
+            id: raffleCheck.body.data[0].raffleId,
+            rawData: dataJson
+          }
+        }
+        this._RaffleHandler(message)
+      }
     }
-    else if (dataJson.rep === 1) {
-      let check: request.Options = { uri: `${rootOrigin}${lightenPathname}/getLiveInfo?roomid=${roomID}` }
-      tools.XHR<string>(check)
-        .then((resolve) => {
-          let lightenCheck: lightenCheck = JSON.parse(resolve)
-          if (lightenCheck.code === 0 && lightenCheck.data.length > 0) {
-            let message: message = {
-              cmd: 'lighten',
-              data: {
-                roomID,
-                id: lightenCheck.data[0].lightenId,
-                rawData: dataJson
-              }
-            }
-            this._LightenHandler(message)
+    else if (dataJson.real_roomid != null && dataJson.giftId === 84) {
+      let check: request.Options = {
+        uri: `${apiLiveOrigin}${lightenPathname}/getLiveInfo?roomid=${roomID}`,
+        json: true,
+        headers: {
+          'Referer': `http://live.bilibili.com/neptune/${roomID}`
+        }
+      }
+      let lightenCheck = await tools.XHR<lightenCheck>(check).catch(tools.Error)
+      if (lightenCheck != null && lightenCheck.body.code === 0 && lightenCheck.body.data.length > 0) {
+        let message: message = {
+          cmd: 'lighten',
+          data: {
+            roomID,
+            id: lightenCheck.body.data[0].lightenId,
+            rawData: dataJson
           }
-        })
-        .catch(tools.Error)
+        }
+        this._LightenHandler(message)
+      }
     }
   }
   /**

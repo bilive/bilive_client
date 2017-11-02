@@ -1,7 +1,6 @@
 import * as ws from 'ws'
-import * as tools from './tools'
 import { EventEmitter } from 'events'
-import { SPECIAL_GIFT, SYS_MSG, SYS_GIFT, RAFFLE_START, LIGHTEN_START } from './comment_client'
+import { SPECIAL_GIFT, SYS_MSG, SYS_GIFT, RAFFLE_START, LIGHTEN_START } from './danmaku.type'
 /**
  * Blive客户端, 用于服务器和发送事件
  * 

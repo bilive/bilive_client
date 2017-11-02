@@ -1,6 +1,6 @@
 import * as request from 'request'
 import * as tools from './lib/tools'
-import { rootOrigin, smallTVPathname, rafflePathname, lightenPathname } from './index'
+import { apiLiveOrigin, smallTVPathname, rafflePathname, lightenPathname } from './index'
 /**
  * 自动参与抽奖
  * 
@@ -57,36 +57,40 @@ export class Raffle {
    * @type {string}
    * @memberof Raffle
    */
-  public smallTVUrl: string = rootOrigin + smallTVPathname
+  public smallTVUrl: string = apiLiveOrigin + smallTVPathname
   /**
    * 抽奖地址
    * 
    * @type {string}
    * @memberof Raffle
    */
-  public raffleUrl: string = rootOrigin + rafflePathname
+  public raffleUrl: string = apiLiveOrigin + rafflePathname
   /**
    * 活动地址
    * @type {string}
    * @memberof Raffle
    */
-  public lightenUrl: string = rootOrigin + lightenPathname
+  public lightenUrl: string = apiLiveOrigin + lightenPathname
   /**
    * 参与小电视抽奖
    * 
    * @memberof Raffle
    */
-  public SmallTV() {
+  public async SmallTV() {
     let join: request.Options = {
-      uri: `${this.smallTVUrl}/join?roomid=${this._roomID}&id=${this._raffleId}`,
-      jar: this._jar
+      uri: `${this.smallTVUrl}/join?roomid=${this._roomID}&id=${this._raffleId}&_=${Date.now()}`,
+      jar: this._jar,
+      json: true,
+      headers: {
+        'Referer': `http://live.bilibili.com/neptune/${this._roomID}`
+      }
     }
-    tools.XHR<string>(join)
-      .then((resolve) => {
-        let smallTVJoinResponse: smallTVJoinResponse = JSON.parse(resolve)
-        if (smallTVJoinResponse.code === 0) setTimeout(this._SmallTVReward.bind(this), 2e5) // 200秒
-      })
-      .catch((reject) => { tools.Log(this._nickname, reject) })
+      , smallTVJoinResponse = await tools.XHR<smallTVJoinResponse>(join)
+        .catch((reject) => { tools.Error(this._nickname, reject) })
+    if (smallTVJoinResponse != null && smallTVJoinResponse.body.code === 0) {
+      await tools.Sleep(2e+5) // 200秒
+      this._SmallTVReward()
+    }
   }
   /**
    * 获取小电视中奖结果
@@ -94,69 +98,78 @@ export class Raffle {
    * @private
    * @memberof Raffle
    */
-  private _SmallTVReward() {
+  private async _SmallTVReward() {
     let reward: request.Options = {
-      uri: `${this.smallTVUrl}/getReward?id=${this._raffleId}`,
-      jar: this._jar
+      uri: `${this.smallTVUrl}/getReward?id=${this._raffleId}&_=${Date.now()}`,
+      jar: this._jar,
+      json: true,
+      headers: {
+        'Referer': `http://live.bilibili.com/neptune/${this._roomID}`
+      }
     }
-    tools.XHR<string>(reward)
-      .then((resolve) => {
-        let smallTVRewardResponse: smallTVRewardResponse = JSON.parse(resolve)
-        if (smallTVRewardResponse.code === 0) {
-          if (smallTVRewardResponse.data.status === 2) setTimeout(this._SmallTVReward.bind(this), 3e4) // 30秒
-          else if (smallTVRewardResponse.data.status === 0) {
-            let winGift = smallTVRewardResponse.data.reward
-              , gift: string
-            switch (winGift.id) {
-              case 1:
-                gift = '小电视'
-                break
-              case 2:
-                gift = '蓝白胖次'
-                break
-              case 3:
-                gift = 'B坷垃'
-                break
-              case 4:
-                gift = '喵娘'
-                break
-              case 5:
-                gift = '便当'
-                break
-              case 6:
-                gift = '银瓜子'
-                break
-              case 7:
-                gift = '辣条'
-                break
-              default:
-                gift = '空虚'
-                break
-            }
-            tools.Log(this._nickname, `获得 ${winGift.num} 个${gift}`)
-          }
+      , smallTVRewardResponse = await tools.XHR<smallTVRewardResponse>(reward)
+        .catch((reject) => { tools.Error(this._nickname, reject) })
+    if (smallTVRewardResponse != null && smallTVRewardResponse.body.code === 0) {
+      if (smallTVRewardResponse.body.data.status === 2) {
+        await tools.Sleep(3e+4) // 30秒
+        this._SmallTVReward()
+      }
+      else if (smallTVRewardResponse.body.data.status === 0) {
+        let winGift = smallTVRewardResponse.body.data.reward
+          , gift: string
+        switch (winGift.id) {
+          case 1:
+            gift = '小电视'
+            break
+          case 2:
+            gift = '蓝白胖次'
+            break
+          case 3:
+            gift = 'B坷垃'
+            break
+          case 4:
+            gift = '喵娘'
+            break
+          case 5:
+            gift = '便当'
+            break
+          case 6:
+            gift = '银瓜子'
+            break
+          case 7:
+            gift = '辣条'
+            break
+          default:
+            gift = '空虚'
+            break
         }
-      })
-      .catch((reject) => { tools.Log(this._nickname, reject) })
+        tools.Log(this._nickname, `获得 ${winGift.num} 个${gift}`)
+      }
+    }
   }
   /**
    * 参与抽奖
    * 
    * @memberof Raffle
    */
-  public Raffle() {
+  public async Raffle() {
     let join: request.Options = {
       method: 'POST',
       uri: `${this.raffleUrl}/join`,
-      body: `roomid=${this._roomID}&raffleId=${this._raffleId}`,
-      jar: this._jar
+      body: `roomid=${this._roomID}&raffleId=${this._raffleId}&_=${Date.now()}`,
+      jar: this._jar,
+      json: true,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Referer': `http://live.bilibili.com/neptune/${this._roomID}`
+      }
     }
-    tools.XHR<string>(join)
-      .then((resolve) => {
-        let raffleJoinResponse: raffleJoinResponse = JSON.parse(resolve)
-        if (raffleJoinResponse.code === 0) setTimeout(this._RaffleReward.bind(this), 1e5) // 100秒
-      })
-      .catch((reject) => { tools.Log(this._nickname, reject) })
+      , raffleJoinResponse = await tools.XHR<raffleJoinResponse>(join)
+        .catch((reject) => { tools.Error(this._nickname, reject) })
+    if (raffleJoinResponse != null && raffleJoinResponse.body.code === 0) {
+      await tools.Sleep(1e+5) // 100秒
+      this._RaffleReward()
+    }
   }
   /**
    * 获取抽奖结果
@@ -164,40 +177,43 @@ export class Raffle {
    * @private
    * @memberof Raffle
    */
-  private _RaffleReward() {
+  private async _RaffleReward() {
     let reward: request.Options = {
-      uri: `${this.raffleUrl}/notice?roomid=${this._roomID}&raffleId=${this._raffleId}`,
-      jar: this._jar
+      uri: `${this.raffleUrl}/notice?roomid=${this._roomID}&raffleId=${this._raffleId}&_=${Date.now()}`,
+      jar: this._jar,
+      json: true,
+      headers: {
+        'Referer': `http://live.bilibili.com/neptune/${this._roomID}`
+      }
     }
-    tools.XHR<string>(reward)
-      .then((resolve) => {
-        let raffleRewardResponse: raffleRewardResponse = JSON.parse(resolve)
-        if (raffleRewardResponse.code === 0) {
-          let gift = raffleRewardResponse.data
-          if (gift.gift_num === 0) tools.Log(this._nickname, raffleRewardResponse.msg)
-          else tools.Log(this._nickname, `获得 ${gift.gift_num} 个${gift.gift_name}`)
-        }
-      })
-      .catch((reject) => { tools.Log(this._nickname, reject) })
+      , raffleRewardResponse = await tools.XHR<raffleRewardResponse>(reward)
+        .catch((reject) => { tools.Error(this._nickname, reject) })
+    if (raffleRewardResponse != null && raffleRewardResponse.body.code === 0) {
+      let gift = raffleRewardResponse.body.data
+      if (gift.gift_num === 0) tools.Log(this._nickname, raffleRewardResponse.body.msg)
+      else tools.Log(this._nickname, `获得 ${gift.gift_num} 个${gift.gift_name}`)
+    }
   }
   /**
    * 参与快速抽奖
    * 
    * @memberof Raffle
    */
-  public Lighten() {
+  public async Lighten() {
     let getCoin: request.Options = {
       method: 'POST',
       uri: `${this.lightenUrl}/getCoin`,
-      body: `roomid=${this._roomID}&lightenId=${this._raffleId}`,
-      jar: this._jar
+      body: `roomid=${this._roomID}&lightenId=${this._raffleId}&_=${Date.now()}`,
+      jar: this._jar,
+      json: true,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Referer': `http://live.bilibili.com/neptune/${this._roomID}`
+      }
     }
-    tools.XHR<string>(getCoin)
-      .then((resolve) => {
-        let lightenRewardResponse: lightenRewardResponse = JSON.parse(resolve)
-        if (lightenRewardResponse.code === 0) tools.Log(this._nickname, lightenRewardResponse.msg)
-      })
-      .catch((reject) => { tools.Log(this._nickname, reject) })
+      , lightenRewardResponse = await tools.XHR<lightenRewardResponse>(getCoin)
+        .catch((reject) => { tools.Error(this._nickname, reject) })
+    if (lightenRewardResponse != null && lightenRewardResponse.body.code === 0) tools.Log(this._nickname, lightenRewardResponse.body.msg)
   }
 }
 /**
@@ -211,25 +227,6 @@ export interface raffleOptions {
   roomID: number
   jar: request.CookieJar
   nickname: string
-}
-/**
- * 房间小电视抽奖信息
- * 
- * @interface smallTVCheckResponse
- */
-interface smallTVCheckResponse {
-  code: number
-  msg: string
-  data: smallTVCheckResponseData
-}
-interface smallTVCheckResponseData {
-  lastid: number
-  join: smallTVCheckResponseDataJoin[]
-  unjoin: smallTVCheckResponseDataJoin[]
-}
-interface smallTVCheckResponseDataJoin {
-  id: number
-  dtime: number
 }
 /**
  * 参与小电视抽奖信息
@@ -268,25 +265,7 @@ interface smallTVRewardResponseDataReward {
   num: number
 }
 /**
- * 房间抽奖信息
- * 
- * @interface raffleCheckResponse
- */
-interface raffleCheckResponse {
-  code: number
-  msg: string
-  message: string
-  data: raffleCheckResponseData[]
-}
-interface raffleCheckResponseData {
-  form: string
-  raffleId: number
-  status: boolean
-  time: number
-  type: string
-}
-/**
- * 参与小抽奖信息
+ * 参与抽奖信息
  * 
  * @interface raffleJoinResponse
  */

@@ -1,30 +1,56 @@
 import * as fs from 'fs'
 import { inflate } from 'zlib'
 import * as request from 'request'
-import { config, usersData, userData } from '../index'
+import { config } from '../index'
 /**
  * 添加request头信息
  * 
  * @export
- * @template T
- * @param {request.Options} options
- * @returns {Promise<T>}
+ * @template T 
+ * @param {request.Options} options 
+ * @param {('PC' | 'Android' | 'WebView')} [platform='PC'] 
+ * @returns {Promise<response<T>>} 
  */
-export function XHR<T>(options: request.Options): Promise<T> {
-  // 开启gzip压缩
+export function XHR<T>(options: request.Options, platform: 'PC' | 'Android' | 'WebView' = 'PC'): Promise<response<T>> {
   options.gzip = true
   // 添加头信息
-  let headers = {
-    'user-agent': 'Mozilla/5.0 BiliLiveDroid/2.0.0 bililive',
-    'referer': 'http://live.bilibili.com/'
+  let headers: request.Headers
+  switch (platform) {
+    case 'Android':
+      headers = {
+        'Accept-Encoding': 'gzip',
+        'Connection': 'Keep-Alive',
+        'User-Agent': 'Mozilla/5.0 BiliLiveDroid/2.0.0 bililive'
+      }
+      break
+    case 'WebView':
+      headers = {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Encoding': 'gzip, deflate',
+        'Accept-Language': 'zh-CN',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': 1,
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 7.1.1; F8132 Build/41.2.A.7.65; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/61.0.3163.98 Mobile Safari/537.36 BiliApp/211109',
+        'X-Requested-With': 'com.bilibili.bilibililive'
+      }
+      break
+    default:
+      headers = {
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.6,en;q=0.4',
+        'Connection': 'keep-alive',
+        'DNT': '1',
+        'Origin': 'http://live.bilibili.com',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'
+      }
+      break
   }
-  if (options.method === 'POST') headers['content-type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
-  if (options.headers == null) options.headers = headers
-  else Object.assign(options.headers, headers)
+  options.headers = options.headers == null ? headers : Object.assign(headers, options.headers)
   // 返回异步request
-  return new Promise<T>((resolve, reject) => {
+  return new Promise<response<T>>((resolve, reject) => {
     request(options, (error, response, body) => {
-      if (error == null) resolve(body)
+      if (error == null) resolve({ response, body })
       else reject(error)
     })
   })
@@ -34,13 +60,15 @@ export function XHR<T>(options: request.Options): Promise<T> {
  * 
  * @export
  * @param {string} cookieString
- * @param {string} url
+ * @param {string[]} urls
  * @returns {request.CookieJar}
  */
-export function SetCookie(cookieString: string, url: string): request.CookieJar {
+export function SetCookie(cookieString: string, urls: string[]): request.CookieJar {
   let jar = request.jar()
-  cookieString.split(';').forEach((cookie) => {
-    jar.setCookie(request.cookie(cookie), url)
+  urls.forEach(url => {
+    cookieString.split(';').forEach((cookie) => {
+      jar.setCookie(request.cookie(cookie), url)
+    })
   })
   return jar
 }
@@ -64,7 +92,7 @@ export function Options(options?: config): Promise<config> {
     }
     else {
       let config = JSON.stringify(options)
-      fs.writeFile(`${__dirname}/../options.json`, config, (error) => {
+      fs.writeFile(`${__dirname}/../options.json`, config, error => {
         if (error == null) resolve(options)
         else reject(error)
       })
@@ -131,7 +159,18 @@ export function Error(message?: any, ...optionalParams: any[]) {
  * @returns {Promise<{}>}
  */
 export function Sleep(ms: number): Promise<{}> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     setTimeout(resolve, ms, 'sleep')
   })
+}
+/**
+ * XHR返回
+ * 
+ * @export
+ * @interface response
+ * @template T 
+ */
+export interface response<T> {
+  response: request.RequestResponse
+  body: T
 }

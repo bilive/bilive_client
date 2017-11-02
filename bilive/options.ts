@@ -4,7 +4,7 @@ import * as url from 'url'
 import * as fs from 'fs'
 import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
-import { config, usersData, userData, rootOrigin, options } from './index'
+import { config, options } from './index'
 /**
  * 程序设置
  * 
@@ -41,7 +41,7 @@ export class Options extends EventEmitter {
         if (this._wsClient != null) this._wsClient.close(1001, JSON.stringify({ cmd: 'close', msg: 'too many connections' }))
         client
           .on('error', error => tools.Log(error))
-          .on('message', message => {
+          .on('message', (message: string) => {
             let msg: message = JSON.parse(message)
             if (msg.cmd === 'save' && msg.data != null) {
               let config = <config>msg.data

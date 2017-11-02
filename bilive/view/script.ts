@@ -4,14 +4,12 @@
  * @class Options
  */
 class Options {
-  private _D = document
-  private _elmDivOptions = <HTMLDivElement>this._D.querySelector('.options')
-  private _elmDivUsersData = <HTMLDivElement>this._D.querySelector('.usersdata')
-  private _elmInputSave = <HTMLInputElement>this._D.querySelector('#save')
-  private _elmInputAdd = <HTMLInputElement>this._D.querySelector('#add')
+  private _elmDivOptions = <HTMLDivElement>document.querySelector('.options')
+  private _elmDivUsersData = <HTMLDivElement>document.querySelector('.usersdata')
+  private _elmInputSave = <HTMLInputElement>document.querySelector('#save')
+  private _elmInputAdd = <HTMLInputElement>document.querySelector('#add')
   private _ws: WebSocket
   private _options: config
-  private _UID: string
   /**
    * 载入页面
    * 
@@ -19,20 +17,21 @@ class Options {
    */
   public Start() {
     // WebSocket与客户端通讯
-    this._ws = new WebSocket('ws://127.0.0.1:10080')
+    let wsHref = location.href.replace(/^http/, 'ws')
+    this._ws = new WebSocket(wsHref)
     this._ws.addEventListener('open', () => {
-      this._D.body.classList.remove('hide')
+      document.body.classList.remove('hide')
     })
     this._ws.addEventListener('close', message => {
       try {
         let msg: message = JSON.parse(message.reason)
-        this._D.body.innerText = <string>msg.msg
+        document.body.innerText = <string>msg.msg
       } catch (error) {
-        this._D.body.innerText = 'connection closed'
+        document.body.innerText = 'connection closed'
       }
     })
     this._ws.addEventListener('error', () => {
-      this._D.body.innerText = 'connection error'
+      document.body.innerText = 'connection error'
     })
     this._ws.addEventListener('message', this._WSMessage.bind(this))
   }
@@ -59,13 +58,13 @@ class Options {
    * @memberof Options
    */
   private _SetOption() {
-    let df = this._D.createDocumentFragment()
+    let df = document.createDocumentFragment()
     for (let key in this._options) {
       let info = <configInfoData | undefined>this._options.info[key]
         , option = this._options[key]
       if (info != null) {
-        let elmDiv = this._D.createElement('div')
-          , elmInput = this._D.createElement('input')
+        let elmDiv = document.createElement('div')
+          , elmInput = document.createElement('input')
         switch (info.type) {
           case 'numberNull':
             elmInput.type = 'text'
@@ -125,7 +124,7 @@ class Options {
    * @memberof Options
    */
   private _SetUser() {
-    let df = this._D.createDocumentFragment()
+    let df = document.createDocumentFragment()
     for (let uid in this._options.usersData) {
       let elmDivUser = this._AddUser(uid)
       df.appendChild(elmDivUser)
@@ -142,8 +141,8 @@ class Options {
    */
   private _AddUser(uid: string): HTMLDivElement {
     let userData = this._options.usersData[uid]
-      , elmDivUser = this._D.createElement('div')
-      , elmInputUser = this._D.createElement('input')
+      , elmDivUser = document.createElement('div')
+      , elmInputUser = document.createElement('input')
     elmInputUser.type = 'button'
     elmInputUser.className = 'delete'
     elmInputUser.value = '删除'
@@ -159,8 +158,8 @@ class Options {
       let info = <configInfoData | undefined>this._options.info[key]
         , option = userData[key]
       if (info != null) {
-        let elmDiv = this._D.createElement('div')
-          , elmInput = this._D.createElement('input')
+        let elmDiv = document.createElement('div')
+          , elmInput = document.createElement('input')
         switch (info.type) {
           case 'string':
             elmInput.type = 'text'
@@ -257,6 +256,7 @@ interface message {
  * @interface config
  */
 interface config {
+  [index: string]: any
   defaultUserID: number | null
   defaultRoomID: number
   apiOrigin: string
@@ -270,6 +270,7 @@ interface usersData {
   [index: string]: userData
 }
 interface userData {
+  [index: string]: any
   nickname: string
   userName: string
   passWord: string
@@ -285,6 +286,7 @@ interface userData {
   debug: boolean
 }
 interface configInfo {
+  [index: string]: configInfoData
   defaultUserID: configInfoData
   defaultRoomID: configInfoData
   apiOrigin: configInfoData

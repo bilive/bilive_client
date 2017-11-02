@@ -1,6 +1,6 @@
 import * as request from 'request'
 import * as tools from './lib/tools'
-import { rootOrigin } from './index'
+import { apiLiveOrigin } from './index'
 /**
  * 自动参与节奏风暴
  * 
@@ -58,24 +58,41 @@ export class BeatStorm {
    * @private
    * @memberof BeatStorm
    */
-  private _SendMsg() {
-    let rnd = Math.floor(Date.now() / 1000 - 60 - 300 * Math.random()),
-      sendMsg: request.Options = {
+  private async _SendMsg() {
+    let rnd = Math.floor(Date.now() / 1000 - 60 - 300 * Math.random())
+      , sendMsg: request.Options = {
         method: 'POST',
-        uri: `${rootOrigin}/msg/send`,
+        uri: `${apiLiveOrigin}/msg/send`,
+        // body: `color=16777215&fontsize=25&mode=1&msg=${encodeURIComponent(this._content)}&rnd=${rnd}&roomid=${this._roomID}&csrf_token=${this._getCsrfToken()}`,
         body: `color=16777215&fontsize=25&mode=1&msg=${encodeURIComponent(this._content)}&rnd=${rnd}&roomid=${this._roomID}`,
-        jar: this._jar
-      }
-    tools.XHR<string>(sendMsg)
-      .then((resolve) => {
-        let beatStormResponse: beatStormResponse = JSON.parse(resolve)
-        if (beatStormResponse.data.cmd === 'SPECIAL_TIPS') {
-          let content = beatStormResponse.data.tips.content,
-            gift = content.match(/恭喜你(.*)</)
-          if (gift != null) tools.Log(this._nickname, gift[1])
+        jar: this._jar,
+        json: true,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          'Referer': `http://live.bilibili.com/neptune/${this._roomID}`
         }
+      }
+    let beatStormResponse = await tools.XHR<beatStormResponse>(sendMsg).catch(tools.Error)
+    if (beatStormResponse != null && beatStormResponse.body.data.cmd === 'SPECIAL_TIPS') {
+      let content = beatStormResponse.body.data.tips.content,
+        gift = content.match(/恭喜你(.*)</)
+      if (gift != null) tools.Log(this._nickname, gift[1])
+    }
+  }
+  /**
+   * 获取CsrfToken
+   * 
+   * @private
+   * @returns 
+   * @memberof BeatStorm
+   */
+  private _getCsrfToken() {
+    let cookies = this._jar.getCookies(apiLiveOrigin)
+      , cookieFind = cookies.find(cookie => {
+        if (cookie.key === 'bili_jct')
+          return cookie.value
       })
-      .catch((error) => { tools.Log(error) })
+    return cookieFind == null ? '' : cookieFind.value
   }
 }
 /**

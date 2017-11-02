@@ -22,23 +22,20 @@ export class BiLive {
    * 
    * @memberof BiLive
    */
-  public Start() {
-    this._SetOptionsFile()
-      .then<config>(() => {
-        return tools.Options()
-      })
-      .then((resolve) => {
-        options = resolve
-        let usersData = options.usersData
-        for (let uid in usersData) {
-          let userData = usersData[uid]
-          cookieJar[uid] = tools.SetCookie(userData.cookie, rootOrigin)
-        }
-        this.Options()
-        this.Online()
-        this.Listener()
-      })
-      .catch((reject) => { tools.Log(reject) })
+  public async Start() {
+    await this._SetOptionsFile()
+    let config = await tools.Options().catch(tools.Error)
+    if (config != null) {
+      options = config
+      let usersData = config.usersData
+      for (let uid in usersData) {
+        let userData = usersData[uid]
+        cookieJar[uid] = tools.SetCookie(userData.cookie, [liveOrigin, apiLiveOrigin])
+      }
+      this.Options()
+      this.Online()
+      this.Listener()
+    }
   }
   /**
    * 初始化设置文件
@@ -123,7 +120,10 @@ export class BiLive {
           nickname: userData.nickname
         }
         let newRaffle = new Raffle(raffleOptions)
-        if (smallTVInfo.pathname != null) newRaffle.smallTVUrl = rootOrigin + smallTVInfo.pathname
+        if (smallTVInfo.pathname != null) {
+          smallTVPathname = smallTVInfo.pathname
+          newRaffle.smallTVUrl = apiLiveOrigin + smallTVInfo.pathname
+        }
         newRaffle.SmallTV()
       }
     }
@@ -146,7 +146,10 @@ export class BiLive {
           nickname: userData.nickname
         }
         let newRaffle = new Raffle(raffleOptions)
-        if (raffleInfo.pathname != null) newRaffle.raffleUrl = rootOrigin + raffleInfo.pathname
+        if (raffleInfo.pathname != null) {
+          rafflePathname = raffleInfo.pathname
+          newRaffle.raffleUrl = apiLiveOrigin + raffleInfo.pathname
+        }
         newRaffle.Raffle()
       }
     }
@@ -170,7 +173,10 @@ export class BiLive {
           nickname: userData.nickname
         }
         let newRaffle = new Raffle(raffleOptions)
-        if (lightenInfo.pathname != null) newRaffle.lightenUrl = rootOrigin + lightenInfo.pathname
+        if (lightenInfo.pathname != null) {
+          lightenPathname = lightenInfo.pathname
+          newRaffle.lightenUrl = apiLiveOrigin + lightenInfo.pathname
+        }
         newRaffle.Lighten()
       }
     }
@@ -183,7 +189,7 @@ export class BiLive {
    * @memberof BiLive
    */
   private _BeatStorm(beatStormInfo: beatStormInfo) {
-    if (options.beatStormBlackList.indexOf(beatStormInfo.roomID) > -1) return
+    if (options.beatStormBlackList.includes(beatStormInfo.roomID)) return
     let usersData = options.usersData
     for (let uid in usersData) {
       let userData = usersData[uid]
@@ -206,20 +212,20 @@ export class BiLive {
    * @param {debugInfo} debugInfo
    * @memberof BiLive
    */
-  private _Debug(debugInfo: debugInfo) {
+  private async _Debug(debugInfo: debugInfo) {
     let usersData = options.usersData
     for (let uid in usersData) {
       let userData = usersData[uid], jar = cookieJar[uid]
       if (userData.status && userData.debug) {
         let debug = {
           method: debugInfo.method,
-          uri: `${rootOrigin}${debugInfo.url}`,
+          uri: `${apiLiveOrigin}${debugInfo.url}`,
           body: debugInfo.body,
-          jar: cookieJar[uid]
+          jar
         }
         tools.XHR<string>(debug)
-          .then((resolve) => { tools.Log(userData.nickname, resolve) })
-          .catch((reject) => { tools.Log(userData.nickname, reject) })
+          .then((resolve) => { tools.Log(userData.nickname, resolve.body) })
+          .catch((reject) => { tools.Error(userData.nickname, reject) })
       }
     }
   }
@@ -230,19 +236,17 @@ export class BiLive {
    * @param {string} uid
    * @memberof BiLive
    */
-  private _CookieError(uid: string) {
+  private async _CookieError(uid: string) {
     let userData = options.usersData[uid]
-    tools.Log(`${userData.nickname} Cookie已失效`)
-    AppClient.GetCookie(userData.accessToken)
-      .then((resolve) => {
-        cookieJar[uid] = resolve
-        options.usersData[uid].cookie = resolve.getCookieString(rootOrigin)
-        tools.Options(options)
-        tools.Log(`${userData.nickname} Cookie已更新`)
-      })
-      .catch((reject) => {
-        this._TokenError(uid)
-      })
+    tools.Log(userData.nickname, 'Cookie已失效')
+    let cookie = await AppClient.GetCookie(userData.accessToken)
+    if (cookie != null) {
+      cookieJar[uid] = cookie
+      options.usersData[uid].cookie = cookie.getCookieString(apiLiveOrigin)
+      tools.Options(options)
+      tools.Log(userData.nickname, 'Cookie已更新')
+    }
+    else this._TokenError(uid)
   }
   /**
    * 监听token失效事件
@@ -251,28 +255,30 @@ export class BiLive {
    * @param {string} uid
    * @memberof BiLive
    */
-  private _TokenError(uid: string) {
+  private async _TokenError(uid: string) {
     let userData = options.usersData[uid]
     tools.Log(userData.nickname, 'Token已失效')
-    AppClient.GetToken({
+    let token = await AppClient.GetToken({
       userName: userData.userName,
       passWord: userData.passWord
     })
-      .then((resolve) => {
-        options.usersData[uid].accessToken = resolve
-        tools.Options(options)
-        tools.Log(`${userData.nickname} Token已更新`)
-      })
-      .catch((reject) => {
-        options.usersData[uid].status = false
-        tools.Options(options)
-        tools.Log(userData.nickname, 'Token更新失败', reject)
-      })
+    if (typeof token === 'string') {
+      options.usersData[uid].accessToken = token
+      tools.Options(options)
+      tools.Log(userData.nickname, 'Token已更新')
+    }
+    else if (token != null) {
+      options.usersData[uid].status = false
+      tools.Options(options)
+      tools.Log(userData.nickname, 'Token更新失败', token.body)
+    }
+    else tools.Log(userData.nickname, 'Token更新失败')
   }
 }
-export let rootOrigin = 'http://api.live.bilibili.com'
+export let apiLiveOrigin = 'http://api.live.bilibili.com'
+  , liveOrigin = 'http://live.bilibili.com'
   , smallTVPathname = '/SmallTV'
-  , rafflePathname = '/activity/v1/SchoolOpen'
+  , rafflePathname = '/activity/v1/Raffle'
   , lightenPathname = '/activity/v1/NeedYou'
   , cookieJar: cookieJar = {}
   , options: config

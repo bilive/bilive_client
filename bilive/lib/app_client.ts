@@ -1,7 +1,7 @@
 import * as crypto from 'crypto'
 import * as request from 'request'
 import * as tools from './tools'
-import { rootOrigin } from '../index'
+import { apiLiveOrigin } from '../index'
 
 export class AppClient {
   // private static readonly _secretKey: string = '560c52ccd288fed045859ed18bffd973'
@@ -11,7 +11,7 @@ export class AppClient {
   // public static readonly platform: string = 'android'
   private static readonly _secretKey: string = 'e988e794d4d4b6dd43bc0e89d6e90c43'
   public static readonly appKey: string = '37207f2beaebf8d7'
-  public static readonly build: string = '26030'
+  public static readonly build: string = '211109'
   public static readonly mobiApp: string = 'biliLink'
   public static readonly platform: string = 'android'
   /**
@@ -26,6 +26,12 @@ export class AppClient {
     // return Math.floor(Date.now() / 1000) * 1000
     return Math.floor(Date.now() / 1000)
   }
+  /**
+   * 基本请求参数
+   * 
+   * @static
+   * @memberof AppClient
+   */
   public static readonly baseQuery = `appkey=${AppClient.appKey}&build=${AppClient.build}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}&ts=${AppClient.TS}`
   /**
    * 对参数签名
@@ -64,82 +70,87 @@ export class AppClient {
    * 
    * @private
    * @static
-   * @returns {Promise<string>}
+   * @returns {Promise<tools.response<getKeyResponse>>} 
    * @memberof AppClient
    */
-  private static _GetKey(): Promise<string> {
+  private static _GetKey(): Promise<tools.response<getKeyResponse>> {
     let getKeyOrigin = 'https://passport.bilibili.com/api/oauth2/getKey',
       getKeyQuery = AppClient.baseQuery,
       getKey: request.Options = {
         method: 'POST',
-        uri: `${getKeyOrigin}?${AppClient.ParamsSign(getKeyQuery)}`
+        uri: getKeyOrigin,
+        body: AppClient.ParamsSign(getKeyQuery),
+        json: true,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
+        }
       }
-    return tools.XHR<string>(getKey)
+    return tools.XHR<getKeyResponse>(getKey, 'Android')
   }
   /**
    * 客户端登录
    * 
    * @private
    * @static
-   * @param {userLogin} userLogin
-   * @param {getKeyResponseData} publicKey
-   * @returns {Promise<string>}
+   * @param {userLogin} userLogin 
+   * @param {getKeyResponseData} publicKey 
+   * @returns {Promise<tools.response<loginResponse>>} 
    * @memberof AppClient
    */
-  private static _Login(userLogin: userLogin, publicKey: getKeyResponseData): Promise<string> {
+  private static _Login(userLogin: userLogin, publicKey: getKeyResponseData): Promise<tools.response<loginResponse>> {
     let passWord = AppClient._RSAPassWord(userLogin.passWord, publicKey),
       loginOrigin = 'https://passport.bilibili.com/api/oauth2/login',
       loginQuery = `appkey=${AppClient.appKey}&build=${AppClient.build}&mobi_app=${AppClient.mobiApp}&password=${passWord}&platform=${AppClient.platform}&ts=${AppClient.TS}&username=${encodeURIComponent(userLogin.userName)}`,
       login: request.Options = {
         method: 'POST',
         uri: loginOrigin,
-        body: AppClient.ParamsSign(loginQuery)
+        body: AppClient.ParamsSign(loginQuery),
+        json: true,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
+        }
       }
-    return tools.XHR<string>(login)
+    return tools.XHR<loginResponse>(login, 'Android')
   }
   /**
    * 获取token
    * 
    * @static
-   * @param {userLogin} userLogin
-   * @returns {Promise<string>}
+   * @param {userLogin} userLogin 
+   * @returns {(Promise<string | void | tools.response<loginResponse> | tools.response<getKeyResponse>>)} 
    * @memberof AppClient
    */
-  public static GetToken(userLogin: userLogin): Promise<string> {
-    return AppClient._GetKey()
-      .then<string>((resolve) => {
-        let getKeyResponse: getKeyResponse = JSON.parse(resolve)
-        if (getKeyResponse.code === 0) return AppClient._Login(userLogin, getKeyResponse.data)
-        else return Promise.reject(getKeyResponse)
-      })
-      .then<string>((resolve) => {
-        let loginResponse: loginResponse = JSON.parse(resolve)
-        if (loginResponse.code === 0) return loginResponse.data.access_token
-        else return Promise.reject(loginResponse)
-      })
+  public static async GetToken(userLogin: userLogin): Promise<string | void | tools.response<loginResponse> | tools.response<getKeyResponse>> {
+    let getKeyResponse = await AppClient._GetKey().catch(tools.Error)
+    if (getKeyResponse != null && getKeyResponse.body.code === 0) {
+      let loginResponse = await AppClient._Login(userLogin, getKeyResponse.body.data).catch(tools.Error)
+      if (loginResponse != null && loginResponse.body.code === 0) return loginResponse.body.data.access_token
+      else return loginResponse
+    }
+    else return getKeyResponse
   }
   /**
    * 获取cookie
    * 
    * @static
-   * @param {string} accessToken
-   * @returns {Promise<request.CookieJar>}
+   * @param {string} accessToken 
+   * @returns {(Promise<void | request.CookieJar>)} 
    * @memberof AppClient
    */
-  public static GetCookie(accessToken: string): Promise<request.CookieJar> {
+  public static async GetCookie(accessToken: string): Promise<void | request.CookieJar> {
     let ssoOrigin = 'https://passport.bilibili.com/api/login/sso',
-      ssoQuery = `access_key=${accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}&gourl=${encodeURIComponent(rootOrigin)}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}`,
+      ssoQuery = `access_key=${accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}&gourl=${encodeURIComponent(apiLiveOrigin)}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}&ts=${AppClient.TS}`,
       jar = request.jar(),
       sso: request.Options = {
         uri: `${ssoOrigin}?${AppClient.ParamsSign(ssoQuery)}`,
         jar
       }
-    return tools.XHR<string>(sso)
-      .then<request.CookieJar>((resolve) => {
-        let cookie = jar.getCookieString(rootOrigin)
-        if (cookie.includes('SESSDATA')) return jar
-        else return Promise.reject(jar)
-      })
+    let gourl = await tools.XHR(sso, 'WebView').catch(tools.Error)
+    if (gourl != null) {
+      let cookie = jar.getCookieString(apiLiveOrigin)
+      if (cookie.includes('SESSDATA')) return jar
+    }
+    else return gourl
   }
 }
 /**

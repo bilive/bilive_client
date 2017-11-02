@@ -3,7 +3,7 @@ import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
 import { AppClient } from './lib/app_client'
 import { DeCaptcha } from './lib/boxcaptcha'
-import { usersData, userData, rootOrigin, options, cookieJar } from './index'
+import { apiLiveOrigin, options, cookieJar } from './index'
 /**
  * 挂机得经验
  * 
@@ -29,37 +29,40 @@ export class Online extends EventEmitter {
    * 
    * @memberof Online
    */
-  public OnlineHeart() {
+  public async OnlineHeart() {
     let roomID = options.defaultRoomID,
       usersData = options.usersData
     for (let uid in usersData) {
       let userData = usersData[uid]
       if (userData.status) {
         // PC
-        let online = {
+        let online: request.Options = {
           method: 'POST',
-          uri: `${rootOrigin}/User/userOnlineHeart`,
-          jar: cookieJar[uid]
-        }
-        tools.XHR<string>(online)
-          .then((resolve) => {
-            let userOnlineHeartResponse: userOnlineHeartResponse = JSON.parse(resolve)
-            if (userOnlineHeartResponse.code === -101) this.emit('cookieError', uid)
-          })
-          .catch((reject) => { tools.Log(userData.nickname, reject) })
-        // 客户端
-        let heartbeatQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`,
-          heartbeat = {
-            method: 'POST',
-            uri: `${rootOrigin}/mobile/userOnlineHeart?${AppClient.ParamsSign(heartbeatQuery)}`,
-            body: `room_id=${roomID}&scale=xxhdpi&`
+          uri: `${apiLiveOrigin}/User/userOnlineHeart`,
+          jar: cookieJar[uid],
+          json: true,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'Referer': `http://live.bilibili.com/neptune/${roomID}`
           }
-        tools.XHR<string>(heartbeat)
-          .then((resolve) => {
-            let userOnlineHeartResponse: userOnlineHeartResponse = JSON.parse(resolve)
-            if (userOnlineHeartResponse.code === -101) this.emit('tokenError', uid)
-          })
-          .catch((reject) => { tools.Log(userData.nickname, reject) })
+        }
+        let userOnlineHeartResponsePC = await tools.XHR<userOnlineHeartResponse>(online)
+          .catch((reject) => { tools.Error(userData.nickname, reject) })
+        if (userOnlineHeartResponsePC != null && userOnlineHeartResponsePC.body.code === -101) this.emit('cookieError', uid)
+        // 客户端
+        let heartbeatQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`
+          , heartbeat: request.Options = {
+            method: 'POST',
+            uri: `${apiLiveOrigin}/mobile/userOnlineHeart?${AppClient.ParamsSign(heartbeatQuery)}`,
+            body: `room_id=${roomID}&scale=xxhdpi`,
+            json: true,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          }
+        let userOnlineHeartResponse = await tools.XHR<userOnlineHeartResponse>(heartbeat, 'Android')
+          .catch((reject) => { tools.Error(userData.nickname, reject) })
+        if (userOnlineHeartResponse != null && userOnlineHeartResponse.body.code === -101) this.emit('tokenError', uid)
       }
     }
     setTimeout(() => {
@@ -94,16 +97,16 @@ export class Online extends EventEmitter {
    * @param {string} uid
    * @memberof Online
    */
-  private _DoSign(uid: string) {
+  private async _DoSign(uid: string) {
     let userData = options.usersData[uid],
       signQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`,
-      sign: request.Options = { uri: `${rootOrigin}/AppUser/getSignInfo?${AppClient.ParamsSign(signQuery)}` }
-    tools.XHR<string>(sign)
-      .then((resolve) => {
-        let signInfoResponse: signInfoResponse = JSON.parse(resolve)
-        if (signInfoResponse.code === 0) tools.Log(userData.nickname, '已签到')
-      })
-      .catch((reject) => { tools.Log(userData.nickname, reject) })
+      sign: request.Options = {
+        uri: `${apiLiveOrigin}/AppUser/getSignInfo?${AppClient.ParamsSign(signQuery)}`,
+        json: true
+      }
+    let signInfoResponse = await tools.XHR<signInfoResponse>(sign, 'Android')
+      .catch((reject) => { tools.Error(userData.nickname, reject) })
+    if (signInfoResponse != null && signInfoResponse.body.code === 0) tools.Log(userData.nickname, '已签到')
   }
   /**
    * 每日签到PC
@@ -112,24 +115,19 @@ export class Online extends EventEmitter {
    * @param {string} uid
    * @memberof Online
    */
-  private _DoSignPC(uid: string) {
+  private async _DoSignPC(uid: string) {
     let userData = options.usersData[uid],
       sign: request.Options = {
-        uri: `${rootOrigin}/sign/GetSignInfo`,
-        jar: cookieJar[uid]
-      }
-    tools.XHR<string>(sign)
-      .then((resolve) => {
-        let signInfoResponse: signInfoResponse = JSON.parse(resolve)
-        if (signInfoResponse.data.status === 0) {
-          let doSign: request.Options = {
-            uri: `${rootOrigin}/sign/doSign`,
-            jar: cookieJar[uid]
-          }
-          tools.XHR(doSign).catch((reject) => { tools.Log(userData.nickname, reject) })
+        uri: `${apiLiveOrigin}/sign/doSign`,
+        jar: cookieJar[uid],
+        json: true,
+        headers: {
+          'Referer': `http://live.bilibili.com/neptune/${options.defaultRoomID}`
         }
-      })
-      .catch((reject) => { tools.Log(userData.nickname, reject) })
+      }
+    let signInfoResponse = await tools.XHR<signInfoResponse>(sign)
+      .catch((reject) => { tools.Error(userData.nickname, reject) })
+    if (signInfoResponse != null && signInfoResponse.body.code === 0) tools.Log(userData.nickname, '已签到')
   }
   /**
    * 每日宝箱
@@ -138,35 +136,32 @@ export class Online extends EventEmitter {
    * @param {string} uid
    * @memberof Online
    */
-  private _TreasureBox(uid: string) {
-    let userData = options.usersData[uid],
+  private async _TreasureBox(uid: string) {
+    let userData = options.usersData[uid]
       // 获取宝箱状态,换房间会重新冷却
-      currentTaskResponse: currentTaskResponse,
-      currentTaskUrl = `${rootOrigin}/mobile/freeSilverCurrentTask`,
-      currentTaskQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`,
-      currentTask: request.Options = { uri: `${currentTaskUrl}?${AppClient.ParamsSign(currentTaskQuery)}` }
-    tools.XHR<string>(currentTask)
-      .then((resolve) => {
-        currentTaskResponse = JSON.parse(resolve)
-        if (currentTaskResponse.code === 0) return tools.Sleep(currentTaskResponse.data.minute * 6e4)
-        else if (currentTaskResponse.code === -10017) return Promise.reject('已领取所有宝箱')
-        else return Promise.reject('获取宝箱状态出错')
-      })
-      .then<string>((resolve) => {
-        let awardUrl = `${rootOrigin}/mobile/freeSilverAward`,
+      , currentTaskUrl = `${apiLiveOrigin}/mobile/freeSilverCurrentTask`
+      , currentTaskQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`
+      , currentTask: request.Options = {
+        uri: `${currentTaskUrl}?${AppClient.ParamsSign(currentTaskQuery)}`,
+        json: true
+      }
+      , currentTaskResponse = await tools.XHR<currentTaskResponse>(currentTask, 'Android')
+        .catch((reject) => { tools.Error(userData.nickname, reject) })
+    if (currentTaskResponse != null) {
+      if (currentTaskResponse.body.code === 0) {
+        await tools.Sleep(currentTaskResponse.body.data.minute * 6e4)
+        let awardUrl = `${apiLiveOrigin}/mobile/freeSilverAward`,
           awardQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`,
-          award: request.Options = { uri: `${awardUrl}?${AppClient.ParamsSign(awardQuery)}` }
-        return tools.XHR<string>(award)
-      })
-      .then<never | undefined>((resolve) => {
-        let awardResponse: awardResponse = JSON.parse(resolve)
-        if (awardResponse.code === 0) this._TreasureBox(uid)
-        else return Promise.reject('error')
-      })
-      .catch((reject) => {
-        if (reject === 'error') this._TreasureBox(uid)
-        else tools.Log(userData.nickname, reject)
-      })
+          award: request.Options = {
+            uri: `${awardUrl}?${AppClient.ParamsSign(awardQuery)}`,
+            json: true
+          }
+        await tools.XHR<awardResponse>(award, 'Android')
+          .catch((reject) => { tools.Error(userData.nickname, reject) })
+        this._TreasureBox(uid)
+      }
+      else if (currentTaskResponse.body.code === -10017) tools.Log(userData.nickname, '已领取所有宝箱')
+    }
   }
   /**
    * 每日宝箱PC
@@ -175,52 +170,52 @@ export class Online extends EventEmitter {
    * @param {string} uid
    * @memberof Online
    */
-  private _TreasureBoxPC(uid: string) {
-    let userData = options.usersData[uid],
+  private async _TreasureBoxPC(uid: string) {
+    let userData = options.usersData[uid]
+      , jar = cookieJar[uid]
       // 获取宝箱状态,换房间会重新冷却
-      currentTaskResponse: currentTaskResponse,
-      getCurrentTask: request.Options = {
-        uri: `${rootOrigin}/FreeSilver/getCurrentTask?_=${Date.now()}`,
-        jar: cookieJar[uid]
+      , getCurrentTask: request.Options = {
+        uri: `${apiLiveOrigin}/FreeSilver/getCurrentTask?_=${Date.now()}`,
+        jar,
+        json: true,
+        headers: {
+          'Referer': `http://live.bilibili.com/neptune/${options.defaultRoomID}`
+        }
       }
-    tools.XHR<string>(getCurrentTask)
-      .then((resolve) => {
-        currentTaskResponse = JSON.parse(resolve)
-        if (currentTaskResponse.code === 0) return tools.Sleep(currentTaskResponse.data.minute * 6e4)
-        else if (currentTaskResponse.code === -10017) return Promise.reject('已领取所有宝箱')
-        else return Promise.reject('获取宝箱状态出错')
-      })
-      .then((resolve) => {
+      , currentTaskResponse = await tools.XHR<currentTaskResponse>(getCurrentTask)
+        .catch((reject) => { tools.Error(userData.nickname, reject) })
+    if (currentTaskResponse != null) {
+      if (currentTaskResponse.body.code === 0) {
+        await tools.Sleep(currentTaskResponse.body.data.minute * 6e4)
         let getCaptcha: request.Options = {
-          uri: `${rootOrigin}/freeSilver/getCaptcha?ts=${Date.now()}`,
+          uri: `${apiLiveOrigin}/freeSilver/getCaptcha?ts=${Date.now()}`,
           encoding: null,
-          jar: cookieJar[uid]
-        }
-        return tools.XHR<Buffer>(getCaptcha)
-      })
-      .then<string>((resolve) => {
-        let captcha = DeCaptcha(resolve)
-        if (captcha > -1) {
-          let getAward: request.Options = {
-            uri: `${rootOrigin}/FreeSilver/getAward?time_start=${currentTaskResponse.data.time_start}&time_end=${currentTaskResponse.data.time_end}&captcha=${captcha}&_=${Date.now()}`,
-            jar: cookieJar[uid]
+          jar,
+          headers: {
+            'Referer': `http://live.bilibili.com/neptune/${options.defaultRoomID}`
           }
-          return tools.XHR<string>(getAward)
         }
-        else return Promise.reject('error')
-      })
-      .then((resolve) => {
-        let awardResponse: awardResponse = JSON.parse(resolve)
-        if (awardResponse.code === 0) {
-          this._TreasureBoxPC(uid)
-          return Promise.resolve('ok')
+          , gCaptcha = await tools.XHR<Buffer>(getCaptcha)
+            .catch((reject) => { tools.Error(userData.nickname, reject) })
+        if (gCaptcha != null) {
+          let captcha = DeCaptcha(gCaptcha.body)
+          if (captcha > -1) {
+            let getAward: request.Options = {
+              uri: `${apiLiveOrigin}/FreeSilver/getAward?time_start=${currentTaskResponse.body.data.time_start}&time_end=${currentTaskResponse.body.data.time_end}&captcha=${captcha}&_=${Date.now()}`,
+              jar,
+              json: true,
+              headers: {
+                'Referer': `http://live.bilibili.com/neptune/${options.defaultRoomID}`
+              }
+            }
+            await tools.XHR<awardResponse>(getAward)
+              .catch((reject) => { tools.Error(userData.nickname, reject) })
+          }
         }
-        else return Promise.reject('error')
-      })
-      .catch((reject) => {
-        if (reject === 'error') this._TreasureBoxPC(uid)
-        else tools.Log(userData.nickname, reject)
-      })
+        this._TreasureBoxPC(uid)
+      }
+      else if (currentTaskResponse.body.code === -10017) tools.Log(userData.nickname, '已领取所有宝箱')
+    }
   }
   /**
    * 日常活动
@@ -232,27 +227,33 @@ export class Online extends EventEmitter {
    */
   private _EventRoom(uid: string, roomIDs: number[]) {
     let userData = options.usersData[uid]
-    roomIDs.forEach((roomID) => {
-      let getInfo: request.Options = { uri: `${rootOrigin}/live/getInfo?roomid=${roomID}` }
-      tools.XHR<string>(getInfo)
-        .then((resolve) => {
-          let roomInfoResponse: roomInfoResponse = JSON.parse(resolve),
-            index: request.Options = {
-              uri: `${rootOrigin}/eventRoom/index?ruid=${roomInfoResponse.data.MASTERID}`,
-              jar: cookieJar[uid]
-            }
-          return tools.XHR<string>(index)
-        })
-        .then((resolve) => {
-          let eventRoomResponse: eventRoomResponse = JSON.parse(resolve)
-          if (eventRoomResponse.code === 0 && eventRoomResponse.data.heart) {
-            let heartTime = eventRoomResponse.data.heartTime * 1000
-            setTimeout(() => {
-              this._EventRoomHeart(uid, heartTime, roomID)
-            }, heartTime)
+    roomIDs.forEach(async roomID => {
+      let getInfo: request.Options = {
+        uri: `${apiLiveOrigin}/live/getInfo?roomid=${roomID}`,
+        json: true,
+        headers: {
+          'Referer': `http://live.bilibili.com/neptune/${roomID}`
+        }
+      }
+      let roomInfoResponse = await tools.XHR<roomInfoResponse>(getInfo)
+        .catch((reject) => { tools.Error(userData.nickname, reject) })
+      if (roomInfoResponse != null && roomInfoResponse.body.data != null) {
+        let index: request.Options = {
+          uri: `${apiLiveOrigin}/eventRoom/index?ruid=${roomInfoResponse.body.data.MASTERID}`,
+          jar: cookieJar[uid],
+          json: true,
+          headers: {
+            'Referer': `http://live.bilibili.com/neptune/${roomID}`
           }
-        })
-        .catch((reject) => { tools.Log(userData.nickname, reject) })
+        }
+          , eventRoomResponse = await tools.XHR<eventRoomResponse>(index)
+            .catch((reject) => { tools.Error(userData.nickname, reject) })
+        if (eventRoomResponse != null && eventRoomResponse.body.code === 0 && eventRoomResponse.body.data.heart) {
+          let heartTime = eventRoomResponse.body.data.heartTime * 1000
+          await tools.Sleep(heartTime)
+          this._EventRoomHeart(uid, heartTime, roomID)
+        }
+      }
     })
   }
   /**
@@ -264,23 +265,22 @@ export class Online extends EventEmitter {
    * @param {number} roomID
    * @memberof Online
    */
-  private _EventRoomHeart(uid: string, heartTime: number, roomID: number) {
+  private async _EventRoomHeart(uid: string, heartTime: number, roomID: number) {
     let userData = options.usersData[uid],
       heart: request.Options = {
-        method: 'GET',
-        uri: `${rootOrigin}/eventRoom/heart?roomid=${roomID}`,
-        jar: cookieJar[uid]
-      }
-    tools.XHR<string>(heart)
-      .then((resolve) => {
-        let eventRoomHeartResponse: eventRoomHeartResponse = JSON.parse(resolve)
-        if (eventRoomHeartResponse.data.heart) {
-          setTimeout(() => {
-            this._EventRoomHeart(uid, heartTime, roomID)
-          }, heartTime)
+        uri: `${apiLiveOrigin}/eventRoom/heart?roomid=${roomID}`,
+        jar: cookieJar[uid],
+        json: true,
+        headers: {
+          'Referer': `http://live.bilibili.com/neptune/${roomID}`
         }
-      })
-      .catch((reject) => { tools.Log(userData.nickname, reject) })
+      }
+      , eventRoomHeartResponse = await tools.XHR<eventRoomHeartResponse>(heart)
+        .catch((reject) => { tools.Error(userData.nickname, reject) })
+    if (eventRoomHeartResponse != null && eventRoomHeartResponse.body.data != null && eventRoomHeartResponse.body.data.heart) {
+      await tools.Sleep(heartTime)
+      this._EventRoomHeart(uid, heartTime, roomID)
+    }
   }
 }
 /**
