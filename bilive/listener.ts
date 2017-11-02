@@ -119,7 +119,7 @@ export class Listener extends EventEmitter {
   private async _SYSGiftHandler(dataJson: SYS_GIFT) {
     if (dataJson.roomid == null) return
     let roomID = dataJson.roomid
-    if (dataJson.real_roomid != null && dataJson.giftId === 85) {
+    if (dataJson.real_roomid != null && dataJson.giftId === 103) {
       let roomID = dataJson.real_roomid
         , check: request.Options = {
           uri: `${apiLiveOrigin}${rafflePathname}/check?roomid=${roomID}`,
