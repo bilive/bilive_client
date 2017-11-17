@@ -68,7 +68,7 @@ export class BiliveClient extends EventEmitter {
   public Connect() {
     if (this._wsClient != null && this._wsClient.readyState === ws.OPEN) return
     clearTimeout(this._Timer)
-    this._wsClient = new ws(this._server, [this._apiKey])
+    this._wsClient = new ws(this._server, [this._apiKey], { ecdhCurve: 'auto' })
     this._wsClient
       .on('error', this._ClientErrorHandler.bind(this))
       .on('close', this._ClientCloseHandler.bind(this))
@@ -249,7 +249,7 @@ export interface lightenInfo {
  * @interface debugInfo
  */
 export interface debugInfo {
-  driver: string
+  driver: 'PC' | 'Android' | 'WebView'
   url: string
   method: string
   body: string

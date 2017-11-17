@@ -15,10 +15,11 @@ export class BeatStorm {
    */
   constructor(beatStormOptions: beatStormOptions) {
     this._content = beatStormOptions.content
+    this._stormID = beatStormOptions.stormID
     this._roomID = beatStormOptions.roomID
     this._jar = beatStormOptions.jar
     this._nickname = beatStormOptions.nickname
-    this._SendMsg()
+    this._JoinStorm()
   }
   /**
    * 弹幕
@@ -28,6 +29,14 @@ export class BeatStorm {
    * @memberof BeatStorm
    */
   private _content: string
+  /**
+   * 节奏编号
+   * 
+   * @private
+   * @type {number}
+   * @memberof BeatStorm
+   */
+  private _stormID: number
   /**
    * 房间号
    * 
@@ -52,6 +61,31 @@ export class BeatStorm {
    * @memberof BeatStorm
    */
   private _nickname: string
+  /**
+   * 参与节奏风暴
+   * 
+   * @private
+   * @memberof BeatStorm
+   */
+  private async _JoinStorm() {
+    let joinStorm: request.Options = {
+      method: 'POST',
+      uri: `${apiLiveOrigin}/lottery/v1/Storm/join`,
+      // body: `id=${this._stormID}&captcha_token=&captcha_phrase=&token=adcd50de0df31150da71bf19c8230d282d8c9d6d&csrf_token=b36ede23909f6aed6e853ac02746ac0d`,
+      body: `id=${this._stormID}`,
+      jar: this._jar,
+      json: true,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Referer': `http://live.bilibili.com/neptune/${this._roomID}`
+      }
+    }
+    let joinStormResponse = await tools.XHR<joinStormResponse>(joinStorm).catch(tools.Error)
+    if (joinStormResponse != null && joinStormResponse.body.code ===0) {
+      let content = joinStormResponse.body.data
+        tools.Log(this._nickname, `获得 ${content.gift_num} 个${content.gift_name}`)
+    }
+  }
   /**
    * 指定直播间发送消息
    * 
@@ -79,21 +113,6 @@ export class BeatStorm {
       if (gift != null) tools.Log(this._nickname, gift[1])
     }
   }
-  /**
-   * 获取CsrfToken
-   * 
-   * @private
-   * @returns 
-   * @memberof BeatStorm
-   */
-  private _getCsrfToken() {
-    let cookies = this._jar.getCookies(apiLiveOrigin)
-      , cookieFind = cookies.find(cookie => {
-        if (cookie.key === 'bili_jct')
-          return cookie.value
-      })
-    return cookieFind == null ? '' : cookieFind.value
-  }
 }
 /**
  * 节奏风暴设置
@@ -103,6 +122,7 @@ export class BeatStorm {
  */
 export interface beatStormOptions {
   content: string
+  stormID: number
   roomID: number
   jar: request.CookieJar
   nickname: string
@@ -110,7 +130,7 @@ export interface beatStormOptions {
 /**
  * 节奏跟风返回值
  * 
- * @interface BeatStormResponse
+ * @interface beatStormResponse
  */
 interface beatStormResponse {
   code: number
@@ -125,4 +145,24 @@ interface beatStormResponseDataTips {
   gift_id: number
   title: string
   content: string
+}
+/**
+ * 节奏跟风返回值
+ * 
+ * @interface joinStormResponse
+ */
+interface joinStormResponse {
+  code: number
+  msg: string
+  message: string
+  data: joinStormResponseData
+}
+interface joinStormResponseData {
+  gift_id: number
+  title: string
+  content: string
+  mobile_content: string
+  gift_img: string
+  gift_num: number
+  gift_name: string
 }

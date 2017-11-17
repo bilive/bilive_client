@@ -30,7 +30,7 @@ export class BiLive {
       let usersData = config.usersData
       for (let uid in usersData) {
         let userData = usersData[uid]
-        cookieJar[uid] = tools.SetCookie(userData.cookie, [liveOrigin, apiLiveOrigin])
+        cookieJar[uid] = tools.SetCookie(userData.cookie, [apiLiveOrigin])
       }
       this.Options()
       this.Online()
@@ -197,6 +197,7 @@ export class BiLive {
       if (userData.status && userData.beatStorm) {
         let beatStormOptions: beatStormOptions = {
           content: beatStormInfo.content,
+          stormID: beatStormInfo.id,
           roomID: beatStormInfo.roomID,
           jar,
           nickname: userData.nickname
@@ -223,7 +224,7 @@ export class BiLive {
           body: debugInfo.body,
           jar
         }
-        tools.XHR<string>(debug)
+        tools.XHR<string>(debug, debugInfo.driver)
           .then((resolve) => { tools.Log(userData.nickname, resolve.body) })
           .catch((reject) => { tools.Error(userData.nickname, reject) })
       }
@@ -276,7 +277,6 @@ export class BiLive {
   }
 }
 export let apiLiveOrigin = 'http://api.live.bilibili.com'
-  , liveOrigin = 'http://live.bilibili.com'
   , smallTVPathname = '/SmallTV'
   , rafflePathname = '/activity/v1/Raffle'
   , lightenPathname = '/activity/v1/NeedYou'

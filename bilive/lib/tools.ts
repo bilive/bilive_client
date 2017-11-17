@@ -73,6 +73,22 @@ export function SetCookie(cookieString: string, urls: string[]): request.CookieJ
   return jar
 }
 /**
+ * 获取cookie值
+ * 
+ * @export
+ * @param {request.CookieJar} jar 
+ * @param {string} url 
+ * @param {string} key 
+ * @returns {string} 
+ */
+export function GetCookie(jar: request.CookieJar, url: string, key: string): string {
+  let cookies = jar.getCookies(url)
+    , cookieFind = cookies.find(cookie => {
+      if (cookie.key === key) return cookie.value
+    })
+  return cookieFind == null ? '' : cookieFind.value
+}
+/**
  * 操作数据文件, 为了可以快速应用不使用数据库
  * 
  * @export
