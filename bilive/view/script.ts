@@ -98,9 +98,7 @@ class Options {
             break
         }
         elmDiv.className = 'relative'
-        elmDiv.innerHTML = `
-<span class="description">${info.description}</span>
-<span class="tip">${info.tip}</span>`
+        elmDiv.innerHTML = `<span class="description tooltipped" data-position="right" data-tooltip="${info.tip}">${info.description}</span>`
         elmDiv.appendChild(elmInput)
         df.appendChild(elmDiv)
       }
@@ -142,10 +140,12 @@ class Options {
   private _AddUser(uid: string): HTMLDivElement {
     let userData = this._options.usersData[uid]
       , elmDivUser = document.createElement('div')
-      , elmInputUser = document.createElement('input')
-    elmInputUser.type = 'button'
-    elmInputUser.className = 'delete'
-    elmInputUser.value = '删除'
+      , elmInputUser = document.createElement('a')
+	let delIcon = document.createElement('i');
+	delIcon.className = 'material-icons';
+	delIcon.innerHTML = 'delete';
+	elmInputUser.className = 'delete btn-floating btn-large waves-effect waves-light red';
+	elmInputUser.appendChild(delIcon);
     elmInputUser.addEventListener('click', () => {
       delete this._options.usersData[uid]
       elmDivUser.remove()
@@ -179,9 +179,7 @@ class Options {
             break
         }
         elmDiv.className = 'relative'
-        elmDiv.innerHTML = `
-<span class="description">${info.description}</span>
-<span class="tip">${info.tip}</span>`
+        elmDiv.innerHTML = `<span class="description tooltipped" data-position="right" data-tooltip="${info.tip}">${info.description}</span>`
         elmDiv.appendChild(elmInput)
         elmDivUser.appendChild(elmDiv)
       }

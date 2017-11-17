@@ -15,16 +15,31 @@
 .description:hover + .tip {
   display: inline
 }
-.userdata {
+.userdata{
   float: left;
-  border: 1px solid gray;
-  margin: 5px 20px 5px 0;
+  margin: 20px 1% 20px 0;
+  padding: 15px;
+  /*卡片阴影样式*/
+  -webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+
 }
 .relative {
-  position: relative
+  position: relative;
 }
 .delete {
   position: absolute;
   margin: -10px 0 0 210px;
   z-index: 10;
+}
+.options{
+  margin-bottom: 50px;
+  padding: 20px;
+  /*卡片阴影样式*/
+  -webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+}
+.select{
+  width: 50%;
+  margin-bottom: 15px;
 }
