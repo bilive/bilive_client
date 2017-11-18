@@ -77,7 +77,7 @@ export class BeatStorm {
       json: true,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'Referer': `http://live.bilibili.com/neptune/${this._roomID}`
+        'Referer': `http://live.bilibili.com/${this._roomID}`
       }
     }
     let joinStormResponse = await tools.XHR<joinStormResponse>(joinStorm).catch(tools.Error)
@@ -103,7 +103,7 @@ export class BeatStorm {
         json: true,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-          'Referer': `http://live.bilibili.com/neptune/${this._roomID}`
+          'Referer': `http://live.bilibili.com/${this._roomID}`
         }
       }
     let beatStormResponse = await tools.XHR<beatStormResponse>(sendMsg).catch(tools.Error)

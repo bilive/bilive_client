@@ -82,7 +82,7 @@ export class Raffle {
       jar: this._jar,
       json: true,
       headers: {
-        'Referer': `http://live.bilibili.com/neptune/${this._roomID}`
+        'Referer': `http://live.bilibili.com/${this._roomID}`
       }
     }
       , smallTVJoinResponse = await tools.XHR<smallTVJoinResponse>(join)
@@ -104,7 +104,7 @@ export class Raffle {
       jar: this._jar,
       json: true,
       headers: {
-        'Referer': `http://live.bilibili.com/neptune/${this._roomID}`
+        'Referer': `http://live.bilibili.com/${this._roomID}`
       }
     }
       , smallTVRewardResponse = await tools.XHR<smallTVRewardResponse>(reward)
@@ -161,13 +161,13 @@ export class Raffle {
       json: true,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'Referer': `http://live.bilibili.com/neptune/${this._roomID}`
+        'Referer': `http://live.bilibili.com/${this._roomID}`
       }
     }
       , raffleJoinResponse = await tools.XHR<raffleJoinResponse>(join)
         .catch((reject) => { tools.Error(this._nickname, reject) })
     if (raffleJoinResponse != null && raffleJoinResponse.body.code === 0) {
-      await tools.Sleep(1e+5) // 100秒
+      await tools.Sleep(2e+5) // 200秒
       this._RaffleReward()
     }
   }
@@ -183,7 +183,7 @@ export class Raffle {
       jar: this._jar,
       json: true,
       headers: {
-        'Referer': `http://live.bilibili.com/neptune/${this._roomID}`
+        'Referer': `http://live.bilibili.com/${this._roomID}`
       }
     }
       , raffleRewardResponse = await tools.XHR<raffleRewardResponse>(reward)
@@ -208,7 +208,7 @@ export class Raffle {
       json: true,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'Referer': `http://live.bilibili.com/neptune/${this._roomID}`
+        'Referer': `http://live.bilibili.com/${this._roomID}`
       }
     }
       , lightenRewardResponse = await tools.XHR<lightenRewardResponse>(getCoin)

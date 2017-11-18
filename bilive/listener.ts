@@ -125,7 +125,7 @@ export class Listener extends EventEmitter {
           uri: `${apiLiveOrigin}${rafflePathname}/check?roomid=${roomID}`,
           json: true,
           headers: {
-            'Referer': `http://live.bilibili.com/neptune/${roomID}`
+            'Referer': `http://live.bilibili.com/${roomID}`
           }
         }
       let raffleCheck = await tools.XHR<raffleCheck>(check).catch(tools.Error)
@@ -146,7 +146,7 @@ export class Listener extends EventEmitter {
         uri: `${apiLiveOrigin}${lightenPathname}/getLiveInfo?roomid=${roomID}`,
         json: true,
         headers: {
-          'Referer': `http://live.bilibili.com/neptune/${roomID}`
+          'Referer': `http://live.bilibili.com/${roomID}`
         }
       }
       let lightenCheck = await tools.XHR<lightenCheck>(check).catch(tools.Error)

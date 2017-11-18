@@ -43,7 +43,7 @@ export class Online extends EventEmitter {
           json: true,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'Referer': `http://live.bilibili.com/neptune/${roomID}`
+            'Referer': `http://live.bilibili.com/${roomID}`
           }
         }
         let userOnlineHeartResponsePC = await tools.XHR<userOnlineHeartResponse>(online)
@@ -122,7 +122,7 @@ export class Online extends EventEmitter {
         jar: cookieJar[uid],
         json: true,
         headers: {
-          'Referer': `http://live.bilibili.com/neptune/${options.defaultRoomID}`
+          'Referer': `http://live.bilibili.com/${options.defaultRoomID}`
         }
       }
     let signInfoResponse = await tools.XHR<signInfoResponse>(sign)
@@ -179,7 +179,7 @@ export class Online extends EventEmitter {
         jar,
         json: true,
         headers: {
-          'Referer': `http://live.bilibili.com/neptune/${options.defaultRoomID}`
+          'Referer': `http://live.bilibili.com/${options.defaultRoomID}`
         }
       }
       , currentTaskResponse = await tools.XHR<currentTaskResponse>(getCurrentTask)
@@ -192,7 +192,7 @@ export class Online extends EventEmitter {
           encoding: null,
           jar,
           headers: {
-            'Referer': `http://live.bilibili.com/neptune/${options.defaultRoomID}`
+            'Referer': `http://live.bilibili.com/${options.defaultRoomID}`
           }
         }
           , gCaptcha = await tools.XHR<Buffer>(getCaptcha)
@@ -205,7 +205,7 @@ export class Online extends EventEmitter {
               jar,
               json: true,
               headers: {
-                'Referer': `http://live.bilibili.com/neptune/${options.defaultRoomID}`
+                'Referer': `http://live.bilibili.com/${options.defaultRoomID}`
               }
             }
             await tools.XHR<awardResponse>(getAward)
@@ -232,7 +232,7 @@ export class Online extends EventEmitter {
         uri: `${apiLiveOrigin}/live/getInfo?roomid=${roomID}`,
         json: true,
         headers: {
-          'Referer': `http://live.bilibili.com/neptune/${roomID}`
+          'Referer': `http://live.bilibili.com/${roomID}`
         }
       }
       let roomInfoResponse = await tools.XHR<roomInfoResponse>(getInfo)
@@ -243,7 +243,7 @@ export class Online extends EventEmitter {
           jar: cookieJar[uid],
           json: true,
           headers: {
-            'Referer': `http://live.bilibili.com/neptune/${roomID}`
+            'Referer': `http://live.bilibili.com/${roomID}`
           }
         }
           , eventRoomResponse = await tools.XHR<eventRoomResponse>(index)
@@ -272,7 +272,7 @@ export class Online extends EventEmitter {
         jar: cookieJar[uid],
         json: true,
         headers: {
-          'Referer': `http://live.bilibili.com/neptune/${roomID}`
+          'Referer': `http://live.bilibili.com/${roomID}`
         }
       }
       , eventRoomHeartResponse = await tools.XHR<eventRoomHeartResponse>(heart)

@@ -1,5 +1,6 @@
 import * as ws from 'ws'
 import { EventEmitter } from 'events'
+import * as tools from './tools'
 import { SPECIAL_GIFT, SYS_MSG, SYS_GIFT, RAFFLE_START, LIGHTEN_START } from './danmaku.type'
 /**
  * Blive客户端, 用于服务器和发送事件
@@ -154,33 +155,11 @@ export class BiliveClient extends EventEmitter {
    * @param {string} data
    * @memberof BiliveClient
    */
-  private _MessageHandler(data: string) {
-    let message: message | null = null
-    try { message = JSON.parse(data) }
-    catch (error) { this.emit('msgError', error) }
+  private async _MessageHandler(data: string) {
+    let message = await tools.JsonParse<message>(data).catch(tools.Error)
     if (message != null) {
-      switch (message.cmd) {
-        case 'sysmsg':
-          this.emit('sysmsg', message)
-          break
-        case 'smallTV':
-          this.emit('smallTV', message)
-          break
-        case 'beatStorm':
-          this.emit('beatStorm', message)
-          break
-        case 'raffle':
-          this.emit('raffle', message)
-          break
-        case 'lighten':
-          this.emit('lighten', message)
-          break
-        case 'debug':
-          this.emit('debug', message)
-          break
-        default:
-          break
-      }
+      this.emit('allmsg', message)
+      this.emit(message.cmd, message)
     }
   }
 }
