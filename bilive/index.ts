@@ -289,7 +289,7 @@ export let apiLiveOrigin = 'http://api.live.bilibili.com'
  * @interface config
  */
 export interface config {
-  defaultUserID: number | null
+  defaultUserID: number
   defaultRoomID: number
   apiOrigin: string
   apiKey: string

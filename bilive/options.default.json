@@ -1,5 +1,5 @@
 {
-  "defaultUserID": null,
+  "defaultUserID": 0,
   "defaultRoomID": 23058,
   "apiOrigin": "",
   "apiKey": "",
@@ -44,8 +44,8 @@
   "info": {
     "defaultUserID": {
       "description": "默认监听UID",
-      "tip": "用来监听系统消息的用户ID, null时为随机",
-      "type": "numberNull"
+      "tip": "用来监听系统消息的用户ID, 默认为0",
+      "type": "number"
     },
     "defaultRoomID": {
       "description": "默认监听RoomID",

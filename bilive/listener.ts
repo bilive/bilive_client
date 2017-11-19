@@ -70,7 +70,7 @@ export class Listener extends EventEmitter {
    * @memberof Listener
    */
   public Start() {
-    this._CommentClient = new CommentClient(options.defaultRoomID, options.defaultUserID)
+    this._CommentClient = new CommentClient({ roomID: options.defaultRoomID, userID: options.defaultUserID })
     this._CommentClient
       .on('serverError', (error) => { tools.Log('与弹幕服务器断开五分钟', error) })
       .on('SYS_MSG', this._SYSMSGHandler.bind(this))

@@ -1,5 +1,6 @@
 import { Socket } from 'net'
 import { EventEmitter } from 'events'
+import * as ws from 'ws'
 import * as tools from './tools'
 import { apiLiveOrigin } from '../index'
 import { danmuJson } from './danmaku.type'
@@ -12,16 +13,22 @@ import { danmuJson } from './danmaku.type'
  */
 export class CommentClient extends EventEmitter {
   /**
-   * 创建一个 CommentClient 实例
-   * 
-   * @param {number} [roomID=23058] 哔哩哔哩音乐台
-   * @param {number} [userID]
+   * Creates an instance of CommentClient.
+   * @param {commentClientOptions} [options] 
    * @memberof CommentClient
    */
-  constructor(roomID: number = 23058, userID?: number | null) {
+  constructor(options?: commentClientOptions) {
     super()
-    this.roomID = roomID
-    if (userID != null) this.userID = userID
+    let option: commentClientOptions = {
+      roomID: 23058,
+      userID: 0,
+      // userID: 100000000000000 + parseInt((200000000000000 * Math.random()).toFixed(0)),
+      protocol: 'socket'
+    }
+    Object.assign(option, options)
+    this.roomID = <number>option.roomID
+    this.userID = <number>option.userID
+    this.protocol = <commentClientProtocol>option.protocol
   }
   /**
    * 用户UID
@@ -37,6 +44,13 @@ export class CommentClient extends EventEmitter {
    * @memberof CommentClient
    */
   public roomID: number
+  /**
+   * 连接弹幕服务器使用的协议
+   * 
+   * @type {commentClientProtocol}
+   * @memberof CommentClient
+   */
+  public protocol: commentClientProtocol
   /**
    * 弹幕服务器
    * 
@@ -79,10 +93,10 @@ export class CommentClient extends EventEmitter {
    * 模仿客户端与服务器进行通讯
    * 
    * @private
-   * @type {Socket}
+   * @type {(Socket | ws)}
    * @memberof CommentClient
    */
-  private _Client: Socket
+  private _Client: Socket | ws
   /**
    * 全局计时器, 确保只有一个定时任务
    * 
@@ -124,35 +138,48 @@ export class CommentClient extends EventEmitter {
   /**
    * 连接到指定服务器
    * 
-   * @param {string} [server] 为了快速连接
-   * @param {number} [port] 为了快速连接
+   * @param {{ server: string, port: number }} [options] 
    * @memberof CommentClient
    */
-  public Connect(server?: string, port?: number) {
+  public async Connect(options?: { server: string, port: number }) {
     if (this._connected) return
     clearTimeout(this._Timer)
-    if (server == null || port == null) {
+    if (options == null) {
       // 动态获取服务器地址, 防止B站临时更换
-      let options = { uri: `${apiLiveOrigin}/api/player?id=cid:${this.roomID}&ts=${Date.now().toString(16)}` }
-      tools.XHR<string>(options)
-        .then(resolve => {
-          let server = resolve.body.match(/<server>(.+)<\/server>/)
-            , port = resolve.body.match(/<dm_port>(\d+)<\/dm_port>/)
-          this._server = server == null ? 'livecmt-2.bilibili.com' : server[1]
-          this._port = port == null ? 2243 : parseInt(port[1])
-          this._ClientConnect()
-        })
-        .catch(() => {
-          this._server = 'livecmt-2.bilibili.com'
-          this._port = 2243
-          this._ClientConnect()
-        })
+      let player = { uri: `${apiLiveOrigin}/api/player?id=cid:${this.roomID}&ts=${Date.now().toString(16)}` }
+        , playerXML = await tools.XHR<string>(player)
+        , socketServer = 'livecmt-2.bilibili.com'
+        , socketPort = 2243
+        , wsServer = 'broadcastlv.chat.bilibili.com'
+        , wsPort = 2244
+        , wssPort = 2245
+      if (playerXML != null) {
+        let flashServer = playerXML.body.match(/<server>(.+)<\/server>/)
+          , dmPort = playerXML.body.match(/<dm_port>(\d+)<\/dm_port>/)
+          , dmServer = playerXML.body.match(/<dm_server>(.+)<\/dm_server>/)
+          , dmWsPort = playerXML.body.match(/<dm_ws_port>(\d+)<\/dm_ws_port>/)
+          , dmWssPort = playerXML.body.match(/<dm_wss_port>(\d+)<\/dm_wss_port>/)
+        if (flashServer != null) socketServer = flashServer[1]
+        if (dmPort != null) socketPort = parseInt(dmPort[1])
+        if (dmServer != null) wsServer = dmServer[1]
+        if (dmWsPort != null) wsPort = parseInt(dmWsPort[1])
+        if (dmWssPort != null) wssPort = parseInt(dmWssPort[1])
+      }
+      if (this.protocol === 'socket') {
+        this._server = socketServer
+        this._port = socketPort
+      }
+      else {
+        this._server = wsServer
+        if (this.protocol === 'ws') this._port = wsPort
+        if (this.protocol === 'wss') this._port = wssPort
+      }
     }
     else {
-      this._server = server
-      this._port = port
-      this._ClientConnect()
+      this._server = options.server
+      this._port = options.port
     }
+    this._ClientConnect()
   }
   /**
    * 断开与服务器的连接
@@ -162,20 +189,16 @@ export class CommentClient extends EventEmitter {
   public Close() {
     clearTimeout(this._Timer)
     if (!this._connected) return
-    this._Client.end()
-    this._Client.destroy()
-    this._Client.removeAllListeners()
     this._connected = false
-  }
-  /**
-   * 重新连接到服务器
-   * 
-   * @param {string} [server]
-   * @memberof CommentClient
-   */
-  public ReConnect(server?: string) {
-    this.Close()
-    this.Connect(server)
+    if (this.protocol === 'socket') {
+      (<Socket>this._Client).end();
+      (<Socket>this._Client).destroy()
+    }
+    else {
+      (<ws>this._Client).close();
+      (<ws>this._Client).terminate();
+    }
+    this._Client.removeAllListeners()
   }
   /**
    * 5分钟后重新连接
@@ -197,13 +220,22 @@ export class CommentClient extends EventEmitter {
    * @memberof CommentClient
    */
   private _ClientConnect() {
-    this._Client = new Socket()
-    this._Client
-      .on('error', this._ClientErrorHandler.bind(this))
-      .on('connect', this._ClientConnectHandler.bind(this))
-      .on('data', this._ClientDataHandler.bind(this))
-      .on('end', this._ClientEndHandler.bind(this))
-      .connect(this._port, this._server)
+    if (this.protocol === 'socket') {
+      this._Client = new Socket().connect(this._port, this._server)
+      this._Client
+        .on('error', this._ClientErrorHandler.bind(this))
+        .on('connect', this._ClientConnectHandler.bind(this))
+        .on('data', this._ClientDataHandler.bind(this))
+        .on('end', this._ClientEndHandler.bind(this))
+    }
+    else {
+      this._Client = new ws(`${this.protocol}://${this._server}:${this._port}/sub`)
+      this._Client
+        .on('error', this._ClientErrorHandler.bind(this))
+        .on('open', this._ClientConnectHandler.bind(this))
+        .on('message', this._ClientDataHandler.bind(this))
+        .on('close', this._ClientEndHandler.bind(this))
+    }
   }
   /**
    * 客户端连接重试
@@ -233,6 +265,7 @@ export class CommentClient extends EventEmitter {
    */
   private _ClientErrorHandler(error: Error) {
     this.emit('clientError', error)
+    if (!this._connected) return
     this._ClientReConnect()
   }
   /**
@@ -243,6 +276,7 @@ export class CommentClient extends EventEmitter {
    */
   private _ClientEndHandler() {
     this.emit('clientEnd', '服务器主动断开')
+    if (!this._connected) return
     this._ClientReConnect()
   }
   /**
@@ -253,10 +287,7 @@ export class CommentClient extends EventEmitter {
    */
   private _ClientConnectHandler() {
     this._connected = true
-    let roomid = this.roomID
-      , uid = this.userID || 100000000000000 + parseInt((200000000000000 * Math.random()).toFixed(0))
-      , protover = 2
-      , data = JSON.stringify({ uid, roomid, protover })
+    let data = JSON.stringify({ uid: this.userID, roomid: this.roomID, protover: 1 })
     this._ClientSendData(16 + data.length, 16, this.version, 7, 1, data)
     this._ClientTimer()
   }
@@ -266,9 +297,9 @@ export class CommentClient extends EventEmitter {
    * @private
    * @memberof CommentClient
    */
-  private _ClientTimer() {
+  private async _ClientTimer() {
     if (!this._connected) return
-    if (this._ClientSendData(16, 16, 1, 2)) {
+    if (await this._ClientSendData(16, 16, 1, 2)) {
       this._Timer = setTimeout(() => {
         this._ClientTimer()
       }, 3e+4) // 30秒
@@ -288,18 +319,25 @@ export class CommentClient extends EventEmitter {
    * @param {number} param4
    * @param {number} [param5=1]
    * @param {string} [data] 数据
-   * @returns {boolean} 是否发送成功
+   * @returns {Promise<boolean>} 是否发送成功
    * @memberof CommentClient
    */
-  private _ClientSendData(totalLen: number, headLen: number, version: number, param4: number, param5 = 1, data?: string): boolean {
-    var bufferData = new Buffer(totalLen)
+  private _ClientSendData(totalLen: number, headLen: number, version: number, param4: number, param5 = 1, data?: string): Promise<boolean> {
+    var bufferData = Buffer.allocUnsafe(totalLen)
     bufferData.writeUInt32BE(totalLen, 0)
     bufferData.writeUInt16BE(headLen, 4)
     bufferData.writeUInt16BE(version, 6)
     bufferData.writeUInt32BE(param4, 8)
     bufferData.writeUInt32BE(param5, 12)
     if (data) bufferData.write(data, headLen)
-    return this._Client.write(bufferData)
+    return new Promise<boolean>(resolve => {
+      let callback = (error: Error) => {
+        if (error) resolve(false)
+        else resolve(true)
+      }
+      if (this.protocol === 'socket') (<Socket>this._Client).write(bufferData, callback)
+      else (<ws>this._Client).send(bufferData, callback)
+    })
   }
   /**
    * 解析从服务器接收的数据
@@ -371,3 +409,9 @@ export class CommentClient extends EventEmitter {
     this.emit(dataJson.cmd, dataJson)
   }
 }
+interface commentClientOptions {
+  roomID?: number
+  userID?: number
+  protocol?: commentClientProtocol
+}
+type commentClientProtocol = 'socket' | 'ws' | 'wss'
