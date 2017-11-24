@@ -6,12 +6,11 @@
 4. 运行npm install
 5. 运行node app.js
 
+[点此进行设置](https://lzghzr.github.io/bilive_client_view/index.html)
 
-~~十一限时开放全功能 (只是体验, 因为亿圆连我自己都抢不到了)~~\
-服务器就一直开着了, 以及节奏风暴功能已经关闭
+服务器开放全功能, 不要指望着可以抢到亿圆
 >远程服务器地址 wss://bilive.halaal.win/clientapi\
 >apiKey eecef037def2c86a5d74798276d80f1a
-
 
 TODO:
 * 增强SDK
