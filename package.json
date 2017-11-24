@@ -1,10 +1,10 @@
 {
   "name": "bilive_client",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "基于Node.JS的bilibili直播挂机系统",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc -p .\\tsconfig.json & copy .\\bilive\\options.default.json .\\build\\bilive\\ /Y & copy .\\package.json .\\build\\ /Y"
   },
   "author": "lzghzr",
   "license": "Apache-2.0",

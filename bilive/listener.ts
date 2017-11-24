@@ -70,14 +70,17 @@ export class Listener extends EventEmitter {
    * @memberof Listener
    */
   public Start() {
-    this._CommentClient = new CommentClient({ roomID: options.defaultRoomID, userID: options.defaultUserID })
+    let config = options.config
+      , roomID = config.defaultRoomID
+      , userID = config.defaultUserID
+    this._CommentClient = new CommentClient({ roomID, userID })
     this._CommentClient
       .on('serverError', (error) => { tools.Log('与弹幕服务器断开五分钟', error) })
       .on('SYS_MSG', this._SYSMSGHandler.bind(this))
       .on('SYS_GIFT', this._SYSGiftHandler.bind(this))
       .Connect()
-    let apiOrigin = options.apiOrigin
-      , apiKey = options.apiKey
+    let apiOrigin = config.apiOrigin
+      , apiKey = config.apiKey
     if (apiOrigin === '' || apiKey === '') return
     this._Client = new BiliveClient(apiOrigin, apiKey)
     this._Client

@@ -1,10 +1,10 @@
 import * as ws from 'ws'
-import * as http from 'http'
-import * as url from 'url'
 import * as fs from 'fs'
+import * as http from 'http'
+import { randomBytes } from 'crypto'
 import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
-import { config, options } from './index'
+import { options, config, optionsInfo, userData } from './index'
 /**
  * 程序设置
  * 
@@ -18,7 +18,6 @@ export class Options extends EventEmitter {
   }
   private _wsServer: ws.Server
   private _wsClient: ws
-  private _http: http.Server
   /**
    * 启动HTTP以及WebSocket服务
    * 
@@ -28,77 +27,178 @@ export class Options extends EventEmitter {
     this._HttpServer()
   }
   /**
-   * WebSocket服务
-   * 
-   * @private
-   * @memberof Options
-   */
-  private _WebSocketServer() {
-    this._wsServer = new ws.Server({ server: this._http })
-    this._wsServer
-      .on('error', error => tools.Log(error))
-      .on('connection', client => {
-        if (this._wsClient != null) this._wsClient.close(1001, JSON.stringify({ cmd: 'close', msg: 'too many connections' }))
-        client
-          .on('error', error => tools.Log(error))
-          .on('message', (message: string) => {
-            let msg: message = JSON.parse(message)
-            if (msg.cmd === 'save' && msg.data != null) {
-              let config = <config>msg.data
-              this.emit('changeOptions', config)
-            }
-          })
-          .send(JSON.stringify({ cmd: 'options', data: options }))
-        this._wsClient = client
-      })
-  }
-  /**
    * HTTP服务
    * 
    * @private
    * @memberof Options
    */
   private _HttpServer() {
-    this._http = http.createServer((req, res) => {
-      let path = url.parse(<string>req.url).path
-      let headers: {}
-      if (path == null) path = '/view/404.html'
-      else if (path === '/') {
-        path = '/view/index.html'
-        headers = { 'content-type': 'text/html; charset=utf-8' }
-      }
-      else if (path.includes('/view/')) {
-        if (path.includes('.html')) headers = { 'content-type': 'text/html; charset=UTF-8' }
-        else if (path.includes('.js')) headers = { 'content-type': 'application/javascript; charset=UTF-8' }
-        else if (path.includes('.css')) headers = { 'content-type': 'text/css; charset=UTF-8' }
-      }
-      else path = '/view/404.html'
-      fs.readFile(`${__dirname}${path}`, (error, data) => {
-        if (error == null) {
-          res.writeHead(200, headers)
-          res.write(data)
-        }
-        else {
-          res.writeHead(404, { 'content-type': 'text/html; charset=utf-8' })
-          res.write('404 not found')
-        }
-        res.end()
+    let server = http.createServer((req, res) => {
+      req.on('error', tools.Error)
+      res.on('error', tools.Error)
+      res.writeHead(200)
+      res.end('All glory to WebSockets!\n')
+    })
+    server.on('error', tools.Error)
+    let listen = options.server
+    if (listen.path === '') {
+      server.listen(listen.port, listen.hostname === '' ? undefined : listen.hostname, () => {
+        this._WebSocketServer(server)
+        tools.Log(`已监听 ${listen.hostname}:${listen.port}`)
       })
+    }
+    else {
+      if (fs.existsSync(listen.path)) fs.unlinkSync(listen.path)
+      server.listen(listen.path, () => {
+        fs.chmodSync(listen.path, '666')
+        this._WebSocketServer(server)
+        tools.Log(`已监听 ${listen.path}`)
+      })
+    }
+  }
+  /**
+   * WebSocket服务
+   * 
+   * @private
+   * @param {http.Server} server 
+   * @memberof Options
+   */
+  private _WebSocketServer(server: http.Server) {
+    this._wsServer = new ws.Server({
+      server,
+      handleProtocols: (protocols: string[]) => {
+        let protocol = options.server.protocol
+        if (protocol === protocols[0]) return protocol
+        else return false
+      }
     })
-    this._http.listen(10080, '127.0.0.1', () => {
-      this._WebSocketServer()
-      tools.Log(`浏览器打开 http://127.0.0.1:10080 进行设置`)
-    })
-      .on('error', error => tools.Log(error))
+    this._wsServer
+      .on('error', tools.Error)
+      .on('connection', client => {
+        if (this._wsClient != null) this._wsClient.close(1001, JSON.stringify({ cmd: 'close', msg: 'too many connections' }))
+        let destroy = () => {
+          client.close()
+          client.terminate()
+          client.removeAllListeners()
+        }
+        client
+          .on('error', (error) => {
+            tools.Error(error)
+            destroy()
+          })
+          .on('close', (code, reason) => {
+            tools.Log(code, reason)
+            destroy()
+          })
+          .on('message', async (msg: string) => {
+            let message = await tools.JsonParse<message>(msg).catch(tools.Error)
+            if (message != null && message.cmd != null && message.ts != null) this._onCMD(message)
+            else this._Send({ cmd: 'error', ts: 'null', msg: '消息格式错误' })
+          })
+        this._wsClient = client
+      })
+  }
+  private _onCMD(message: message) {
+    let cmd = message.cmd
+      , ts = message.ts
+    // 获取设置
+    if (cmd === 'getConfig') {
+      let data = options.config
+      this._Send({ cmd, ts, data })
+    }
+    // 保存设置
+    else if (cmd === 'setConfig') {
+      let config = options.config
+        , msg = ''
+        , setConfig = <config>message.data || {}
+      for (let i in config) {
+        if (typeof config[i] === typeof setConfig[i]) config[i] = setConfig[i]
+        else {
+          msg = '参数错误'
+          break
+        }
+      }
+      if (msg === '') {
+        options.config = config
+        tools.Options(options)
+        this._Send({ cmd, ts, data: config })
+      }
+      else this._Send({ cmd, ts, msg, data: options.config })
+    }
+    // 获取参数描述
+    else if (cmd === 'getInfo') {
+      let data = options.info
+      this._Send({ cmd, ts, data })
+    }
+    // 获取uid
+    else if (cmd === 'getAllUID') {
+      let data = []
+        , user = options.user
+      for (let uid in user) data.push(uid)
+      this._Send({ cmd, ts, data })
+    }
+    // 获取用户设置
+    else if (cmd === 'getUserData') {
+      let user = options.user
+        , getUID = message.uid
+      if (getUID != null && user[getUID] != null) this._Send({ cmd, ts, uid: getUID, data: user[getUID] })
+      else this._Send({ cmd, ts, msg: '未知用户' })
+    }
+    // 保存用户设置
+    else if (cmd === 'setUserData') {
+      let user = options.user
+        , setUID = message.uid
+      if (setUID != null && user[setUID] != null) {
+        let userData = user[setUID]
+          , msg = ''
+          , setUserData = <userData>message.data || {}
+        for (let i in userData) {
+          if (typeof userData[i] === typeof setUserData[i]) userData[i] = setUserData[i]
+          else {
+            msg = '参数错误'
+            break
+          }
+        }
+        if (msg === '') {
+          options.user[setUID] = userData
+          tools.Options(options)
+          this._Send({ cmd, ts, uid: setUID, data: userData })
+        }
+        else this._Send({ cmd, ts, uid: setUID, msg, data: options.user[setUID] })
+      }
+      else this._Send({ cmd, ts, uid: setUID, msg: '未知用户' })
+    }
+    // 删除用户设置
+    else if (cmd === 'delUserData') {
+      let user = options.user
+        , delUID = message.uid
+      if (delUID != null && user[delUID] != null) {
+        let userData = user[delUID]
+        delete options.user[delUID]
+        tools.Options(options)
+        this._Send({ cmd, ts, uid: delUID, data: userData })
+      }
+      else this._Send({ cmd, ts, uid: delUID, msg: '未知用户' })
+    }
+    // 新建用户设置
+    else if (cmd === 'newUserData') {
+      let uid = randomBytes(16).toString('hex')
+        , data = Object.assign({}, options.newUserData)
+      options.user[uid] = data
+      tools.Options(options)
+      this._Send({ cmd, ts, uid, data })
+    }
+    else this._Send({ cmd, ts, msg: '未知命令' })
+  }
+  private _Send(message: message) {
+    this._wsClient.send(JSON.stringify(message))
   }
 }
-/**
- * 消息格式
- * 
- * @interface message
- */
+// WebSocket消息
 interface message {
   cmd: string
+  ts: string
   msg?: string
-  data?: any
+  uid?: string
+  data?: config | optionsInfo | string[] | userData
 }

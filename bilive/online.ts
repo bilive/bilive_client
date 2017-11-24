@@ -30,8 +30,8 @@ export class Online extends EventEmitter {
    * @memberof Online
    */
   public async OnlineHeart() {
-    let roomID = options.defaultRoomID,
-      usersData = options.usersData
+    let roomID = options.config.defaultRoomID,
+      usersData = options.user
     for (let uid in usersData) {
       let userData = usersData[uid]
       if (userData.status) {
@@ -75,8 +75,8 @@ export class Online extends EventEmitter {
    * @memberof Online
    */
   public DoLoop() {
-    let eventRooms = options.eventRooms,
-      usersData = options.usersData
+    let eventRooms = options.config.eventRooms,
+      usersData = options.user
     for (let uid in usersData) {
       let userData = usersData[uid]
       // 每日签到
@@ -98,7 +98,7 @@ export class Online extends EventEmitter {
    * @memberof Online
    */
   private async _DoSign(uid: string) {
-    let userData = options.usersData[uid],
+    let userData = options.user[uid],
       signQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`,
       sign: request.Options = {
         uri: `${apiLiveOrigin}/AppUser/getSignInfo?${AppClient.ParamsSign(signQuery)}`,
@@ -116,13 +116,14 @@ export class Online extends EventEmitter {
    * @memberof Online
    */
   private async _DoSignPC(uid: string) {
-    let userData = options.usersData[uid],
+    let roomID = options.config.defaultRoomID
+      , userData = options.user[uid],
       sign: request.Options = {
         uri: `${apiLiveOrigin}/sign/doSign`,
         jar: cookieJar[uid],
         json: true,
         headers: {
-          'Referer': `http://live.bilibili.com/${options.defaultRoomID}`
+          'Referer': `http://live.bilibili.com/${roomID}`
         }
       }
     let signInfoResponse = await tools.XHR<signInfoResponse>(sign)
@@ -137,7 +138,7 @@ export class Online extends EventEmitter {
    * @memberof Online
    */
   private async _TreasureBox(uid: string) {
-    let userData = options.usersData[uid]
+    let userData = options.user[uid]
       // 获取宝箱状态,换房间会重新冷却
       , currentTaskUrl = `${apiLiveOrigin}/mobile/freeSilverCurrentTask`
       , currentTaskQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`
@@ -171,7 +172,8 @@ export class Online extends EventEmitter {
    * @memberof Online
    */
   private async _TreasureBoxPC(uid: string) {
-    let userData = options.usersData[uid]
+    let roomID = options.config.defaultRoomID
+      , userData = options.user[uid]
       , jar = cookieJar[uid]
       // 获取宝箱状态,换房间会重新冷却
       , getCurrentTask: request.Options = {
@@ -179,7 +181,7 @@ export class Online extends EventEmitter {
         jar,
         json: true,
         headers: {
-          'Referer': `http://live.bilibili.com/${options.defaultRoomID}`
+          'Referer': `http://live.bilibili.com/${roomID}`
         }
       }
       , currentTaskResponse = await tools.XHR<currentTaskResponse>(getCurrentTask)
@@ -192,7 +194,7 @@ export class Online extends EventEmitter {
           encoding: null,
           jar,
           headers: {
-            'Referer': `http://live.bilibili.com/${options.defaultRoomID}`
+            'Referer': `http://live.bilibili.com/${roomID}`
           }
         }
           , gCaptcha = await tools.XHR<Buffer>(getCaptcha)
@@ -205,7 +207,7 @@ export class Online extends EventEmitter {
               jar,
               json: true,
               headers: {
-                'Referer': `http://live.bilibili.com/${options.defaultRoomID}`
+                'Referer': `http://live.bilibili.com/${roomID}`
               }
             }
             await tools.XHR<awardResponse>(getAward)
@@ -226,7 +228,7 @@ export class Online extends EventEmitter {
    * @memberof Online
    */
   private _EventRoom(uid: string, roomIDs: number[]) {
-    let userData = options.usersData[uid]
+    let userData = options.user[uid]
     roomIDs.forEach(async roomID => {
       let getInfo: request.Options = {
         uri: `${apiLiveOrigin}/live/getInfo?roomid=${roomID}`,
@@ -266,7 +268,7 @@ export class Online extends EventEmitter {
    * @memberof Online
    */
   private async _EventRoomHeart(uid: string, heartTime: number, roomID: number) {
-    let userData = options.usersData[uid],
+    let userData = options.user[uid],
       heart: request.Options = {
         uri: `${apiLiveOrigin}/eventRoom/heart?roomid=${roomID}`,
         jar: cookieJar[uid],

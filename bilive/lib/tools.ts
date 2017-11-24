@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import { inflate } from 'zlib'
 import * as request from 'request'
-import { config } from '../index'
+import { options } from '../index'
 /**
  * 添加request头信息
  * 
@@ -92,15 +92,15 @@ export function GetCookie(jar: request.CookieJar, url: string, key: string): str
  * 操作数据文件, 为了可以快速应用不使用数据库
  * 
  * @export
- * @param {config} [options]
- * @returns {Promise<config>}
+ * @param {options} [options]
+ * @returns {Promise<options>}
  */
-export function Options(options?: config): Promise<config> {
-  return new Promise<config>((resolve, reject) => {
+export function Options(options?: options): Promise<options> {
+  return new Promise<options>((resolve, reject) => {
     if (options == null) {
       fs.readFile(`${__dirname}/../options.json`, (error, data) => {
         if (error == null) {
-          let config = <config>JSON.parse(data.toString())
+          let config = <options>JSON.parse(data.toString())
           resolve(config)
         }
         else reject(error)

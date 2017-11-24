@@ -1,45 +1,37 @@
 {
-  "defaultUserID": 0,
-  "defaultRoomID": 23058,
-  "apiOrigin": "",
-  "apiKey": "",
-  "eventRooms": [
-    23058
-  ],
-  "beatStormBlackList": [
-    10101
-  ],
-  "usersData": {
-    "15d8f8a437e": {
-      "nickname": "admin",
-      "userName": "bishi",
-      "passWord": "password",
-      "accessToken": "",
-      "cookie": "",
-      "status": false,
-      "doSign": false,
-      "treasureBox": false,
-      "eventRoom": false,
-      "smallTV": false,
-      "raffle": false,
-      "beatStorm": false,
-      "debug": false
-    },
-    "15d8f8ec948": {
-      "nickname": "user",
-      "userName": "碧诗",
-      "passWord": "password",
-      "accessToken": "",
-      "cookie": "",
-      "status": false,
-      "doSign": false,
-      "treasureBox": false,
-      "eventRoom": false,
-      "smallTV": false,
-      "raffle": false,
-      "beatStorm": false,
-      "debug": false
-    }
+  "server": {
+    "path": "",
+    "hostname": "127.0.0.1",
+    "port": 10080,
+    "protocol": "admin"
+  },
+  "config": {
+    "defaultUserID": 0,
+    "defaultRoomID": 23058,
+    "apiOrigin": "",
+    "apiKey": "",
+    "eventRooms": [
+      23058
+    ],
+    "beatStormBlackList": [
+      10101
+    ]
+  },
+  "user": {},
+  "newUserData": {
+    "nickname": "user",
+    "userName": "bishi",
+    "passWord": "password",
+    "accessToken": "",
+    "cookie": "",
+    "status": false,
+    "doSign": false,
+    "treasureBox": false,
+    "eventRoom": false,
+    "smallTV": false,
+    "raffle": false,
+    "beatStorm": false,
+    "debug": false
   },
   "info": {
     "defaultUserID": {

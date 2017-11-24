@@ -24,12 +24,12 @@ export class BiLive {
    */
   public async Start() {
     await this._SetOptionsFile()
-    let config = await tools.Options().catch(tools.Error)
-    if (config != null) {
-      options = config
-      let usersData = config.usersData
-      for (let uid in usersData) {
-        let userData = usersData[uid]
+    let option = await tools.Options().catch(tools.Error)
+    if (option != null) {
+      options = option
+      let user = option.user
+      for (let uid in user) {
+        let userData = user[uid]
         cookieJar[uid] = tools.SetCookie(userData.cookie, [apiLiveOrigin])
       }
       this.Options()
@@ -68,12 +68,7 @@ export class BiLive {
    */
   public Options() {
     const SOptions = new Options()
-    SOptions
-      .on('changeOptions', (config: config) => {
-        options = config
-        tools.Options(options)
-      })
-      .Start()
+    SOptions.Start()
   }
   /**
    * 在线挂机
@@ -109,7 +104,7 @@ export class BiLive {
    * @memberof BiLive
    */
   private _SmallTV(smallTVInfo: smallTVInfo) {
-    let usersData = options.usersData
+    let usersData = options.user
     for (let uid in usersData) {
       let userData = usersData[uid], jar = cookieJar[uid]
       if (userData.status && userData.smallTV) {
@@ -135,7 +130,7 @@ export class BiLive {
    * @memberof BiLive
    */
   private _Raffle(raffleInfo: raffleInfo) {
-    let usersData = options.usersData
+    let usersData = options.user
     for (let uid in usersData) {
       let userData = usersData[uid], jar = cookieJar[uid]
       if (userData.status && userData.raffle) {
@@ -162,7 +157,7 @@ export class BiLive {
    * @memberof BiLive
    */
   private _Lighten(lightenInfo: lightenInfo) {
-    let usersData = options.usersData
+    let usersData = options.user
     for (let uid in usersData) {
       let userData = usersData[uid], jar = cookieJar[uid]
       if (userData.status && userData.raffle) {
@@ -189,8 +184,9 @@ export class BiLive {
    * @memberof BiLive
    */
   private _BeatStorm(beatStormInfo: beatStormInfo) {
-    if (options.beatStormBlackList.includes(beatStormInfo.roomID)) return
-    let usersData = options.usersData
+    let config = options.config
+    if (config.beatStormBlackList.includes(beatStormInfo.roomID)) return
+    let usersData = options.user
     for (let uid in usersData) {
       let userData = usersData[uid]
         , jar = cookieJar[uid]
@@ -214,7 +210,7 @@ export class BiLive {
    * @memberof BiLive
    */
   private async _Debug(debugInfo: debugInfo) {
-    let usersData = options.usersData
+    let usersData = options.user
     for (let uid in usersData) {
       let userData = usersData[uid], jar = cookieJar[uid]
       if (userData.status && userData.debug) {
@@ -238,12 +234,12 @@ export class BiLive {
    * @memberof BiLive
    */
   private async _CookieError(uid: string) {
-    let userData = options.usersData[uid]
+    let userData = options.user[uid]
     tools.Log(userData.nickname, 'Cookie已失效')
     let cookie = await AppClient.GetCookie(userData.accessToken)
     if (cookie != null) {
       cookieJar[uid] = cookie
-      options.usersData[uid].cookie = cookie.getCookieString(apiLiveOrigin)
+      options.user[uid].cookie = cookie.getCookieString(apiLiveOrigin)
       tools.Options(options)
       tools.Log(userData.nickname, 'Cookie已更新')
     }
@@ -257,19 +253,19 @@ export class BiLive {
    * @memberof BiLive
    */
   private async _TokenError(uid: string) {
-    let userData = options.usersData[uid]
+    let userData = options.user[uid]
     tools.Log(userData.nickname, 'Token已失效')
     let token = await AppClient.GetToken({
       userName: userData.userName,
       passWord: userData.passWord
     })
     if (typeof token === 'string') {
-      options.usersData[uid].accessToken = token
+      options.user[uid].accessToken = token
       tools.Options(options)
       tools.Log(userData.nickname, 'Token已更新')
     }
     else if (token != null) {
-      options.usersData[uid].status = false
+      options.user[uid].status = false
       tools.Options(options)
       tools.Log(userData.nickname, 'Token更新失败', token.body)
     }
@@ -281,27 +277,40 @@ export let apiLiveOrigin = 'http://api.live.bilibili.com'
   , rafflePathname = '/activity/v1/Raffle'
   , lightenPathname = '/activity/v1/NeedYou'
   , cookieJar: cookieJar = {}
-  , options: config
+  , options: options
 /**
  * 应用设置
  * 
  * @export
- * @interface config
+ * @interface options
  */
+export interface options {
+  server: server
+  config: config
+  user: userCollection
+  newUserData: userData
+  info: optionsInfo
+}
+export interface server {
+  path: string
+  hostname: string
+  port: number
+  protocol: string
+}
 export interface config {
+  [index: string]: number | string | number[]
   defaultUserID: number
   defaultRoomID: number
   apiOrigin: string
   apiKey: string
   eventRooms: number[]
   beatStormBlackList: number[]
-  usersData: usersData
-  info: configInfo
 }
-export interface usersData {
+export interface userCollection {
   [index: string]: userData
 }
 export interface userData {
+  [index: string]: string | boolean
   nickname: string
   userName: string
   passWord: string
@@ -316,7 +325,7 @@ export interface userData {
   beatStorm: boolean
   debug: boolean
 }
-export interface configInfo {
+export interface optionsInfo {
   defaultUserID: configInfoData
   defaultRoomID: configInfoData
   apiOrigin: configInfoData

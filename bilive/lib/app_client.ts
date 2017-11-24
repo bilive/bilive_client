@@ -98,6 +98,8 @@ export class AppClient {
    * @memberof AppClient
    */
   private static _Login(userLogin: userLogin, publicKey: getKeyResponseData): Promise<tools.response<loginResponse>> {
+    // captcha= JSESSIONID
+    // https://passport.bilibili.com/captcha
     let passWord = AppClient._RSAPassWord(userLogin.passWord, publicKey),
       loginOrigin = 'https://passport.bilibili.com/api/oauth2/login',
       loginQuery = `appkey=${AppClient.appKey}&build=${AppClient.build}&mobi_app=${AppClient.mobiApp}&password=${passWord}&platform=${AppClient.platform}&ts=${AppClient.TS}&username=${encodeURIComponent(userLogin.userName)}`,
