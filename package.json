@@ -4,7 +4,12 @@
   "description": "基于Node.JS的bilibili直播挂机系统",
   "main": "index.js",
   "scripts": {
-    "build": "tsc -p .\\tsconfig.json & copy .\\bilive\\options.default.json .\\build\\bilive\\ /Y & copy .\\package.json .\\build\\ /Y"
+    "build": "npm run build:tsc && npm-run-posix-or-windows build:copy",
+    "build:tsc": "tsc -p tsconfig.json || exit 0",
+    "build:copy": "cp ./bilive/options.default.json ./build/bilive/ && cp package.json ./build/",
+    "build:copy:windows": "copy .\\bilive\\options.default.json .\\build\\bilive\\ /Y & copy .\\package.json .\\build\\ /Y",
+    "clean": "rimraf build",
+    "start": "node build/app.js"
   },
   "author": "lzghzr",
   "license": "Apache-2.0",
@@ -12,7 +17,10 @@
     "@types/jpeg-js": "^0.3.0",
     "@types/node": "^8.0.53",
     "@types/request": "^2.0.8",
-    "@types/ws": "^3.2.0"
+    "@types/ws": "^3.2.0",
+    "npm-run-posix-or-windows": "^2.0.2",
+    "rimraf": "^2.6.2",
+    "typescript": "^2.6.1"
   },
   "dependencies": {
     "jpeg-js": "^0.3.3",
