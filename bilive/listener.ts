@@ -133,15 +133,17 @@ export class Listener extends EventEmitter {
         }
       let raffleCheck = await tools.XHR<raffleCheck>(check).catch(tools.Error)
       if (raffleCheck != null && raffleCheck.body.code === 0 && raffleCheck.body.data.length > 0) {
-        let message: message = {
-          cmd: 'raffle',
-          data: {
-            roomID,
-            id: raffleCheck.body.data[0].raffleId,
-            rawData: dataJson
+        raffleCheck.body.data.forEach(value => {
+          let message: message = {
+            cmd: 'raffle',
+            data: {
+              roomID,
+              id: value.raffleId,
+              rawData: dataJson
+            }
           }
-        }
-        this._RaffleHandler(message)
+          this._RaffleHandler(message)
+        })
       }
     }
     else if (dataJson.real_roomid != null && dataJson.giftId === 84) {
@@ -154,15 +156,17 @@ export class Listener extends EventEmitter {
       }
       let lightenCheck = await tools.XHR<lightenCheck>(check).catch(tools.Error)
       if (lightenCheck != null && lightenCheck.body.code === 0 && lightenCheck.body.data.length > 0) {
-        let message: message = {
-          cmd: 'lighten',
-          data: {
-            roomID,
-            id: lightenCheck.body.data[0].lightenId,
-            rawData: dataJson
+        lightenCheck.body.data.forEach(value => {
+          let message: message = {
+            cmd: 'lighten',
+            data: {
+              roomID,
+              id: value.lightenId,
+              rawData: dataJson
+            }
           }
-        }
-        this._LightenHandler(message)
+          this._LightenHandler(message)
+        })
       }
     }
   }

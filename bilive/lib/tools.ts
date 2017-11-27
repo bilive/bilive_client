@@ -1,5 +1,4 @@
 import * as fs from 'fs'
-import { inflate } from 'zlib'
 import * as request from 'request'
 import { options } from '../index'
 /**
@@ -63,7 +62,7 @@ export function XHR<T>(options: request.Options, platform: 'PC' | 'Android' | 'W
  * @param {string[]} urls
  * @returns {request.CookieJar}
  */
-export function SetCookie(cookieString: string, urls: string[]): request.CookieJar {
+export function setCookie(cookieString: string, urls: string[]): request.CookieJar {
   let jar = request.jar()
   urls.forEach(url => {
     cookieString.split(';').forEach((cookie) => {
@@ -81,7 +80,7 @@ export function SetCookie(cookieString: string, urls: string[]): request.CookieJ
  * @param {string} key 
  * @returns {string} 
  */
-export function GetCookie(jar: request.CookieJar, url: string, key: string): string {
+export function getCookie(jar: request.CookieJar, url: string, key: string): string {
   let cookies = jar.getCookies(url)
     , cookieFind = cookies.find(cookie => {
       if (cookie.key === key) return cookie.value
@@ -96,22 +95,21 @@ export function GetCookie(jar: request.CookieJar, url: string, key: string): str
  * @returns {Promise<options>}
  */
 export function Options(options?: options): Promise<options> {
-  return new Promise<options>((resolve, reject) => {
+  return new Promise(async resolve => {
+    let dirname = __dirname + (process.env.npm_lifecycle_event === 'start' ? '/../../..' : '/../..')
+      , hasDir = fs.existsSync(dirname + '/options/')
+    if (!hasDir) fs.mkdirSync(dirname + '/options/')
+    let hasFile = fs.existsSync(dirname + '/options/options.json')
+    if (!hasFile) fs.copyFileSync(dirname + '/bilive/options.default.json', dirname + '/options/options.json')
     if (options == null) {
-      fs.readFile(`${__dirname}/../options.json`, (error, data) => {
-        if (error == null) {
-          let config = <options>JSON.parse(data.toString())
-          resolve(config)
-        }
-        else reject(error)
-      })
+      let optionsBuffer = fs.readFileSync(dirname + '/options/options.json')
+        , option = await JsonParse<options>(optionsBuffer.toString())
+      resolve(option)
     }
     else {
-      let config = JSON.stringify(options)
-      fs.writeFile(`${__dirname}/../options.json`, config, error => {
-        if (error == null) resolve(options)
-        else reject(error)
-      })
+      let option = JSON.stringify(options)
+      fs.writeFileSync(dirname + '/options/options.json', option)
+      resolve(options)
     }
   })
 }
@@ -130,21 +128,6 @@ export function JsonParse<T>(text: string, reviver?: ((key: any, value: any) => 
       let obj = JSON.parse(text, reviver)
       resolve(obj)
     } catch (error) { reject(error) }
-  })
-}
-/**
- * 解压数据
- * 
- * @export
- * @param {Buffer} data 
- * @returns {Promise<Buffer>} 
- */
-export function Uncompress(data: Buffer): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    inflate(data, (error, result) => {
-      if (error == null) resolve(result)
-      else reject(error)
-    })
   })
 }
 /**
@@ -175,7 +158,7 @@ export function Error(message?: any, ...optionalParams: any[]) {
  * @returns {Promise<{}>}
  */
 export function Sleep(ms: number): Promise<{}> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     setTimeout(resolve, ms, 'sleep')
   })
 }

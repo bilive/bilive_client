@@ -30,7 +30,7 @@ export class BiLive {
       let user = option.user
       for (let uid in user) {
         let userData = user[uid]
-        cookieJar[uid] = tools.SetCookie(userData.cookie, [apiLiveOrigin])
+        cookieJar[uid] = tools.setCookie(userData.cookie, [apiLiveOrigin])
       }
       this.Options()
       this.Online()

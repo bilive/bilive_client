@@ -1,5 +1,6 @@
 import { Socket } from 'net'
 import { EventEmitter } from 'events'
+import { inflate } from 'zlib'
 import * as ws from 'ws'
 import * as tools from './tools'
 import { apiLiveOrigin } from '../index'
@@ -355,7 +356,7 @@ export class CommentClient extends EventEmitter {
     if (dataLen > 18) {
       let compress = data.readUInt16BE(16)
       if (compress === 30938) {
-        let uncompressData = await tools.Uncompress(data.slice(16, dataLen)).catch(tools.Error)
+        let uncompressData = await this._Uncompress(data.slice(16, dataLen)).catch(tools.Error)
         if (uncompressData != null) {
           data = uncompressData
           dataLen = data.length
@@ -395,6 +396,22 @@ export class CommentClient extends EventEmitter {
       packageLen = (dataLen - packageIndex >= 16) ? data.readUInt32BE(packageIndex) : 1048576
       if (packageLen < 16) packageLen = 1048576
     }
+  }
+  /**
+   * 解压数据
+   * 
+   * @private
+   * @param {Buffer} data 
+   * @returns {Promise<Buffer>} 
+   * @memberof CommentClient
+   */
+  private _Uncompress(data: Buffer): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      inflate(data, (error, result) => {
+        if (error == null) resolve(result)
+        else reject(error)
+      })
+    })
   }
   /**
    * 解析消息
