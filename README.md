@@ -8,12 +8,7 @@
 
 [点此进行设置](https://lzghzr.github.io/bilive_client_view/index.html)
 
-~~服务器开放全功能, 不要指望着可以抢到亿圆~~\
-抢亿圆已经凉了, 服务器自然也没有再运行下去的必要\
-清理掉一些不必要的代码以后, 会分享服务端代码以及数据库备份
-
->远程服务器地址 wss://bilive.halaal.win/clientapi\
->apiKey eecef037def2c86a5d74798276d80f1a
+[服务端](https://github.com/lzghzr/bilive_server)
 
 TODO:
 * 增强SDK
