@@ -12,7 +12,7 @@
     "start": "node build/app.js"
   },
   "author": "lzghzr",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "devDependencies": {
     "@types/jpeg-js": "^0.3.0",
     "@types/node": "^8.0.53",

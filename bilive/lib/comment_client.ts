@@ -3,7 +3,6 @@ import { EventEmitter } from 'events'
 import { inflate } from 'zlib'
 import * as ws from 'ws'
 import * as tools from './tools'
-import { apiLiveOrigin } from '../index'
 import { danmuJson } from './danmaku.type'
 /**
  * 弹幕客户端, 用于连接弹幕服务器和发送弹幕事件
@@ -23,7 +22,6 @@ export class CommentClient extends EventEmitter {
     let option: commentClientOptions = {
       roomID: 23058,
       userID: 0,
-      // userID: 100000000000000 + parseInt((200000000000000 * Math.random()).toFixed(0)),
       protocol: 'socket'
     }
     Object.assign(option, options)
@@ -75,6 +73,16 @@ export class CommentClient extends EventEmitter {
    * @memberof CommentClient
    */
   public version: number = 1
+  /**
+   * 猜测为客户端设备
+   * 
+   * @readonly
+   * @type {(0 | 1)}
+   * @memberof CommentClient
+   */
+  public get driver(): 0 | 1 {
+    return this.protocol === 'socket' ? 0 : 1
+  }
   /**
    * 重连次数, 以五次为阈值
    * 
@@ -147,7 +155,7 @@ export class CommentClient extends EventEmitter {
     clearTimeout(this._Timer)
     if (options == null) {
       // 动态获取服务器地址, 防止B站临时更换
-      let player = { uri: `${apiLiveOrigin}/api/player?id=cid:${this.roomID}&ts=${Date.now().toString(16)}` }
+      let player = { uri: `https://api.live.bilibili.com/api/player?id=cid:${this.roomID}&ts=${Date.now().toString(16)}` }
         , playerXML = await tools.XHR<string>(player)
         , socketServer = 'livecmt-2.bilibili.com'
         , socketPort = 2243
@@ -288,8 +296,8 @@ export class CommentClient extends EventEmitter {
    */
   private _ClientConnectHandler() {
     this._connected = true
-    let data = JSON.stringify({ uid: this.userID, roomid: this.roomID, protover: 1 })
-    this._ClientSendData(16 + data.length, 16, this.version, 7, 1, data)
+    let data = JSON.stringify({ roomid: this.roomID, uid: this.userID })
+    this._ClientSendData(16 + data.length, 16, this.version, 7, this.driver, data)
     this._ClientTimer()
   }
   /**
@@ -300,7 +308,9 @@ export class CommentClient extends EventEmitter {
    */
   private async _ClientTimer() {
     if (!this._connected) return
-    if (await this._ClientSendData(16, 16, 1, 2)) {
+    let data = JSON.stringify({ roomid: this.roomID, uid: this.userID })
+      , status = await this._ClientSendData(16 + data.length, 16, this.version, 2, this.driver, data)
+    if (status) {
       this._Timer = setTimeout(() => {
         this._ClientTimer()
       }, 3e+4) // 30秒
@@ -315,23 +325,23 @@ export class CommentClient extends EventEmitter {
    * 
    * @private
    * @param {number} totalLen 总长度
-   * @param {number} headLen 头部长度
-   * @param {number} version 版本
-   * @param {number} param4
-   * @param {number} [param5=1]
+   * @param {number} [headLen=16] 头部长度
+   * @param {any} [version=this.version] 版本
+   * @param {number} [type=2] 类型
+   * @param {any} [driver=this.driver] 设备
    * @param {string} [data] 数据
-   * @returns {Promise<boolean>} 是否发送成功
+   * @returns {Promise<boolean>} 
    * @memberof CommentClient
    */
-  private _ClientSendData(totalLen: number, headLen: number, version: number, param4: number, param5 = 1, data?: string): Promise<boolean> {
-    var bufferData = Buffer.allocUnsafe(totalLen)
-    bufferData.writeUInt32BE(totalLen, 0)
-    bufferData.writeUInt16BE(headLen, 4)
-    bufferData.writeUInt16BE(version, 6)
-    bufferData.writeUInt32BE(param4, 8)
-    bufferData.writeUInt32BE(param5, 12)
-    if (data) bufferData.write(data, headLen)
+  private _ClientSendData(totalLen: number, headLen = 16, version = this.version, type = 2, driver = this.driver, data?: string): Promise<boolean> {
     return new Promise<boolean>(resolve => {
+      let bufferData = Buffer.allocUnsafe(totalLen)
+      bufferData.writeUInt32BE(totalLen, 0)
+      bufferData.writeUInt16BE(headLen, 4)
+      bufferData.writeUInt16BE(version, 6)
+      bufferData.writeUInt32BE(type, 8)
+      bufferData.writeUInt32BE(driver, 12)
+      if (data) bufferData.write(data, headLen)
       let callback = (error: Error) => {
         if (error) resolve(false)
         else resolve(true)
