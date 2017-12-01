@@ -36,8 +36,8 @@ export class Options extends EventEmitter {
     let server = http.createServer((req, res) => {
       req.on('error', tools.Error)
       res.on('error', tools.Error)
-      res.writeHead(200)
-      res.end('All glory to WebSockets!\n')
+      res.writeHead(301, { 'Location': 'https://lzghzr.github.io/bilive_client_view/index.html' })
+      res.end()
     })
     server.on('error', tools.Error)
     let listen = _options.server
