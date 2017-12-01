@@ -36,7 +36,7 @@ export class Options extends EventEmitter {
     let server = http.createServer((req, res) => {
       req.on('error', tools.Error)
       res.on('error', tools.Error)
-      res.writeHead(301, { 'Location': 'https://lzghzr.github.io/bilive_client_view/index.html' })
+      res.writeHead(302, { 'Location': 'https://lzghzr.github.io/bilive_client_view/index.html' })
       res.end()
     })
     server.on('error', tools.Error)

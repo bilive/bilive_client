@@ -23,7 +23,6 @@ export class BiLive {
    * @memberof BiLive
    */
   public async Start() {
-    await this._SetOptionsFile()
     let option = await tools.Options().catch(tools.Error)
     if (option != null) {
       _options = option
@@ -36,30 +35,6 @@ export class BiLive {
       this.Online()
       this.Listener()
     }
-  }
-  /**
-   * 初始化设置文件
-   * 
-   * @private
-   * @returns {Promise<{}>} 
-   * @memberof BiLive
-   */
-  private _SetOptionsFile(): Promise<{}> {
-    return new Promise((resolve, reject) => {
-      fs.exists(`${__dirname}/options.json`, exists => {
-        if (exists) resolve()
-        else {
-          fs.createReadStream(`${__dirname}/options.default.json`)
-            .pipe(fs.createWriteStream(`${__dirname}/options.json`))
-            .on('error', (error) => {
-              reject(error)
-            })
-            .on('close', () => {
-              resolve()
-            })
-        }
-      })
-    })
   }
   /**
    * 用户设置
