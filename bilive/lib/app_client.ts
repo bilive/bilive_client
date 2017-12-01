@@ -4,16 +4,16 @@ import * as tools from './tools'
 import { apiLiveOrigin } from '../index'
 
 export class AppClient {
-  // private static readonly _secretKey: string = '560c52ccd288fed045859ed18bffd973'
-  // public static readonly appKey: string = '1d8b6e7d45233436'
-  // public static readonly build: string = '434000'
-  // public static readonly mobiApp: string = 'android'
-  // public static readonly platform: string = 'android'
-  private static readonly _secretKey: string = 'e988e794d4d4b6dd43bc0e89d6e90c43'
-  public static readonly appKey: string = '37207f2beaebf8d7'
-  public static readonly build: string = '211109'
-  public static readonly mobiApp: string = 'biliLink'
+  private static readonly _secretKey: string = '560c52ccd288fed045859ed18bffd973'
+  public static readonly appKey: string = '1d8b6e7d45233436'
+  public static readonly build: string = '519000'
+  public static readonly mobiApp: string = 'android'
   public static readonly platform: string = 'android'
+  // private static readonly _secretKey: string = 'e988e794d4d4b6dd43bc0e89d6e90c43'
+  // public static readonly appKey: string = '37207f2beaebf8d7'
+  // public static readonly build: string = '211109'
+  // public static readonly mobiApp: string = 'biliLink'
+  // public static readonly platform: string = 'android'
   /**
    * 谜一样的TS
    * 
@@ -80,10 +80,7 @@ export class AppClient {
         method: 'POST',
         uri: getKeyOrigin,
         body: AppClient.ParamsSign(getKeyQuery),
-        json: true,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
-        }
+        json: true
       }
     return tools.XHR<getKeyResponse>(getKey, 'Android')
   }
@@ -107,10 +104,7 @@ export class AppClient {
         method: 'POST',
         uri: loginOrigin,
         body: AppClient.ParamsSign(loginQuery),
-        json: true,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
-        }
+        json: true
       }
     return tools.XHR<loginResponse>(login, 'Android')
   }

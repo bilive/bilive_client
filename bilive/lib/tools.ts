@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import * as request from 'request'
-import { options } from '../index'
+import { _options } from '../index'
 /**
  * 添加request头信息
  * 
@@ -17,35 +17,33 @@ export function XHR<T>(options: request.Options, platform: 'PC' | 'Android' | 'W
   switch (platform) {
     case 'Android':
       headers = {
-        'Accept-Encoding': 'gzip',
         'Connection': 'Keep-Alive',
-        'User-Agent': 'Mozilla/5.0 BiliLiveDroid/2.0.0 bililive'
+        'User-Agent': 'Mozilla/5.0 BiliDroid/5.19.0 (bbcallen@gmail.com)'
       }
       break
     case 'WebView':
       headers = {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Encoding': 'gzip, deflate',
+        'Accept': 'application/json, text/javascript, */*',
         'Accept-Language': 'zh-CN',
         'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': 1,
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 7.1.1; F8132 Build/41.2.A.7.65; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/61.0.3163.98 Mobile Safari/537.36 BiliApp/211109',
-        'X-Requested-With': 'com.bilibili.bilibililive'
+        'Origin': 'https://live.bilibili.com',
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 7.1.1; E6883 Build/32.4.A.1.54; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/62.0.3202.84 Mobile Safari/537.36 BiliApp/1',
+        'X-Requested-With': 'tv.danmaku.bili'
       }
       break
     default:
       headers = {
-        'Accept': 'application/json, text/javascript, */*; q=0.01',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.6,en;q=0.4',
+        'Accept': 'application/json, text/javascript, */*',
+        'Accept-Language': 'zh-CN',
         'Connection': 'keep-alive',
         'DNT': '1',
-        'Origin': 'http://live.bilibili.com',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'
+        'Origin': 'https://live.bilibili.com',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36'
       }
       break
   }
   options.headers = options.headers == null ? headers : Object.assign(headers, options.headers)
+  if (options.method === 'POST') options.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
   // 返回异步request
   return new Promise<response<T>>((resolve, reject) => {
     request(options, (error, response, body) => {
@@ -91,10 +89,11 @@ export function getCookie(jar: request.CookieJar, url: string, key: string): str
  * 操作数据文件, 为了可以快速应用不使用数据库
  * 
  * @export
- * @param {options} [options]
+ * @param {_options} [options]
  * @returns {Promise<options>}
  */
-export function Options(options?: options): Promise<options> {
+
+export function Options(options?: _options): Promise<_options> {
   return new Promise(async resolve => {
     let dirname = __dirname + (process.env.npm_lifecycle_event === 'start' ? '/../../..' : '/../..')
       , hasDir = fs.existsSync(dirname + '/options/')
@@ -103,7 +102,7 @@ export function Options(options?: options): Promise<options> {
     if (!hasFile) fs.copyFileSync(dirname + '/bilive/options.default.json', dirname + '/options/options.json')
     if (options == null) {
       let optionsBuffer = fs.readFileSync(dirname + '/options/options.json')
-        , option = await JsonParse<options>(optionsBuffer.toString())
+        , option = await JsonParse<_options>(optionsBuffer.toString())
       resolve(option)
     }
     else {
