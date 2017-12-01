@@ -4,7 +4,7 @@ import { EventEmitter } from 'events'
 import { BiliveClient, message, beatStormInfo, smallTVInfo, raffleInfo, lightenInfo, debugInfo } from './lib/bilive_client'
 import { CommentClient } from './lib/comment_client'
 import { SYS_MSG, SYS_GIFT } from './lib/danmaku.type'
-import { apiLiveOrigin, rafflePathname, lightenPathname, options } from './index'
+import { apiLiveOrigin, rafflePathname, lightenPathname, _options, smallTVPathname } from './index'
 /**
  * 监听服务器消息
  * 
@@ -70,7 +70,7 @@ export class Listener extends EventEmitter {
    * @memberof Listener
    */
   public Start() {
-    let config = options.config
+    let config = _options.config
       , roomID = config.defaultRoomID
       , userID = config.defaultUserID
     this._CommentClient = new CommentClient({ roomID, userID })
@@ -102,15 +102,9 @@ export class Listener extends EventEmitter {
    */
   private _SYSMSGHandler(dataJson: SYS_MSG) {
     if (dataJson.real_roomid == null || dataJson.tv_id == null) return
-    let message: message = {
-      cmd: 'smallTV',
-      data: {
-        roomID: dataJson.real_roomid,
-        id: parseInt(dataJson.tv_id),
-        rawData: dataJson
-      }
-    }
-    this._SmallTVHandler(message)
+    let url = apiLiveOrigin + smallTVPathname
+      , roomID = dataJson.real_roomid
+    this._RaffleCheck(url, roomID, 'smallTV')
   }
   /**
    * 监听系统礼物消息
@@ -120,41 +114,22 @@ export class Listener extends EventEmitter {
    * @memberof Listener
    */
   private async _SYSGiftHandler(dataJson: SYS_GIFT) {
-    if (dataJson.roomid == null) return
-    let roomID = dataJson.roomid
-    if (dataJson.real_roomid != null && dataJson.giftId === 103) {
+    if (dataJson.real_roomid == null) return
+    if (dataJson.giftId === 103) {
+      let url = apiLiveOrigin + rafflePathname
+        , roomID = dataJson.real_roomid
+      this._RaffleCheck(url, roomID, 'raffle')
+    }
+    else if (dataJson.giftId === 84) {
       let roomID = dataJson.real_roomid
         , check: request.Options = {
-          uri: `${apiLiveOrigin}${rafflePathname}/check?roomid=${roomID}`,
+          uri: `${apiLiveOrigin}${lightenPathname}/getLiveInfo?roomid=${roomID}`,
           json: true,
           headers: {
-            'Referer': `http://live.bilibili.com/${roomID}`
+            'Referer': `https://live.bilibili.com/${roomID}`
           }
         }
-      let raffleCheck = await tools.XHR<raffleCheck>(check).catch(tools.Error)
-      if (raffleCheck != null && raffleCheck.body.code === 0 && raffleCheck.body.data.length > 0) {
-        raffleCheck.body.data.forEach(value => {
-          let message: message = {
-            cmd: 'raffle',
-            data: {
-              roomID,
-              id: value.raffleId,
-              rawData: dataJson
-            }
-          }
-          this._RaffleHandler(message)
-        })
-      }
-    }
-    else if (dataJson.real_roomid != null && dataJson.giftId === 84) {
-      let check: request.Options = {
-        uri: `${apiLiveOrigin}${lightenPathname}/getLiveInfo?roomid=${roomID}`,
-        json: true,
-        headers: {
-          'Referer': `http://live.bilibili.com/${roomID}`
-        }
-      }
-      let lightenCheck = await tools.XHR<lightenCheck>(check).catch(tools.Error)
+        , lightenCheck = await tools.XHR<lightenCheck>(check).catch(tools.Error)
       if (lightenCheck != null && lightenCheck.body.code === 0 && lightenCheck.body.data.length > 0) {
         lightenCheck.body.data.forEach(value => {
           let message: message = {
@@ -168,6 +143,39 @@ export class Listener extends EventEmitter {
           this._LightenHandler(message)
         })
       }
+    }
+  }
+  /**
+   * 检查房间抽奖信息
+   * 
+   * @private
+   * @param {string} url 
+   * @param {number} roomID 
+   * @param {string} raffle 
+   * @memberof Listener
+   */
+  private async _RaffleCheck(url: string, roomID: number, raffle: string) {
+    let check: request.Options = {
+      uri: `${url}/check?roomid=${roomID}`,
+      json: true,
+      headers: {
+        'Referer': `https://live.bilibili.com/${roomID}`
+      }
+    }
+      , raffleCheck = await tools.XHR<raffleCheck>(check)
+    if (raffleCheck.response.statusCode === 200 && raffleCheck.body.code === 0 && raffleCheck.body.data.length > 0) {
+      raffleCheck.body.data.forEach(value => {
+        let message: message = {
+          cmd: raffle,
+          data: {
+            roomID,
+            id: value.raffleId
+          }
+        }
+        if (raffle === 'smallTV') this._SmallTVHandler(message)
+        else if (raffle === 'raffle') this._RaffleHandler(message)
+        else if (raffle === 'lighten') this._LightenHandler(message)
+      })
     }
   }
   /**
@@ -253,18 +261,22 @@ export class Listener extends EventEmitter {
  * @export
  * @interface raffleCheck
  */
-export interface raffleCheck {
+interface raffleCheck {
   code: number
   msg: string
   message: string
-  data: raffleCheck_Data[]
+  data: raffleCheckData[]
 }
-export interface raffleCheck_Data {
-  form: string
+interface raffleCheckData {
   raffleId: number
-  status: boolean
+  type: 'small_tv' | string
+  form: string
+  from_user: {
+    uname: string
+    face: string
+  }
   time: number
-  type: string
+  status: number
 }
 /**
  * 快速抽奖检查
@@ -272,13 +284,13 @@ export interface raffleCheck_Data {
  * @export
  * @interface lightenCheck
  */
-export interface lightenCheck {
+interface lightenCheck {
   code: number
   msg: string
   message: string
-  data: lightenCheck_Data[]
+  data: lightenCheckData[]
 }
-export interface lightenCheck_Data {
+interface lightenCheckData {
   type: string
   lightenId: number
   time: number

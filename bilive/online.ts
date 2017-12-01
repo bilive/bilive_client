@@ -3,7 +3,7 @@ import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
 import { AppClient } from './lib/app_client'
 import { DeCaptcha } from './lib/boxcaptcha'
-import { apiLiveOrigin, options, cookieJar } from './index'
+import { apiLiveOrigin, _options, cookieJar } from './index'
 /**
  * 挂机得经验
  * 
@@ -15,6 +15,8 @@ export class Online extends EventEmitter {
   constructor() {
     super()
   }
+  public doLoop: NodeJS.Timer
+  public onlineHeart: NodeJS.Timer
   /**
    * 开始挂机
    * 
@@ -23,6 +25,9 @@ export class Online extends EventEmitter {
   public Start() {
     this.DoLoop()
     this.OnlineHeart()
+    // 为以后可能的END做准备
+    this.doLoop = setInterval(() => { this.DoLoop() }, 288e5) // 8小时
+    this.onlineHeart = setInterval(() => { this.OnlineHeart() }, 3e5) // 5分钟
   }
   /**
    * 发送在线心跳包, 检查cookie是否失效
@@ -30,8 +35,8 @@ export class Online extends EventEmitter {
    * @memberof Online
    */
   public async OnlineHeart() {
-    let roomID = options.config.defaultRoomID,
-      usersData = options.user
+    let roomID = _options.config.defaultRoomID
+      , usersData = _options.user
     for (let uid in usersData) {
       let userData = usersData[uid]
       if (userData.status) {
@@ -42,32 +47,23 @@ export class Online extends EventEmitter {
           jar: cookieJar[uid],
           json: true,
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'Referer': `http://live.bilibili.com/${roomID}`
+            'Referer': `https://live.bilibili.com/${roomID}`
           }
         }
-        let userOnlineHeartResponsePC = await tools.XHR<userOnlineHeartResponse>(online)
-          .catch((reject) => { tools.Error(userData.nickname, reject) })
-        if (userOnlineHeartResponsePC != null && userOnlineHeartResponsePC.body.code === -101) this.emit('cookieError', uid)
+          , heartPC = await tools.XHR<userOnlineHeartResponse>(online)
+        if (heartPC.response.statusCode === 200 && heartPC.body.code === 3) this.emit('cookieError', uid)
         // 客户端
         let heartbeatQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`
           , heartbeat: request.Options = {
             method: 'POST',
             uri: `${apiLiveOrigin}/mobile/userOnlineHeart?${AppClient.ParamsSign(heartbeatQuery)}`,
             body: `room_id=${roomID}&scale=xxhdpi`,
-            json: true,
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded'
-            }
+            json: true
           }
-        let userOnlineHeartResponse = await tools.XHR<userOnlineHeartResponse>(heartbeat, 'Android')
-          .catch((reject) => { tools.Error(userData.nickname, reject) })
-        if (userOnlineHeartResponse != null && userOnlineHeartResponse.body.code === -101) this.emit('tokenError', uid)
+          , heart = await tools.XHR<userOnlineHeartResponse>(heartbeat, 'Android')
+        if (heart.response.statusCode === 200 && heart.body.code === 3) this.emit('tokenError', uid)
       }
     }
-    setTimeout(() => {
-      this.OnlineHeart()
-    }, 3e5) // 5分钟
   }
   /**
    * 八小时循环, 用于签到, 宝箱, 日常活动
@@ -75,8 +71,8 @@ export class Online extends EventEmitter {
    * @memberof Online
    */
   public DoLoop() {
-    let eventRooms = options.config.eventRooms,
-      usersData = options.user
+    let usersData = _options.user
+    // , eventRooms = _options.config.eventRooms
     for (let uid in usersData) {
       let userData = usersData[uid]
       // 每日签到
@@ -84,11 +80,8 @@ export class Online extends EventEmitter {
       // 每日宝箱
       if (userData.status && userData.treasureBox) this._TreasureBox(uid)
       // 日常活动
-      if (userData.status && userData.eventRoom && eventRooms.length > 0) this._EventRoom(uid, eventRooms)
+      // if (userData.status && userData.eventRoom && eventRooms.length > 0) this._EventRoom(uid, eventRooms)
     }
-    setTimeout(() => {
-      this.DoLoop()
-    }, 288e5) // 8小时
   }
   /**
    * 每日签到
@@ -98,14 +91,14 @@ export class Online extends EventEmitter {
    * @memberof Online
    */
   private async _DoSign(uid: string) {
-    let userData = options.user[uid],
-      signQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`,
-      sign: request.Options = {
+    let userData = _options.user[uid]
+      , signQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`
+      , sign: request.Options = {
         uri: `${apiLiveOrigin}/AppUser/getSignInfo?${AppClient.ParamsSign(signQuery)}`,
         json: true
       }
-    let signInfoResponse = await tools.XHR<signInfoResponse>(sign, 'Android')
-      .catch((reject) => { tools.Error(userData.nickname, reject) })
+      , signInfoResponse = await tools.XHR<signInfoResponse>(sign, 'Android')
+        .catch((reject) => { tools.Error(userData.nickname, reject) })
     if (signInfoResponse != null && signInfoResponse.body.code === 0) tools.Log(userData.nickname, '已签到')
   }
   /**
@@ -116,14 +109,14 @@ export class Online extends EventEmitter {
    * @memberof Online
    */
   private async _DoSignPC(uid: string) {
-    let roomID = options.config.defaultRoomID
-      , userData = options.user[uid],
-      sign: request.Options = {
+    let roomID = _options.config.defaultRoomID
+      , userData = _options.user[uid]
+      , sign: request.Options = {
         uri: `${apiLiveOrigin}/sign/doSign`,
         jar: cookieJar[uid],
         json: true,
         headers: {
-          'Referer': `http://live.bilibili.com/${roomID}`
+          'Referer': `https://live.bilibili.com/${roomID}`
         }
       }
     let signInfoResponse = await tools.XHR<signInfoResponse>(sign)
@@ -138,7 +131,7 @@ export class Online extends EventEmitter {
    * @memberof Online
    */
   private async _TreasureBox(uid: string) {
-    let userData = options.user[uid]
+    let userData = _options.user[uid]
       // 获取宝箱状态,换房间会重新冷却
       , currentTaskUrl = `${apiLiveOrigin}/mobile/freeSilverCurrentTask`
       , currentTaskQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`
@@ -151,9 +144,9 @@ export class Online extends EventEmitter {
     if (currentTaskResponse != null) {
       if (currentTaskResponse.body.code === 0) {
         await tools.Sleep(currentTaskResponse.body.data.minute * 6e4)
-        let awardUrl = `${apiLiveOrigin}/mobile/freeSilverAward`,
-          awardQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`,
-          award: request.Options = {
+        let awardUrl = `${apiLiveOrigin}/mobile/freeSilverAward`
+          , awardQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`
+          , award: request.Options = {
             uri: `${awardUrl}?${AppClient.ParamsSign(awardQuery)}`,
             json: true
           }
@@ -172,8 +165,8 @@ export class Online extends EventEmitter {
    * @memberof Online
    */
   private async _TreasureBoxPC(uid: string) {
-    let roomID = options.config.defaultRoomID
-      , userData = options.user[uid]
+    let roomID = _options.config.defaultRoomID
+      , userData = _options.user[uid]
       , jar = cookieJar[uid]
       // 获取宝箱状态,换房间会重新冷却
       , getCurrentTask: request.Options = {
@@ -181,7 +174,7 @@ export class Online extends EventEmitter {
         jar,
         json: true,
         headers: {
-          'Referer': `http://live.bilibili.com/${roomID}`
+          'Referer': `https://live.bilibili.com/${roomID}`
         }
       }
       , currentTaskResponse = await tools.XHR<currentTaskResponse>(getCurrentTask)
@@ -194,7 +187,7 @@ export class Online extends EventEmitter {
           encoding: null,
           jar,
           headers: {
-            'Referer': `http://live.bilibili.com/${roomID}`
+            'Referer': `https://live.bilibili.com/${roomID}`
           }
         }
           , gCaptcha = await tools.XHR<Buffer>(getCaptcha)
@@ -207,7 +200,7 @@ export class Online extends EventEmitter {
               jar,
               json: true,
               headers: {
-                'Referer': `http://live.bilibili.com/${roomID}`
+                'Referer': `https://live.bilibili.com/${roomID}`
               }
             }
             await tools.XHR<awardResponse>(getAward)
@@ -228,13 +221,13 @@ export class Online extends EventEmitter {
    * @memberof Online
    */
   private _EventRoom(uid: string, roomIDs: number[]) {
-    let userData = options.user[uid]
+    let userData = _options.user[uid]
     roomIDs.forEach(async roomID => {
       let getInfo: request.Options = {
         uri: `${apiLiveOrigin}/live/getInfo?roomid=${roomID}`,
         json: true,
         headers: {
-          'Referer': `http://live.bilibili.com/${roomID}`
+          'Referer': `https://live.bilibili.com/${roomID}`
         }
       }
       let roomInfoResponse = await tools.XHR<roomInfoResponse>(getInfo)
@@ -245,7 +238,7 @@ export class Online extends EventEmitter {
           jar: cookieJar[uid],
           json: true,
           headers: {
-            'Referer': `http://live.bilibili.com/${roomID}`
+            'Referer': `https://live.bilibili.com/${roomID}`
           }
         }
           , eventRoomResponse = await tools.XHR<eventRoomResponse>(index)
@@ -268,13 +261,13 @@ export class Online extends EventEmitter {
    * @memberof Online
    */
   private async _EventRoomHeart(uid: string, heartTime: number, roomID: number) {
-    let userData = options.user[uid],
-      heart: request.Options = {
+    let userData = _options.user[uid]
+      , heart: request.Options = {
         uri: `${apiLiveOrigin}/eventRoom/heart?roomid=${roomID}`,
         jar: cookieJar[uid],
         json: true,
         headers: {
-          'Referer': `http://live.bilibili.com/${roomID}`
+          'Referer': `https://live.bilibili.com/${roomID}`
         }
       }
       , eventRoomHeartResponse = await tools.XHR<eventRoomHeartResponse>(heart)

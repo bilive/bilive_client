@@ -4,7 +4,7 @@ import * as http from 'http'
 import { randomBytes } from 'crypto'
 import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
-import { options, config, optionsInfo, userData } from './index'
+import { _options, config, optionsInfo, userData } from './index'
 /**
  * 程序设置
  * 
@@ -40,7 +40,7 @@ export class Options extends EventEmitter {
       res.end('All glory to WebSockets!\n')
     })
     server.on('error', tools.Error)
-    let listen = options.server
+    let listen = _options.server
     if (listen.path === '') {
       server.listen(listen.port, listen.hostname === '' ? undefined : listen.hostname, () => {
         this._WebSocketServer(server)
@@ -67,7 +67,7 @@ export class Options extends EventEmitter {
     this._wsServer = new ws.Server({
       server,
       handleProtocols: (protocols: string[]) => {
-        let protocol = options.server.protocol
+        let protocol = _options.server.protocol
         if (protocol === protocols[0]) return protocol
         else return false
       }
@@ -103,12 +103,12 @@ export class Options extends EventEmitter {
       , ts = message.ts
     // 获取设置
     if (cmd === 'getConfig') {
-      let data = options.config
+      let data = _options.config
       this._Send({ cmd, ts, data })
     }
     // 保存设置
     else if (cmd === 'setConfig') {
-      let config = options.config
+      let config = _options.config
         , msg = ''
         , setConfig = <config>message.data || {}
       for (let i in config) {
@@ -119,34 +119,34 @@ export class Options extends EventEmitter {
         }
       }
       if (msg === '') {
-        options.config = config
-        tools.Options(options)
+        _options.config = config
+        tools.Options(_options)
         this._Send({ cmd, ts, data: config })
       }
-      else this._Send({ cmd, ts, msg, data: options.config })
+      else this._Send({ cmd, ts, msg, data: _options.config })
     }
     // 获取参数描述
     else if (cmd === 'getInfo') {
-      let data = options.info
+      let data = _options.info
       this._Send({ cmd, ts, data })
     }
     // 获取uid
     else if (cmd === 'getAllUID') {
       let data = []
-        , user = options.user
+        , user = _options.user
       for (let uid in user) data.push(uid)
       this._Send({ cmd, ts, data })
     }
     // 获取用户设置
     else if (cmd === 'getUserData') {
-      let user = options.user
+      let user = _options.user
         , getUID = message.uid
       if (getUID != null && user[getUID] != null) this._Send({ cmd, ts, uid: getUID, data: user[getUID] })
       else this._Send({ cmd, ts, msg: '未知用户' })
     }
     // 保存用户设置
     else if (cmd === 'setUserData') {
-      let user = options.user
+      let user = _options.user
         , setUID = message.uid
       if (setUID != null && user[setUID] != null) {
         let userData = user[setUID]
@@ -160,22 +160,22 @@ export class Options extends EventEmitter {
           }
         }
         if (msg === '') {
-          options.user[setUID] = userData
-          tools.Options(options)
+          _options.user[setUID] = userData
+          tools.Options(_options)
           this._Send({ cmd, ts, uid: setUID, data: userData })
         }
-        else this._Send({ cmd, ts, uid: setUID, msg, data: options.user[setUID] })
+        else this._Send({ cmd, ts, uid: setUID, msg, data: _options.user[setUID] })
       }
       else this._Send({ cmd, ts, uid: setUID, msg: '未知用户' })
     }
     // 删除用户设置
     else if (cmd === 'delUserData') {
-      let user = options.user
+      let user = _options.user
         , delUID = message.uid
       if (delUID != null && user[delUID] != null) {
         let userData = user[delUID]
-        delete options.user[delUID]
-        tools.Options(options)
+        delete _options.user[delUID]
+        tools.Options(_options)
         this._Send({ cmd, ts, uid: delUID, data: userData })
       }
       else this._Send({ cmd, ts, uid: delUID, msg: '未知用户' })
@@ -183,9 +183,9 @@ export class Options extends EventEmitter {
     // 新建用户设置
     else if (cmd === 'newUserData') {
       let uid = randomBytes(16).toString('hex')
-        , data = Object.assign({}, options.newUserData)
-      options.user[uid] = data
-      tools.Options(options)
+        , data = Object.assign({}, _options.newUserData)
+      _options.user[uid] = data
+      tools.Options(_options)
       this._Send({ cmd, ts, uid, data })
     }
     else this._Send({ cmd, ts, msg: '未知命令' })

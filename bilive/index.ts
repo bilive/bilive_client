@@ -26,7 +26,7 @@ export class BiLive {
     await this._SetOptionsFile()
     let option = await tools.Options().catch(tools.Error)
     if (option != null) {
-      options = option
+      _options = option
       let user = option.user
       for (let uid in user) {
         let userData = user[uid]
@@ -104,7 +104,7 @@ export class BiLive {
    * @memberof BiLive
    */
   private _SmallTV(smallTVInfo: smallTVInfo) {
-    let usersData = options.user
+    let usersData = _options.user
     for (let uid in usersData) {
       let userData = usersData[uid], jar = cookieJar[uid]
       if (userData.status && userData.smallTV) {
@@ -114,12 +114,8 @@ export class BiLive {
           jar,
           nickname: userData.nickname
         }
-        let newRaffle = new Raffle(raffleOptions)
-        if (smallTVInfo.pathname != null) {
-          smallTVPathname = smallTVInfo.pathname
-          newRaffle.smallTVUrl = apiLiveOrigin + smallTVInfo.pathname
-        }
-        newRaffle.SmallTV()
+        if (smallTVInfo.pathname != null) smallTVPathname = smallTVInfo.pathname
+        new Raffle(raffleOptions).SmallTV().catch((error) => { tools.Error(userData.nickname, error) })
       }
     }
   }
@@ -130,7 +126,7 @@ export class BiLive {
    * @memberof BiLive
    */
   private _Raffle(raffleInfo: raffleInfo) {
-    let usersData = options.user
+    let usersData = _options.user
     for (let uid in usersData) {
       let userData = usersData[uid], jar = cookieJar[uid]
       if (userData.status && userData.raffle) {
@@ -140,12 +136,8 @@ export class BiLive {
           jar,
           nickname: userData.nickname
         }
-        let newRaffle = new Raffle(raffleOptions)
-        if (raffleInfo.pathname != null) {
-          rafflePathname = raffleInfo.pathname
-          newRaffle.raffleUrl = apiLiveOrigin + raffleInfo.pathname
-        }
-        newRaffle.Raffle()
+        if (raffleInfo.pathname != null) rafflePathname = raffleInfo.pathname
+        new Raffle(raffleOptions).Raffle().catch((error) => { tools.Error(userData.nickname, error) })
       }
     }
   }
@@ -157,7 +149,7 @@ export class BiLive {
    * @memberof BiLive
    */
   private _Lighten(lightenInfo: lightenInfo) {
-    let usersData = options.user
+    let usersData = _options.user
     for (let uid in usersData) {
       let userData = usersData[uid], jar = cookieJar[uid]
       if (userData.status && userData.raffle) {
@@ -167,12 +159,8 @@ export class BiLive {
           jar,
           nickname: userData.nickname
         }
-        let newRaffle = new Raffle(raffleOptions)
-        if (lightenInfo.pathname != null) {
-          lightenPathname = lightenInfo.pathname
-          newRaffle.lightenUrl = apiLiveOrigin + lightenInfo.pathname
-        }
-        newRaffle.Lighten()
+        if (lightenInfo.pathname != null) lightenPathname = lightenInfo.pathname
+        new Raffle(raffleOptions).Lighten().catch((error) => { tools.Error(userData.nickname, error) })
       }
     }
   }
@@ -184,9 +172,9 @@ export class BiLive {
    * @memberof BiLive
    */
   private _BeatStorm(beatStormInfo: beatStormInfo) {
-    let config = options.config
+    let config = _options.config
     if (config.beatStormBlackList.includes(beatStormInfo.roomID)) return
-    let usersData = options.user
+    let usersData = _options.user
     for (let uid in usersData) {
       let userData = usersData[uid]
         , jar = cookieJar[uid]
@@ -210,7 +198,7 @@ export class BiLive {
    * @memberof BiLive
    */
   private async _Debug(debugInfo: debugInfo) {
-    let usersData = options.user
+    let usersData = _options.user
     for (let uid in usersData) {
       let userData = usersData[uid], jar = cookieJar[uid]
       if (userData.status && userData.debug) {
@@ -234,13 +222,13 @@ export class BiLive {
    * @memberof BiLive
    */
   private async _CookieError(uid: string) {
-    let userData = options.user[uid]
+    let userData = _options.user[uid]
     tools.Log(userData.nickname, 'Cookie已失效')
     let cookie = await AppClient.GetCookie(userData.accessToken)
     if (cookie != null) {
       cookieJar[uid] = cookie
-      options.user[uid].cookie = cookie.getCookieString(apiLiveOrigin)
-      tools.Options(options)
+      _options.user[uid].cookie = cookie.getCookieString(apiLiveOrigin)
+      tools.Options(_options)
       tools.Log(userData.nickname, 'Cookie已更新')
     }
     else this._TokenError(uid)
@@ -253,38 +241,38 @@ export class BiLive {
    * @memberof BiLive
    */
   private async _TokenError(uid: string) {
-    let userData = options.user[uid]
+    let userData = _options.user[uid]
     tools.Log(userData.nickname, 'Token已失效')
     let token = await AppClient.GetToken({
       userName: userData.userName,
       passWord: userData.passWord
     })
     if (typeof token === 'string') {
-      options.user[uid].accessToken = token
-      tools.Options(options)
+      _options.user[uid].accessToken = token
+      tools.Options(_options)
       tools.Log(userData.nickname, 'Token已更新')
     }
-    else if (token != null) {
-      options.user[uid].status = false
-      tools.Options(options)
+    else if (token != null && token.response.statusCode === 200) {
+      _options.user[uid].status = false
+      tools.Options(_options)
       tools.Log(userData.nickname, 'Token更新失败', token.body)
     }
     else tools.Log(userData.nickname, 'Token更新失败')
   }
 }
-export let apiLiveOrigin = 'http://api.live.bilibili.com'
-  , smallTVPathname = '/SmallTV'
+export let apiLiveOrigin = 'https://api.live.bilibili.com'
+  , smallTVPathname = '/gift/v2/smalltv'
   , rafflePathname = '/activity/v1/Raffle'
   , lightenPathname = '/activity/v1/NeedYou'
   , cookieJar: cookieJar = {}
-  , options: options
+  , _options: _options
 /**
  * 应用设置
  * 
  * @export
  * @interface options
  */
-export interface options {
+export interface _options {
   server: server
   config: config
   user: userCollection

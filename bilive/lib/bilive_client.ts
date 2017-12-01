@@ -183,7 +183,7 @@ export interface beatStormInfo {
   roomID: number
   content: string
   id: number
-  rawData: SPECIAL_GIFT
+  rawData?: SPECIAL_GIFT
 }
 /**
  * 小电视信息
@@ -195,7 +195,7 @@ export interface smallTVInfo {
   roomID: number
   id: number
   pathname?: string
-  rawData: SYS_MSG
+  rawData?: SYS_MSG
 }
 /**
  * 抽奖信息
@@ -207,7 +207,7 @@ export interface raffleInfo {
   roomID: number
   id: number
   pathname?: string
-  rawData: SYS_GIFT | RAFFLE_START
+  rawData?: SYS_GIFT | RAFFLE_START
 }
 /**
  * 快速抽奖信息
@@ -219,7 +219,7 @@ export interface lightenInfo {
   roomID: number
   id: number
   pathname?: string
-  rawData: SYS_GIFT | LIGHTEN_START
+  rawData?: SYS_GIFT | LIGHTEN_START
 }
 /**
  * 远程调试
