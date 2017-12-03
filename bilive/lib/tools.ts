@@ -95,7 +95,7 @@ export function getCookie(jar: request.CookieJar, url: string, key: string): str
 
 export function Options(options?: _options): Promise<_options> {
   return new Promise(async resolve => {
-    let dirname = __dirname + (process.env.npm_lifecycle_event === 'start' ? '/../../..' : '/../..')
+    let dirname = __dirname + (process.env.npm_package_scripts_start === 'node build/app.js' ? '/../../..' : '/../..')
       , hasDir = fs.existsSync(dirname + '/options/')
     if (!hasDir) fs.mkdirSync(dirname + '/options/')
     let hasFile = fs.existsSync(dirname + '/options/options.json')

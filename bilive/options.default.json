@@ -1,7 +1,7 @@
 {
   "server": {
     "path": "",
-    "hostname": "127.0.0.1",
+    "hostname": "",
     "port": 10080,
     "protocol": "admin"
   },

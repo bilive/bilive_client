@@ -42,9 +42,11 @@ export class Options extends EventEmitter {
     server.on('error', tools.Error)
     let listen = _options.server
     if (listen.path === '') {
-      server.listen(listen.port, listen.hostname === '' ? undefined : listen.hostname, () => {
+      let host = process.env.HOST == null ? listen.hostname : process.env.HOST
+        , port = process.env.PORT == null ? listen.port : parseInt(<string>process.env.PORT)
+      server.listen(port, host, () => {
         this._WebSocketServer(server)
-        tools.Log(`已监听 ${listen.hostname}:${listen.port}`)
+        tools.Log(`已监听 ${host}:${port}`)
       })
     }
     else {
