@@ -1,4 +1,3 @@
-import * as fs from 'fs'
 import * as request from 'request'
 import * as tools from './lib/tools'
 import { Online } from './online'

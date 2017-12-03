@@ -2,7 +2,6 @@ import * as request from 'request'
 import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
 import { AppClient } from './lib/app_client'
-import { DeCaptcha } from './lib/boxcaptcha'
 import { apiLiveOrigin, _options, cookieJar } from './index'
 /**
  * 挂机得经验
@@ -72,7 +71,7 @@ export class Online extends EventEmitter {
    */
   public DoLoop() {
     let usersData = _options.user
-    // , eventRooms = _options.config.eventRooms
+      , eventRooms = _options.config.eventRooms
     for (let uid in usersData) {
       let userData = usersData[uid]
       // 每日签到
@@ -80,7 +79,7 @@ export class Online extends EventEmitter {
       // 每日宝箱
       if (userData.status && userData.treasureBox) this._TreasureBox(uid)
       // 日常活动
-      // if (userData.status && userData.eventRoom && eventRooms.length > 0) this._EventRoom(uid, eventRooms)
+      if (userData.status && userData.eventRoom && eventRooms.length > 0) this._EventRoom(uid, eventRooms)
     }
   }
   /**
@@ -158,61 +157,6 @@ export class Online extends EventEmitter {
     }
   }
   /**
-   * 每日宝箱PC
-   * 
-   * @private
-   * @param {string} uid
-   * @memberof Online
-   */
-  private async _TreasureBoxPC(uid: string) {
-    let roomID = _options.config.defaultRoomID
-      , userData = _options.user[uid]
-      , jar = cookieJar[uid]
-      // 获取宝箱状态,换房间会重新冷却
-      , getCurrentTask: request.Options = {
-        uri: `${apiLiveOrigin}/FreeSilver/getCurrentTask?_=${Date.now()}`,
-        jar,
-        json: true,
-        headers: {
-          'Referer': `https://live.bilibili.com/${roomID}`
-        }
-      }
-      , currentTaskResponse = await tools.XHR<currentTaskResponse>(getCurrentTask)
-        .catch((reject) => { tools.Error(userData.nickname, reject) })
-    if (currentTaskResponse != null) {
-      if (currentTaskResponse.body.code === 0) {
-        await tools.Sleep(currentTaskResponse.body.data.minute * 6e4)
-        let getCaptcha: request.Options = {
-          uri: `${apiLiveOrigin}/freeSilver/getCaptcha?ts=${Date.now()}`,
-          encoding: null,
-          jar,
-          headers: {
-            'Referer': `https://live.bilibili.com/${roomID}`
-          }
-        }
-          , gCaptcha = await tools.XHR<Buffer>(getCaptcha)
-            .catch((reject) => { tools.Error(userData.nickname, reject) })
-        if (gCaptcha != null) {
-          let captcha = DeCaptcha(gCaptcha.body)
-          if (captcha > -1) {
-            let getAward: request.Options = {
-              uri: `${apiLiveOrigin}/FreeSilver/getAward?time_start=${currentTaskResponse.body.data.time_start}&time_end=${currentTaskResponse.body.data.time_end}&captcha=${captcha}&_=${Date.now()}`,
-              jar,
-              json: true,
-              headers: {
-                'Referer': `https://live.bilibili.com/${roomID}`
-              }
-            }
-            await tools.XHR<awardResponse>(getAward)
-              .catch((reject) => { tools.Error(userData.nickname, reject) })
-          }
-        }
-        this._TreasureBoxPC(uid)
-      }
-      else if (currentTaskResponse.body.code === -10017) tools.Log(userData.nickname, '已领取所有宝箱')
-    }
-  }
-  /**
    * 日常活动
    * 
    * @private
@@ -221,61 +165,28 @@ export class Online extends EventEmitter {
    * @memberof Online
    */
   private _EventRoom(uid: string, roomIDs: number[]) {
-    let userData = _options.user[uid]
-    roomIDs.forEach(async roomID => {
-      let getInfo: request.Options = {
-        uri: `${apiLiveOrigin}/live/getInfo?roomid=${roomID}`,
-        json: true,
-        headers: {
-          'Referer': `https://live.bilibili.com/${roomID}`
-        }
+    let singleWatchTask: request.Options = {
+      method: 'POST',
+      uri: `${apiLiveOrigin}/activity/v1/task/receive_award`,
+      body: 'task_id=single_watch_task',
+      jar: cookieJar[uid],
+      json: true,
+      headers: {
+        'Referer': `https://live.bilibili.com/${roomIDs[0]}`
       }
-      let roomInfoResponse = await tools.XHR<roomInfoResponse>(getInfo)
-        .catch((reject) => { tools.Error(userData.nickname, reject) })
-      if (roomInfoResponse != null && roomInfoResponse.body.data != null) {
-        let index: request.Options = {
-          uri: `${apiLiveOrigin}/eventRoom/index?ruid=${roomInfoResponse.body.data.MASTERID}`,
-          jar: cookieJar[uid],
-          json: true,
-          headers: {
-            'Referer': `https://live.bilibili.com/${roomID}`
-          }
-        }
-          , eventRoomResponse = await tools.XHR<eventRoomResponse>(index)
-            .catch((reject) => { tools.Error(userData.nickname, reject) })
-        if (eventRoomResponse != null && eventRoomResponse.body.code === 0 && eventRoomResponse.body.data.heart) {
-          let heartTime = eventRoomResponse.body.data.heartTime * 1000
-          await tools.Sleep(heartTime)
-          this._EventRoomHeart(uid, heartTime, roomID)
-        }
-      }
-    })
-  }
-  /**
-   * 发送活动心跳包
-   * 
-   * @private
-   * @param {string} uid
-   * @param {number} heartTime
-   * @param {number} roomID
-   * @memberof Online
-   */
-  private async _EventRoomHeart(uid: string, heartTime: number, roomID: number) {
-    let userData = _options.user[uid]
-      , heart: request.Options = {
-        uri: `${apiLiveOrigin}/eventRoom/heart?roomid=${roomID}`,
+    }
+      , doubleWatchTask: request.Options = {
+        method: 'POST',
+        uri: `${apiLiveOrigin}/activity/v1/task/receive_award`,
+        body: 'task_id=double_watch_task',
         jar: cookieJar[uid],
         json: true,
         headers: {
-          'Referer': `https://live.bilibili.com/${roomID}`
+          'Referer': `https://live.bilibili.com/${roomIDs[0]}`
         }
       }
-      , eventRoomHeartResponse = await tools.XHR<eventRoomHeartResponse>(heart)
-        .catch((reject) => { tools.Error(userData.nickname, reject) })
-    if (eventRoomHeartResponse != null && eventRoomHeartResponse.body.data != null && eventRoomHeartResponse.body.data.heart) {
-      await tools.Sleep(heartTime)
-      this._EventRoomHeart(uid, heartTime, roomID)
-    }
+    tools.XHR(singleWatchTask, 'WebView').catch(tools.Error)
+    tools.XHR(doubleWatchTask, 'WebView').catch(tools.Error)
   }
 }
 /**
@@ -338,121 +249,3 @@ interface awardResponseData {
   awardSilver: number
   isEnd: number
 }
-/**
- * 活动信息
- * 
- * @interface eventRoomResponse
- */
-interface eventRoomResponse {
-  code: number
-  msg: string
-  data: eventRoomResponseData
-}
-interface eventRoomResponseData {
-  eventList: eventRoomResponseDataEventList[]
-  heart: boolean
-  heartTime: number
-}
-interface eventRoomResponseDataEventList {
-  status: boolean
-  score: number
-  giftId: number
-  type: string
-  masterTitle: string
-  keyword: string
-  bagId: number
-  num: number
-  kingMoney: number
-  isGoldBinBin: number
-  goldBinBinInRoom: number
-  team_id: number
-  goldBinBinHeart: number
-  is2233: number
-}
-/**
- * 活动心跳返回
- * 
- * @interface eventRoomHeartResponse
- */
-interface eventRoomHeartResponse {
-  code: number
-  msg: string
-  data: eventRoomHeartResponseData
-}
-interface eventRoomHeartResponseData {
-  uid: number
-  gift: eventRoomHeartResponseDataGift
-  heart: boolean
-}
-interface eventRoomHeartResponseDataGift {
-  '43': eventRoomHeartResponseDataGiftOrange; // 命格转盘
-}
-interface eventRoomHeartResponseDataGiftOrange {
-  num: number
-  bagId: number
-  dayNum: number
-}
-/**
- * 房间信息
- * 
- * @interface roomInfoResponse
- */
-interface roomInfoResponse {
-  code: number
-  msg: string
-  data: roomInfoResponseData
-}
-interface roomInfoResponseData {
-  UID: number
-  IS_NEWBIE: number
-  ISATTENTION: number
-  ISADMIN: number
-  ISANCHOR: number
-  SVIP: number
-  VIP: number
-  SILVER: number
-  GOLD: number
-  BLOCK_TYPE: number
-  BLOCK_TIME: number
-  UNAME: number
-  MASTERID: number
-  ANCHOR_NICK_NAME: string
-  ROOMID: number
-  _status: string
-  LIVE_STATUS: string
-  ROUND_STATUS: number
-  AREAID: number
-  BACKGROUND_ID: number
-  ROOMtITLE: string
-  COVER: string
-  LIVE_TIMELINE: number
-  FANS_COUNT: number
-  GIFT_TOP: roomInfoResponseDataGiftTop[]
-  RCOST: number
-  MEDAL: any[]
-  IS_STAR: boolean
-  starRank: number
-  TITLE: roomInfoResponseDataTitle
-  USER_LEVEL: roomInfoResponseDataUserLevel[]
-  IS_RED_BAG: boolean
-  IS_HAVE_VT: boolean
-  ACTIVITY_ID: number
-  ACTIVITY_PIC: number
-  MI_ACTIVITY: number
-  PENDANT: string
-}
-interface roomInfoResponseDataGiftTop {
-  uid: number
-  uname: string
-  coin: number
-  isSelf: number
-}
-interface roomInfoResponseDataTitle {
-  title: string
-}
-interface roomInfoResponseDataUserLevel {
-  level: number
-  rank: number
-}
-// gm mogrify -crop 80x31+20+6 -quality 100 getCaptcha.jpg
-// gm mogrify -format pbm -quality 0 getCaptcha.jpg
