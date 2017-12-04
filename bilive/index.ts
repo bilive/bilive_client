@@ -284,6 +284,8 @@ export interface userData {
   eventRoom: boolean
   smallTV: boolean
   raffle: boolean
+  sendGift: boolean,
+  sendGiftRoom: string,
   beatStorm: boolean
   debug: boolean
 }
@@ -306,6 +308,8 @@ export interface optionsInfo {
   eventRoom: configInfoData
   smallTV: configInfoData
   raffle: configInfoData
+  sendGift: configInfoData,
+  sendGiftRoom: configInfoData,
   beatStorm: configInfoData
   debug: configInfoData
 }

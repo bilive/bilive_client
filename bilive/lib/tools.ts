@@ -101,8 +101,13 @@ export function Options(options?: _options): Promise<_options> {
     let hasFile = fs.existsSync(dirname + '/options/options.json')
     if (!hasFile) fs.copyFileSync(dirname + '/bilive/options.default.json', dirname + '/options/options.json')
     if (options == null) {
-      let optionsBuffer = fs.readFileSync(dirname + '/options/options.json')
-        , option = await JsonParse<_options>(optionsBuffer.toString())
+      let defaultOptionBuffer = fs.readFileSync(dirname + '/bilive/options.default.json')
+        , defaultOption = await JsonParse<_options>(defaultOptionBuffer.toString())
+        , optionBuffer = fs.readFileSync(dirname + '/options/options.json')
+        , option = await JsonParse<_options>(optionBuffer.toString())
+      option.newUserData = Object.freeze(defaultOption.newUserData)
+      option.info = Object.freeze(defaultOption.info)
+      for (let uid in option.user) option.user[uid] = Object.assign({}, option.newUserData, option.user[uid])
       resolve(option)
     }
     else {

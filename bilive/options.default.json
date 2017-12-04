@@ -30,6 +30,8 @@
     "eventRoom": false,
     "smallTV": false,
     "raffle": false,
+    "sendGift": false,
+    "sendGiftRoom": "",
     "beatStorm": false,
     "debug": false
   },
@@ -118,6 +120,16 @@
       "description": "抽奖",
       "tip": "参与抽奖",
       "type": "boolean"
+    },
+    "sendGift": {
+      "description": "自动送礼",
+      "tip": "自动送出剩余时间不足24小时的礼物",
+      "type": "boolean"
+    },
+    "sendGiftRoom": {
+      "description": "自动送礼房间",
+      "tip": "要自动送出礼物的房间号",
+      "type": "string"
     },
     "beatStorm": {
       "description": "节奏风暴",
