@@ -10,6 +10,12 @@ export class AppClient {
   public static readonly build: string = '519000'
   public static readonly mobiApp: string = 'android'
   public static readonly platform: string = 'android'
+  // bilibili 国际版
+  // private static readonly _secretKey: string = '36efcfed79309338ced0380abd824ac1'
+  // public static readonly appKey: string = 'bb3101000e232e27'
+  // public static readonly build: string = '110001'
+  // public static readonly mobiApp: string = 'android_i'
+  // public static readonly platform: string = 'android'
   // bilibili link
   // private static readonly _secretKey: string = 'e988e794d4d4b6dd43bc0e89d6e90c43'
   // public static readonly appKey: string = '37207f2beaebf8d7'
