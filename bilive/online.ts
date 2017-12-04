@@ -1,3 +1,4 @@
+import * as crypto from 'crypto'
 import * as request from 'request'
 import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
@@ -80,7 +81,7 @@ export class Online extends EventEmitter {
       // 每日宝箱
       if (userData.treasureBox) this._TreasureBox(uid).catch((reject) => { tools.Error(userData.nickname, reject) })
       // 日常活动
-      if (userData.eventRoom && eventRooms.length > 0) this._EventRoom(uid, eventRooms)
+      if (userData.eventRoom && eventRooms.length > 0) this._EventRoom(uid, eventRooms).catch((reject) => { tools.Error(userData.nickname, reject) })
       // 自动送礼
       if (userData.sendGift && userData.sendGiftRoom !== '') this._sendGift(uid).catch((reject) => { tools.Error(userData.nickname, reject) })
     }
@@ -147,8 +148,21 @@ export class Online extends EventEmitter {
    * @param {number[]} roomIDs
    * @memberof Online
    */
-  private _EventRoom(uid: string, roomIDs: number[]) {
-    ['single_watch_task', 'double_watch_task', 'share_task'].forEach(value => {
+  private async _EventRoom(uid: string, roomIDs: number[]) {
+    // 分享房间
+    let userData = _options.user[uid]
+      , biliUID = tools.getCookie(cookieJar[uid], apiLiveOrigin, 'DedeUserID')
+      , md5 = crypto.createHash('md5').update(`${biliUID}${roomIDs[0]}bilibili`).digest('hex')
+      , sha1 = crypto.createHash('sha1').update(`${md5}bilibili`).digest('hex')
+      , baseQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`
+      , share: request.Options = {
+        uri: `${apiLiveOrigin}/activity/v1/Common/shareCallback?${AppClient.ParamsSign(`roomid=${roomIDs[0]}&sharing_plat=weibo&share_sign=${sha1}&${baseQuery}`)}`,
+        json: true
+      }
+    await tools.XHR(share, 'Android')
+    // 做任务
+    let task = ['single_watch_task', 'double_watch_task', 'share_task']
+    task.forEach(value => {
       let task: request.Options = {
         method: 'POST',
         uri: `${apiLiveOrigin}/activity/v1/task/receive_award`,
