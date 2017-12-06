@@ -115,7 +115,7 @@ export class Listener extends EventEmitter {
    */
   private async _SYSGiftHandler(dataJson: SYS_GIFT) {
     if (dataJson.real_roomid == null) return
-    if (dataJson.giftId === 103) {
+    if (dataJson.giftId === 106) {
       let url = apiLiveOrigin + rafflePathname
         , roomID = dataJson.real_roomid
       this._RaffleCheck(url, roomID, 'raffle')

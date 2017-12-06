@@ -4,9 +4,10 @@
 2. 下载[bilive_client.zip](https://github.com/lzghzr/bilive_client/releases/)
 3. 解压并定位到目录
 4. 运行npm install
-5. 运行node app.js
+5. 运行npm start
 
 [点此进行设置](https://lzghzr.github.io/bilive_client_view/index.html)
+!由于Firefox的安全限制, 推荐使用Chrome打开
 
 因为B站对弹幕服务器进行了限制, 一般方法已无法监听到节奏相关内容\
 所以之前提供的监听服务器已经关闭, 并且开源, 有兴趣的可以自己研究\
