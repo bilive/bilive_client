@@ -61,7 +61,7 @@ export class AppClient {
    */
   public static ParamsSign(params: string): string {
     let paramsBase = params + AppClient._secretKey
-      , paramsHash = crypto.createHash('md5').update(paramsBase).digest('hex')
+      , paramsHash = tools.Hash('md5', paramsBase)
     return `${params}&sign=${paramsHash}`
   }
   /**
@@ -113,7 +113,8 @@ export class AppClient {
    * @memberof AppClient
    */
   private static _Login(userLogin: userLogin, publicKey: getKeyResponseData): Promise<tools.response<loginResponse>> {
-    // captcha= JSESSIONID
+    // captcha=
+    // Ste-Cookie JSESSIONID
     // https://passport.bilibili.com/captcha
     let passWord = AppClient._RSAPassWord(userLogin.passWord, publicKey)
       , loginOrigin = 'https://passport.bilibili.com/api/oauth2/login'

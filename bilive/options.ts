@@ -76,35 +76,45 @@ export class Options extends EventEmitter {
     })
     this._wsServer
       .on('error', tools.Error)
-      .on('connection', client => {
+      .on('connection', (client: ws, req: http.IncomingMessage) => {
+        let remoteAddress = req.headers['x-real-ip'] == null ? `${req.connection.remoteAddress}:${req.connection.remotePort}` : `${req.headers['x-real-ip']}:${req.headers['x-real-port']}`
+        tools.Log(`${remoteAddress} 已连接`)
         if (this._wsClient != null) this._wsClient.close(1001, JSON.stringify({ cmd: 'close', msg: 'too many connections' }))
         let destroy = () => {
+          delete tools.logs.onLog
           client.close()
           client.terminate()
           client.removeAllListeners()
         }
         client
           .on('error', (error) => {
-            tools.Error(error)
             destroy()
+            tools.Error(error)
           })
           .on('close', (code, reason) => {
-            tools.Log(code, reason)
             destroy()
+            tools.Log(`${remoteAddress} 已断开`, code, reason)
           })
           .on('message', async (msg: string) => {
             let message = await tools.JsonParse<message>(msg).catch(tools.Error)
             if (message != null && message.cmd != null && message.ts != null) this._onCMD(message)
-            else this._Send({ cmd: 'error', ts: 'null', msg: '消息格式错误' })
+            else this._Send({ cmd: 'error', ts: 'error', msg: '消息格式错误' })
           })
         this._wsClient = client
+        // 日志
+        tools.logs.onLog = data => this._Send({ cmd: 'log', ts: 'log', msg: data })
       })
   }
   private _onCMD(message: message) {
     let cmd = message.cmd
       , ts = message.ts
+    // 获取log
+    if (cmd === 'getLog') {
+      let data = tools.logs.data
+      this._Send({ cmd, ts, data })
+    }
     // 获取设置
-    if (cmd === 'getConfig') {
+    else if (cmd === 'getConfig') {
       let data = _options.config
       this._Send({ cmd, ts, data })
     }
@@ -192,8 +202,15 @@ export class Options extends EventEmitter {
     }
     else this._Send({ cmd, ts, msg: '未知命令' })
   }
+  /**
+   * 向客户端发送消息
+   * 
+   * @private
+   * @param {message} message 
+   * @memberof Options
+   */
   private _Send(message: message) {
-    this._wsClient.send(JSON.stringify(message))
+    if (this._wsClient.readyState === ws.OPEN) this._wsClient.send(JSON.stringify(message))
   }
 }
 // WebSocket消息

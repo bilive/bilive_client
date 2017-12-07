@@ -202,6 +202,7 @@ export class BiLive {
     if (cookie != null) {
       cookieJar[uid] = cookie
       _options.user[uid].cookie = cookie.getCookieString(apiLiveOrigin)
+      _options.user[uid].biliUID = parseInt(tools.getCookie(cookie, 'DedeUserID'))
       tools.Options(_options)
       tools.Log(userData.nickname, 'Cookie已更新')
     }
@@ -272,10 +273,11 @@ export interface userCollection {
   [index: string]: userData
 }
 export interface userData {
-  [index: string]: string | boolean
+  [index: string]: string | boolean | number
   nickname: string
   userName: string
   passWord: string
+  biliUID: number
   accessToken: string
   cookie: string
   status: boolean
@@ -285,7 +287,8 @@ export interface userData {
   smallTV: boolean
   raffle: boolean
   sendGift: boolean,
-  sendGiftRoom: string,
+  sendGiftRoom: number,
+  signGroup: boolean,
   beatStorm: boolean
   debug: boolean
 }
@@ -300,6 +303,7 @@ export interface optionsInfo {
   nickname: configInfoData
   userName: configInfoData
   passWord: configInfoData
+  biliUID: configInfoData
   accessToken: configInfoData
   cookie: configInfoData
   status: configInfoData
@@ -310,6 +314,7 @@ export interface optionsInfo {
   raffle: configInfoData
   sendGift: configInfoData,
   sendGiftRoom: configInfoData,
+  signGroup: configInfoData,
   beatStorm: configInfoData
   debug: configInfoData
 }

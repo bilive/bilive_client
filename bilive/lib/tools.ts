@@ -1,6 +1,8 @@
 import * as fs from 'fs'
+import * as util from 'util'
+import * as crypto from 'crypto'
 import * as request from 'request'
-import { _options } from '../index'
+import { _options, apiLiveOrigin } from '../index'
 /**
  * 添加request头信息
  * 
@@ -74,11 +76,11 @@ export function setCookie(cookieString: string, urls: string[]): request.CookieJ
  * 
  * @export
  * @param {request.CookieJar} jar 
- * @param {string} url 
  * @param {string} key 
+ * @param {string} [url=apiLiveOrigin] 
  * @returns {string} 
  */
-export function getCookie(jar: request.CookieJar, url: string, key: string): string {
+export function getCookie(jar: request.CookieJar, key: string, url = apiLiveOrigin): string {
   let cookies = jar.getCookies(url)
     , cookieFind = cookies.find(cookie => {
       if (cookie.key === key) return cookie.value
@@ -135,6 +137,17 @@ export function JsonParse<T>(text: string, reviver?: ((key: any, value: any) => 
   })
 }
 /**
+ * Hash
+ * 
+ * @export
+ * @param {string} algorithm 
+ * @param {(string | Buffer)} data 
+ * @returns {string} 
+ */
+export function Hash(algorithm: string, data: string | Buffer): string {
+  return crypto.createHash(algorithm).update(data).digest('hex')
+}
+/**
  * 格式化输出, 配合PM2凑合用
  * 
  * @export
@@ -142,7 +155,14 @@ export function JsonParse<T>(text: string, reviver?: ((key: any, value: any) => 
  * @param {...any[]} optionalParams
  */
 export function Log(message?: any, ...optionalParams: any[]) {
-  console.log(`${new Date().toString().slice(4, 24)} :`, message, ...optionalParams)
+  let log = util.format(`${new Date().toString().slice(4, 24)} :`, message, ...optionalParams)
+  if (logs.data.length > 2000) logs.data.shift()
+  if (typeof logs.onLog === 'function') logs.onLog(log)
+  logs.data.push(log)
+  console.log(log)
+}
+export let logs: { data: string[], onLog?: (data: string) => void } = {
+  data: []
 }
 /**
  * 格式化输出, 配合PM2凑合用

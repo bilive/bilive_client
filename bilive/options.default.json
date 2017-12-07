@@ -22,6 +22,7 @@
     "nickname": "user",
     "userName": "bishi",
     "passWord": "password",
+    "biliUID": 0,
     "accessToken": "",
     "cookie": "",
     "status": false,
@@ -31,7 +32,8 @@
     "smallTV": false,
     "raffle": false,
     "sendGift": false,
-    "sendGiftRoom": "",
+    "sendGiftRoom": 0,
+    "signGroup": false,
     "beatStorm": false,
     "debug": false
   },
@@ -81,14 +83,19 @@
       "tip": "密码",
       "type": "string"
     },
+    "biliUID": {
+      "description": "B站UID",
+      "tip": "bilibili站内的UID, 自动获取, 一般无用",
+      "type": "number"
+    },
     "accessToken": {
       "description": "Token",
-      "tip": "access token, 一般无用",
+      "tip": "access token, 自动获取, 一般无用",
       "type": "string"
     },
     "cookie": {
       "description": "Cookie",
-      "tip": "cookie, 一般无用",
+      "tip": "cookie, 自动获取, 一般无用",
       "type": "string"
     },
     "status": {
@@ -129,7 +136,12 @@
     "sendGiftRoom": {
       "description": "自动送礼房间",
       "tip": "要自动送出礼物的房间号",
-      "type": "string"
+      "type": "number"
+    },
+    "signGroup": {
+      "description": "应援团签到",
+      "tip": "自动签到所有已加入的应援团",
+      "type": "boolean"
     },
     "beatStorm": {
       "description": "节奏风暴",
