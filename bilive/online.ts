@@ -237,7 +237,7 @@ export class Online extends EventEmitter {
     let baseQuery = `access_key=${userData.accessToken}&${AppClient.baseQuery}`
       // 获取已加入应援团列表
       , group: request.Options = {
-        uri: `${apiLiveOrigin}/link_group/v1/member/joinable_groups?${AppClient.ParamsSign(baseQuery)}`,
+        uri: `${apiLiveOrigin}/link_group/v1/member/my_groups?${AppClient.ParamsSign(baseQuery)}`,
         json: true
       }
       , linkGroup = await tools.XHR<linkGroup>(group, 'Android')

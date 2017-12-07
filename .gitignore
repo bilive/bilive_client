@@ -46,3 +46,4 @@ configs/*.json
 # Build flies
 build
 .vscode
+options
