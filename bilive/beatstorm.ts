@@ -1,6 +1,6 @@
 import * as request from 'request'
 import * as tools from './lib/tools'
-import { apiLiveOrigin } from './index'
+import { apiLiveOrigin, userData } from './index'
 /**
  * 自动参与节奏风暴
  * 
@@ -18,7 +18,7 @@ export class BeatStorm {
     this._stormID = beatStormOptions.stormID
     this._roomID = beatStormOptions.roomID
     this._jar = beatStormOptions.jar
-    this._nickname = beatStormOptions.nickname
+    this._userData = beatStormOptions.userData
     this._JoinStorm()
   }
   /**
@@ -54,13 +54,13 @@ export class BeatStorm {
    */
   private _jar: request.CookieJar
   /**
-   * 昵称
+   * userData
    * 
    * @private
-   * @type {string}
+   * @type {userData}
    * @memberof BeatStorm
    */
-  private _nickname: string
+  private _userData: userData
   /**
    * 参与节奏风暴
    * 
@@ -80,9 +80,9 @@ export class BeatStorm {
       }
     }
     let joinStormResponse = await tools.XHR<joinStormResponse>(joinStorm).catch(tools.Error)
-    if (joinStormResponse != null && joinStormResponse.body.code ===0) {
+    if (joinStormResponse != null && joinStormResponse.body.code === 0) {
       let content = joinStormResponse.body.data
-        tools.Log(this._nickname, `获得 ${content.gift_num} 个${content.gift_name}`)
+      tools.Log(this._userData.nickname, `获得 ${content.gift_num} 个${content.gift_name}`)
     }
   }
   /**
@@ -108,7 +108,7 @@ export class BeatStorm {
     if (beatStormResponse != null && beatStormResponse.body.data.cmd === 'SPECIAL_TIPS') {
       let content = beatStormResponse.body.data.tips.content,
         gift = content.match(/恭喜你(.*)</)
-      if (gift != null) tools.Log(this._nickname, gift[1])
+      if (gift != null) tools.Log(this._userData.nickname, gift[1])
     }
   }
 }
@@ -122,8 +122,8 @@ export interface beatStormOptions {
   content: string
   stormID: number
   roomID: number
+  userData: userData
   jar: request.CookieJar
-  nickname: string
 }
 /**
  * 节奏跟风返回值

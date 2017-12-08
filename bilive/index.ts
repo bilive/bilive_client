@@ -85,11 +85,11 @@ export class BiLive {
         let raffleOptions: raffleOptions = {
           raffleId: smallTVInfo.id,
           roomID: smallTVInfo.roomID,
-          jar,
-          nickname: userData.nickname
+          userData,
+          jar
         }
         if (smallTVInfo.pathname != null) smallTVPathname = smallTVInfo.pathname
-        new Raffle(raffleOptions).SmallTV().catch((error) => { tools.Error(userData.nickname, error) })
+        new Raffle(raffleOptions).SmallTV().catch(error => { tools.Error(userData.nickname, error) })
       }
     }
   }
@@ -107,11 +107,11 @@ export class BiLive {
         let raffleOptions: raffleOptions = {
           raffleId: raffleInfo.id,
           roomID: raffleInfo.roomID,
-          jar,
-          nickname: userData.nickname
+          userData,
+          jar
         }
         if (raffleInfo.pathname != null) rafflePathname = raffleInfo.pathname
-        new Raffle(raffleOptions).Raffle().catch((error) => { tools.Error(userData.nickname, error) })
+        new Raffle(raffleOptions).Raffle().catch(error => { tools.Error(userData.nickname, error) })
       }
     }
   }
@@ -130,11 +130,11 @@ export class BiLive {
         let raffleOptions: raffleOptions = {
           raffleId: lightenInfo.id,
           roomID: lightenInfo.roomID,
-          jar,
-          nickname: userData.nickname
+          userData,
+          jar
         }
         if (lightenInfo.pathname != null) lightenPathname = lightenInfo.pathname
-        new Raffle(raffleOptions).Lighten().catch((error) => { tools.Error(userData.nickname, error) })
+        new Raffle(raffleOptions).Lighten().catch(error => { tools.Error(userData.nickname, error) })
       }
     }
   }
@@ -157,8 +157,8 @@ export class BiLive {
           content: beatStormInfo.content,
           stormID: beatStormInfo.id,
           roomID: beatStormInfo.roomID,
-          jar,
-          nickname: userData.nickname
+          userData,
+          jar
         }
         new BeatStorm(beatStormOptions)
       }
