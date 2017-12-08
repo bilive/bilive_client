@@ -321,13 +321,18 @@ interface awardData {
  * 
  * @interface roomInfo
  */
-interface roomInfo {
+export interface roomInfo {
   code: number
   data: roomInfoData
 }
 interface roomInfoData {
   room_id: number
   mid: number
+  event_corner: roomInfoDataEvent[]
+}
+interface roomInfoDataEvent {
+  event_type: string
+  event_img: string
 }
 /**
  * 分享房间返回

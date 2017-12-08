@@ -1,10 +1,12 @@
 import * as request from 'request'
 import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
-import { BiliveClient, message, beatStormInfo, smallTVInfo, raffleInfo, lightenInfo, debugInfo } from './lib/bilive_client'
+import { roomInfo } from './online'
+import { AppClient } from './lib/app_client'
 import { CommentClient } from './lib/comment_client'
 import { SYS_MSG, SYS_GIFT } from './lib/danmaku.type'
 import { apiLiveOrigin, rafflePathname, lightenPathname, _options, smallTVPathname } from './index'
+import { BiliveClient, message, beatStormInfo, smallTVInfo, raffleInfo, lightenInfo, appLightenInfo, debugInfo } from './lib/bilive_client'
 /**
  * 监听服务器消息
  * 
@@ -65,6 +67,14 @@ export class Listener extends EventEmitter {
    */
   private _lightenID: number = 0
   /**
+   * app快速抽奖ID
+   * 
+   * @private
+   * @type {number}
+   * @memberof Listener
+   */
+  private _appLightenID: number = 0
+  /**
    * 开始监听
    * 
    * @memberof Listener
@@ -119,6 +129,7 @@ export class Listener extends EventEmitter {
       let url = apiLiveOrigin + rafflePathname
         , roomID = dataJson.real_roomid
       this._RaffleCheck(url, roomID, 'raffle')
+      this._AppLightenCheck(roomID)
     }
     else if (dataJson.giftId === 84) {
       let roomID = dataJson.real_roomid
@@ -179,6 +190,35 @@ export class Listener extends EventEmitter {
     }
   }
   /**
+   * 检查app房间信息
+   * 
+   * @private
+   * @param {number} roomID 
+   * @memberof Listener
+   */
+  private async _AppLightenCheck(roomID: number) {
+    let room: request.Options = {
+      uri: `${apiLiveOrigin}/AppRoom/index?${AppClient.ParamsSign(`room_id=${roomID}&${AppClient.baseQuery}`)}`,
+      json: true
+    }
+      , roomInfo = await tools.XHR<roomInfo>(room, 'Android')
+    if (roomInfo.response.statusCode === 200 && roomInfo.body.code === 0 && roomInfo.body.data.event_corner.length > 0) {
+      roomInfo.body.data.event_corner.forEach(event => {
+        let type = event.event_type.split('-')
+        if (type.length !== 2) return
+        let message: message = {
+          cmd: 'appLighten',
+          data: {
+            roomID,
+            id: parseInt(type[1]),
+            type: type[0]
+          }
+        }
+        this._AppLightenHandler(message)
+      })
+    }
+  }
+  /**
    * 监听小电视消息
    * 
    * @private
@@ -225,6 +265,22 @@ export class Listener extends EventEmitter {
     this._lightenID = id
     tools.Log(`房间 ${roomID} 赠送了第 ${id} 个活动道具`)
     this.emit('lighten', lightenInfo)
+  }
+  /**
+   * 监听app快速抽奖消息
+   * 
+   * @private
+   * @param {message} message
+   * @memberof Listener
+   */
+  private _AppLightenHandler(message: message) {
+    let appLightenInfo = <appLightenInfo>message.data
+    if (this._appLightenID >= appLightenInfo.id) return
+    let roomID = appLightenInfo.roomID
+      , id = appLightenInfo.id
+    this._appLightenID = id
+    tools.Log(`房间 ${roomID} 赠送了第 ${id} 个活动道具`)
+    this.emit('appLighten', appLightenInfo)
   }
   /**
    * 监听节奏风暴消息

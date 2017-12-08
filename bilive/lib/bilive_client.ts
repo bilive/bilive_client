@@ -171,7 +171,7 @@ export class BiliveClient extends EventEmitter {
 export interface message {
   cmd: string
   msg?: string
-  data?: smallTVInfo | beatStormInfo | raffleInfo | lightenInfo | debugInfo
+  data?: smallTVInfo | beatStormInfo | raffleInfo | lightenInfo | appLightenInfo | debugInfo
 }
 /**
  * 节奏风暴信息
@@ -218,6 +218,19 @@ export interface raffleInfo {
 export interface lightenInfo {
   roomID: number
   id: number
+  pathname?: string
+  rawData?: SYS_GIFT | LIGHTEN_START
+}
+/**
+ * app快速抽奖信息
+ * 
+ * @export
+ * @interface appLightenInfo
+ */
+export interface appLightenInfo {
+  roomID: number
+  id: number
+  type: string
   pathname?: string
   rawData?: SYS_GIFT | LIGHTEN_START
 }

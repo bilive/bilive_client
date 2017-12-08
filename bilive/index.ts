@@ -6,7 +6,7 @@ import { Listener } from './listener'
 import { AppClient } from './lib/app_client'
 import { Raffle, raffleOptions } from './raffle'
 import { BeatStorm, beatStormOptions } from './beatstorm'
-import { beatStormInfo, smallTVInfo, raffleInfo, lightenInfo, debugInfo } from './lib/bilive_client'
+import { beatStormInfo, smallTVInfo, raffleInfo, lightenInfo, appLightenInfo, debugInfo } from './lib/bilive_client'
 /**
  * 主程序
  * 
@@ -68,6 +68,7 @@ export class BiLive {
       .on('beatStorm', this._BeatStorm.bind(this))
       .on('raffle', this._Raffle.bind(this))
       .on('lighten', this._Lighten.bind(this))
+      .on('appLighten', this._AppLighten.bind(this))
       .on('debug', this._Debug.bind(this))
       .Start()
   }
@@ -135,6 +136,29 @@ export class BiLive {
         }
         if (lightenInfo.pathname != null) lightenPathname = lightenInfo.pathname
         new Raffle(raffleOptions).Lighten().catch(error => { tools.Error(userData.nickname, error) })
+      }
+    }
+  }
+  /**
+   * 参与app快速抽奖
+   * 
+   * @private
+   * @param {appLightenInfo} appLightenInfo
+   * @memberof BiLive
+   */
+  private _AppLighten(appLightenInfo: appLightenInfo) {
+    let usersData = _options.user
+    for (let uid in usersData) {
+      let userData = usersData[uid], jar = cookieJar[uid]
+      if (userData.status && userData.raffle) {
+        let raffleOptions: raffleOptions = {
+          type: appLightenInfo.type,
+          raffleId: appLightenInfo.id,
+          roomID: appLightenInfo.roomID,
+          userData,
+          jar
+        }
+        new Raffle(raffleOptions).AppLighten().catch(error => { tools.Error(userData.nickname, error) })
       }
     }
   }

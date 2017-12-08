@@ -15,11 +15,20 @@ export class Raffle {
    * @memberof Raffle
    */
   constructor(raffleOptions: raffleOptions) {
+    if (raffleOptions.type != null) this._type = raffleOptions.type
     this._raffleId = raffleOptions.raffleId
     this._roomID = raffleOptions.roomID
     this._jar = raffleOptions.jar
     this._userData = raffleOptions.userData
   }
+  /**
+   * type
+   * 
+   * @private
+   * @type {string}
+   * @memberof Raffle
+   */
+  private _type?: string
   /**
    * 参与ID
    * 
@@ -76,7 +85,6 @@ export class Raffle {
    */
   public Raffle() {
     this._url = apiLiveOrigin + rafflePathname
-    this._appLighten().catch(error => { tools.Error(this._userData.nickname, error) })
     return this._Raffle()
   }
   /**
@@ -100,21 +108,6 @@ export class Raffle {
       await tools.Sleep(time)
       this._RaffleReward()
     }
-  }
-  /**
-   * app快速抽奖
-   * 
-   * @private
-   * @memberof Raffle
-   */
-  private async _appLighten() {
-    let baseQuery = `access_key=${this._userData.accessToken}&${AppClient.baseQuery}`
-      , reward: request.Options = {
-        uri: `${apiLiveOrigin}/YunYing/roomEvent?${AppClient.ParamsSign(`event_type=openfire-${this._raffleId}&room_id=${this._roomID}&${baseQuery}`)}`,
-        json: true
-      }
-      , appLightenReward = await tools.XHR<appLightenReward>(reward, 'Android')
-    if (appLightenReward.response.statusCode === 200 && appLightenReward.body.code === 0) tools.Log(this._userData.nickname, `抽奖 ${this._raffleId} `, `获得${appLightenReward.body.data.gift_desc}`)
   }
   /**
    * 获取抽奖结果
@@ -161,8 +154,22 @@ export class Raffle {
       }
     }
       , lightenReward = await tools.XHR<lightenReward>(getCoin)
-        .catch((reject) => { tools.Error(this._userData.nickname, reject) })
-    if (lightenReward != null && lightenReward.body.code === 0) tools.Log(this._userData.nickname, `抽奖 ${this._raffleId} `, lightenReward.body.msg)
+    if (lightenReward.response.statusCode === 200 && lightenReward.body.code === 0) tools.Log(this._userData.nickname, `抽奖 ${this._raffleId} `, lightenReward.body.msg)
+  }
+  /**
+   * app快速抽奖
+   * 
+   * @private
+   * @memberof Raffle
+   */
+  public async AppLighten() {
+    let baseQuery = `access_key=${this._userData.accessToken}&${AppClient.baseQuery}`
+      , reward: request.Options = {
+        uri: `${apiLiveOrigin}/YunYing/roomEvent?${AppClient.ParamsSign(`event_type=${this._type}-${this._raffleId}&room_id=${this._roomID}&${baseQuery}`)}`,
+        json: true
+      }
+      , appLightenReward = await tools.XHR<appLightenReward>(reward, 'Android')
+    if (appLightenReward.response.statusCode === 200 && appLightenReward.body.code === 0) tools.Log(this._userData.nickname, `抽奖 ${this._raffleId}`, `获得${appLightenReward.body.data.gift_desc}`)
   }
 }
 /**
@@ -172,6 +179,7 @@ export class Raffle {
  * @interface raffleOptions
  */
 export interface raffleOptions {
+  type?: string
   raffleId: number
   roomID: number
   userData: userData
