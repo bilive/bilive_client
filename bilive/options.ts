@@ -5,6 +5,7 @@ import { randomBytes } from 'crypto'
 import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
 import { _options, config, optionsInfo, userData } from './index'
+import { setInterval, clearInterval } from 'timers';
 /**
  * 程序设置
  * 
@@ -70,7 +71,7 @@ export class Options extends EventEmitter {
       server,
       handleProtocols: (protocols: string[]) => {
         let protocol = _options.server.protocol
-        if (protocol === protocols[0]) return protocol
+        if (protocol === protocols[0]) return protocols[1] || protocol
         else return false
       }
     })
@@ -100,6 +101,12 @@ export class Options extends EventEmitter {
             if (message != null && message.cmd != null && message.ts != null) this._onCMD(message)
             else this._Send({ cmd: 'error', ts: 'error', msg: '消息格式错误' })
           })
+        if (client.protocol === 'keep') {
+          let ping = setInterval(() => {
+            if (client.readyState === ws.OPEN) client.ping()
+            else clearInterval(ping)
+          }, 6e+4) // 60秒
+        }
         this._wsClient = client
         // 日志
         tools.logs.onLog = data => this._Send({ cmd: 'log', ts: 'log', msg: data })
