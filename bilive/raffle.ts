@@ -1,7 +1,7 @@
 import * as request from 'request'
 import * as tools from './lib/tools'
 import { AppClient } from './lib/app_client'
-import { apiLiveOrigin, smallTVPathname, rafflePathname, lightenPathname, userData } from './index'
+import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, lightenPathname } from './index'
 /**
  * 自动参与抽奖
  * 
@@ -99,7 +99,7 @@ export class Raffle {
       jar: this._jar,
       json: true,
       headers: {
-        'Referer': `https://live.bilibili.com/${this._roomID}`
+        'Referer': `${liveOrigin}/${this._roomID}`
       }
     }
       , raffleJoin = await tools.XHR<raffleJoin>(join)
@@ -121,7 +121,7 @@ export class Raffle {
       jar: this._jar,
       json: true,
       headers: {
-        'Referer': `https://live.bilibili.com/${this._roomID}`
+        'Referer': `${liveOrigin}/${this._roomID}`
       }
     }
       , raffleReward = await tools.XHR<raffleReward>(reward)
@@ -150,7 +150,7 @@ export class Raffle {
       jar: this._jar,
       json: true,
       headers: {
-        'Referer': `https://live.bilibili.com/${this._roomID}`
+        'Referer': `${liveOrigin}/${this._roomID}`
       }
     }
       , lightenReward = await tools.XHR<lightenReward>(getCoin)
@@ -171,84 +171,4 @@ export class Raffle {
       , appLightenReward = await tools.XHR<appLightenReward>(reward, 'Android')
     if (appLightenReward.response.statusCode === 200 && appLightenReward.body.code === 0) tools.Log(this._userData.nickname, `抽奖 ${this._raffleId}`, `获得${appLightenReward.body.data.gift_desc}`)
   }
-}
-/**
- * 抽奖设置
- * 
- * @export
- * @interface raffleOptions
- */
-export interface raffleOptions {
-  type?: string
-  raffleId: number
-  roomID: number
-  userData: userData
-  jar: request.CookieJar
-}
-/**
-/**
- * 参与抽奖信息
- * 
- * @interface raffleJoin
- */
-interface raffleJoin {
-  code: number
-  msg: string
-  message: string
-  data: raffleJoinData
-}
-interface raffleJoinData {
-  face?: string
-  from: string
-  type: 'small_tv' | string
-  roomid?: string
-  raffleId: number | string
-  time: number
-  status: number
-}
-/**
- * 抽奖结果信息
- * 
- * @interface raffleReward
- */
-interface raffleReward {
-  code: number
-  msg: string
-  message: string
-  data: raffleRewardData
-}
-interface raffleRewardData {
-  gift_id: number
-  gift_name: string
-  gift_num: number
-  gift_from: string
-  gift_type: number
-  gift_content: string
-  status?: number
-}
-/**
- * 快速抽奖结果信息
- * 
- * @interface lightenReward
- */
-interface lightenReward {
-  code: number
-  msg: string
-  message: string
-  data: [number]
-}
-/**
- * App快速抽奖结果信息
- * 
- * @interface appLightenReward
- */
-interface appLightenReward {
-  code: number
-  msg: string
-  message: string
-  data: appLightenRewardData
-}
-interface appLightenRewardData {
-  gift_img: string
-  gift_desc: string
 }

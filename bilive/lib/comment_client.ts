@@ -3,7 +3,6 @@ import { EventEmitter } from 'events'
 import { inflate } from 'zlib'
 import * as ws from 'ws'
 import * as tools from './tools'
-import { danmuJson } from './danmaku.type'
 /**
  * 弹幕客户端, 用于连接弹幕服务器和发送弹幕事件
  * 
@@ -22,7 +21,7 @@ export class CommentClient extends EventEmitter {
     let option: commentClientOptions = {
       roomID: 23058,
       userID: 0,
-      protocol: 'socket'
+      protocol: 'flash'
     }
     Object.assign(option, options)
     this.roomID = <number>option.roomID
@@ -174,7 +173,7 @@ export class CommentClient extends EventEmitter {
         if (dmWsPort != null) wsPort = parseInt(dmWsPort[1])
         if (dmWssPort != null) wssPort = parseInt(dmWssPort[1])
       }
-      if (this.protocol === 'socket') {
+      if (this.protocol === 'socket' || this.protocol === 'flash') {
         this._server = socketServer
         this._port = socketPort
       }
@@ -199,7 +198,7 @@ export class CommentClient extends EventEmitter {
     clearTimeout(this._Timer)
     if (!this._connected) return
     this._connected = false
-    if (this.protocol === 'socket') {
+    if (this.protocol === 'socket' || this.protocol === 'flash') {
       (<Socket>this._Client).end();
       (<Socket>this._Client).destroy()
     }
@@ -229,7 +228,7 @@ export class CommentClient extends EventEmitter {
    * @memberof CommentClient
    */
   private _ClientConnect() {
-    if (this.protocol === 'socket') {
+    if (this.protocol === 'socket' || this.protocol === 'flash') {
       this._Client = new Socket().connect(this._port, this._server)
       this._Client
         .on('error', this._ClientErrorHandler.bind(this))
@@ -296,7 +295,10 @@ export class CommentClient extends EventEmitter {
    */
   private _ClientConnectHandler() {
     this._connected = true
-    let data = JSON.stringify({ roomid: this.roomID, uid: this.userID })
+    let data: string
+    if (this.protocol === 'socket') data = JSON.stringify({ roomid: this.roomID, uid: this.userID })
+    else if (this.protocol === 'flash') data = JSON.stringify({ roomid: this.roomID, uid: this.userID, protover: 2 })
+    else data = JSON.stringify({ uid: 0, roomid: this.roomID, protover: 1 })
     this._ClientSendData(16 + data.length, 16, this.version, 7, this.driver, data)
     this._ClientTimer()
   }
@@ -308,8 +310,11 @@ export class CommentClient extends EventEmitter {
    */
   private async _ClientTimer() {
     if (!this._connected) return
-    let data = JSON.stringify({ roomid: this.roomID, uid: this.userID })
-      , status = await this._ClientSendData(16 + data.length, 16, this.version, 2, this.driver, data)
+    let data: string
+    if (this.protocol === 'socket') data = JSON.stringify({ roomid: this.roomID, uid: this.userID })
+    else if (this.protocol === 'flash') data = ''
+    else data = '[object Object]'
+    let status = await this._ClientSendData(16 + data.length, 16, this.version, 2, this.driver, data)
     if (status) {
       this._Timer = setTimeout(() => {
         this._ClientTimer()
@@ -346,7 +351,7 @@ export class CommentClient extends EventEmitter {
         if (error) resolve(false)
         else resolve(true)
       }
-      if (this.protocol === 'socket') (<Socket>this._Client).write(bufferData, callback)
+      if (this.protocol === 'socket' || this.protocol === 'flash') (<Socket>this._Client).write(bufferData, callback)
       else (<ws>this._Client).send(bufferData, callback)
     })
   }
@@ -381,12 +386,9 @@ export class CommentClient extends EventEmitter {
     let packageIndex = 0
     while (dataLen - packageIndex >= packageLen) {
       switch (data.readUInt32BE(packageIndex + 8)) {
-        case 1:
-        case 2:
         case 3:
           this.emit('commentInLine', data.readUInt32BE(packageIndex + 16))
           break
-        case 4:
         case 5:
           let dataJson = await tools.JsonParse<danmuJson>(data.toString('UTF-8', packageIndex + 16, packageIndex + packageLen)).catch(tools.Error)
           if (dataJson != null) this._ParseClientData(dataJson)
@@ -394,10 +396,6 @@ export class CommentClient extends EventEmitter {
           break
         case 8:
           this.emit('serverSuccess', '服务器连接成功')
-          break
-        case 17:
-          this.emit('serverUpdate', '服务器升级中')
-          this._DelayReConnect()
           break
         default:
           break
@@ -441,4 +439,4 @@ interface commentClientOptions {
   userID?: number
   protocol?: commentClientProtocol
 }
-type commentClientProtocol = 'socket' | 'ws' | 'wss'
+type commentClientProtocol = 'socket' | 'flash' | 'ws' | 'wss'

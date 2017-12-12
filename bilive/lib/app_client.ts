@@ -50,7 +50,7 @@ export class AppClient {
    * @static
    * @memberof AppClient
    */
-  public static readonly baseQuery = `appkey=${AppClient.appKey}&build=${AppClient.build}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}&ts=${AppClient.TS}`
+  public static readonly baseQuery = `appkey=${AppClient.appKey}&build=${AppClient.build}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}`
   /**
    * 对参数签名
    * 
@@ -60,9 +60,10 @@ export class AppClient {
    * @memberof AppClient
    */
   public static ParamsSign(params: string): string {
-    let paramsBase = params + AppClient._secretKey
+    let ts = AppClient.TS
+      , paramsBase = `${params}&ts=${ts}${AppClient._secretKey}`
       , paramsHash = tools.Hash('md5', paramsBase)
-    return `${params}&sign=${paramsHash}`
+    return `${params}&ts=${ts}&sign=${paramsHash}`
   }
   /**
    * 对密码进行加密
@@ -88,10 +89,10 @@ export class AppClient {
    * 
    * @private
    * @static
-   * @returns {Promise<tools.response<getKeyResponse>>} 
+   * @returns {Promise<response<getKeyResponse>>} 
    * @memberof AppClient
    */
-  private static _GetKey(): Promise<tools.response<getKeyResponse>> {
+  private static _GetKey(): Promise<response<getKeyResponse>> {
     let getKeyOrigin = 'https://passport.bilibili.com/api/oauth2/getKey'
       , getKeyQuery = AppClient.baseQuery
       , getKey: request.Options = {
@@ -109,10 +110,10 @@ export class AppClient {
    * @static
    * @param {userLogin} userLogin 
    * @param {getKeyResponseData} publicKey 
-   * @returns {Promise<tools.response<loginResponse>>} 
+   * @returns {Promise<response<loginResponse>>} 
    * @memberof AppClient
    */
-  private static _Login(userLogin: userLogin, publicKey: getKeyResponseData): Promise<tools.response<loginResponse>> {
+  private static _Login(userLogin: userLogin, publicKey: getKeyResponseData): Promise<response<loginResponse>> {
     // captcha=
     // Ste-Cookie JSESSIONID
     // https://passport.bilibili.com/captcha
@@ -122,7 +123,7 @@ export class AppClient {
       , login: request.Options = {
         method: 'POST',
         uri: loginOrigin,
-        body: AppClient.ParamsSign(loginQuery),
+        body: `${loginQuery}&sign=${tools.Hash('md5', loginQuery + AppClient._secretKey)}`,
         json: true
       }
     return tools.XHR<loginResponse>(login, 'Android')
@@ -132,10 +133,10 @@ export class AppClient {
    * 
    * @static
    * @param {userLogin} userLogin 
-   * @returns {(Promise<string | void | tools.response<loginResponse> | tools.response<getKeyResponse>>)} 
+   * @returns {(Promise<string | void | response<loginResponse> | response<getKeyResponse>>)} 
    * @memberof AppClient
    */
-  public static async GetToken(userLogin: userLogin): Promise<string | void | tools.response<loginResponse> | tools.response<getKeyResponse>> {
+  public static async GetToken(userLogin: userLogin): Promise<string | void | response<loginResponse> | response<getKeyResponse>> {
     let getKeyResponse = await AppClient._GetKey().catch(tools.Error)
     if (getKeyResponse != null && getKeyResponse.body.code === 0) {
       let loginResponse = await AppClient._Login(userLogin, getKeyResponse.body.data).catch(tools.Error)
@@ -154,7 +155,7 @@ export class AppClient {
    */
   public static async GetCookie(accessToken: string): Promise<void | request.CookieJar> {
     let ssoOrigin = 'https://passport.bilibili.com/api/login/sso'
-      , ssoQuery = `access_key=${accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}&gourl=${encodeURIComponent(apiLiveOrigin)}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}&ts=${AppClient.TS}`
+      , ssoQuery = `access_key=${accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}&gourl=${encodeURIComponent(apiLiveOrigin)}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}`
       , jar = request.jar()
       , sso: request.Options = {
         uri: `${ssoOrigin}?${AppClient.ParamsSign(ssoQuery)}`,
@@ -167,46 +168,4 @@ export class AppClient {
     }
     else return gourl
   }
-}
-/**
- * 公钥返回
- * 
- * @export
- * @interface getKeyResponse
- */
-export interface getKeyResponse {
-  ts: number
-  code: number
-  data: getKeyResponseData
-}
-export interface getKeyResponseData {
-  hash: string
-  key: string
-}
-/**
- * 登录返回
- * 
- * @export
- * @interface loginResponse
- */
-export interface loginResponse {
-  ts: number
-  code: number
-  data: loginResponseData
-}
-export interface loginResponseData {
-  mid: number
-  access_token: string
-  refresh_token: string
-  expires_in: number
-}
-/**
- * 用户信息
- * 
- * @export
- * @interface userLogin
- */
-export interface userLogin {
-  userName: string
-  passWord: string
 }

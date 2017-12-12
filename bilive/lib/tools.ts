@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as util from 'util'
 import * as crypto from 'crypto'
 import * as request from 'request'
-import { _options, apiLiveOrigin } from '../index'
+import { apiLiveOrigin } from '../index'
 /**
  * 添加request头信息
  * 
@@ -185,15 +185,4 @@ export function Sleep(ms: number): Promise<{}> {
   return new Promise(resolve => {
     setTimeout(resolve, ms, 'sleep')
   })
-}
-/**
- * XHR返回
- * 
- * @export
- * @interface response
- * @template T 
- */
-export interface response<T> {
-  response: request.RequestResponse
-  body: T
 }

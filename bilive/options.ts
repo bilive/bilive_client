@@ -4,7 +4,7 @@ import * as http from 'http'
 import { randomBytes } from 'crypto'
 import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
-import { _options, config, optionsInfo, userData } from './index'
+import { _options } from './index'
 import { setInterval, clearInterval } from 'timers';
 /**
  * 程序设置

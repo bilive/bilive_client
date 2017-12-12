@@ -8,13 +8,8 @@
   "config": {
     "defaultUserID": 0,
     "defaultRoomID": 23058,
-    "apiOrigin": "",
-    "apiKey": "",
     "eventRooms": [
       23058
-    ],
-    "beatStormBlackList": [
-      10101
     ]
   },
   "user": {},
@@ -33,9 +28,7 @@
     "raffle": false,
     "sendGift": false,
     "sendGiftRoom": 0,
-    "signGroup": false,
-    "beatStorm": false,
-    "debug": false
+    "signGroup": false
   },
   "info": {
     "defaultUserID": {
@@ -48,24 +41,9 @@
       "tip": "用来监听系统消息的房间, 默认为23058(官方音乐台)",
       "type": "number"
     },
-    "apiOrigin": {
-      "description": "远程服务器地址",
-      "tip": "远程服务器地址, 主要用来监听节奏风暴",
-      "type": "string"
-    },
-    "apiKey": {
-      "description": "apiKey",
-      "tip": "连接远程服务器所需的apiKey",
-      "type": "string"
-    },
     "eventRooms": {
       "description": "挂机活动房间以,分隔",
       "tip": "挂取活动道具的房间, 默认为23058(官方音乐台), 有时活动只有主播报名才可以参加",
-      "type": "numberArray"
-    },
-    "beatStormBlackList": {
-      "description": "节奏风暴黑名单以,分隔",
-      "tip": "节奏风暴黑名单, 不抢黑名单内的房间",
       "type": "numberArray"
     },
     "nickname": {
@@ -141,16 +119,6 @@
     "signGroup": {
       "description": "应援团签到",
       "tip": "自动签到所有已加入的应援团",
-      "type": "boolean"
-    },
-    "beatStorm": {
-      "description": "节奏风暴",
-      "tip": "参与节奏风暴",
-      "type": "boolean"
-    },
-    "debug": {
-      "description": "调试模式",
-      "tip": "远程调试, 非常危险, 开启此项远程服务器可以进行更改B站密码, 邮箱, 电话, 清空包裹, 刷广告等等你想得到和想不到的事情",
       "type": "boolean"
     }
   }
