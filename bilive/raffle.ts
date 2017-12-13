@@ -132,8 +132,8 @@ export class Raffle {
     }
     else {
       let gift = raffleReward.body.data
-      if (gift.gift_num === 0) tools.Log(this._userData.nickname, `抽奖 ${this._raffleId} `, raffleReward.body.msg)
-      else tools.Log(this._userData.nickname, `抽奖 ${this._raffleId} `, `获得 ${gift.gift_num} 个${gift.gift_name}`)
+      if (gift.gift_num === 0) tools.Log(this._userData.nickname, `抽奖 ${this._raffleId}`, raffleReward.body.msg)
+      else tools.Log(this._userData.nickname, `抽奖 ${this._raffleId}`, `获得 ${gift.gift_num} 个${gift.gift_name}`)
     }
   }
   /**
@@ -154,7 +154,7 @@ export class Raffle {
       }
     }
       , lightenReward = await tools.XHR<lightenReward>(getCoin)
-    if (lightenReward.response.statusCode === 200 && lightenReward.body.code === 0) tools.Log(this._userData.nickname, `抽奖 ${this._raffleId} `, lightenReward.body.msg)
+    if (lightenReward.response.statusCode === 200 && lightenReward.body.code === 0) tools.Log(this._userData.nickname, `抽奖 ${this._raffleId}`, lightenReward.body.msg)
   }
   /**
    * app快速抽奖

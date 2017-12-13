@@ -156,7 +156,7 @@ export function Hash(algorithm: string, data: string | Buffer): string {
  */
 export function Log(message?: any, ...optionalParams: any[]) {
   let log = util.format(`${new Date().toString().slice(4, 24)} :`, message, ...optionalParams)
-  if (logs.data.length > 2000) logs.data.shift()
+  if (logs.data.length > 500) logs.data.shift()
   if (typeof logs.onLog === 'function') logs.onLog(log)
   logs.data.push(log)
   console.log(log)
