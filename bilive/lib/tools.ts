@@ -113,8 +113,7 @@ export function Options(options?: _options): Promise<_options> {
       resolve(option)
     }
     else {
-      let option = JSON.stringify(options)
-      fs.writeFileSync(dirname + '/options/options.json', option)
+      fs.writeFileSync(dirname + '/options/options.json', JSON.stringify(options))
       resolve(options)
     }
   })

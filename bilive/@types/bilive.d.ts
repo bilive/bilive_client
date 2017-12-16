@@ -40,8 +40,8 @@ interface userData {
   eventRoom: boolean
   smallTV: boolean
   raffle: boolean
-  sendGift: boolean,
-  sendGiftRoom: number,
+  sendGift: boolean
+  sendGiftRoom: number
   signGroup: boolean
 }
 interface optionsInfo {
@@ -195,8 +195,7 @@ interface raffleOptions {
   type?: string
   raffleId: number
   roomID: number
-  userData: userData
-  jar: request.CookieJar
+  User: User
 }
 /**
 /**

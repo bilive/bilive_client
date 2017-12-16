@@ -4,7 +4,8 @@ import * as http from 'http'
 import { randomBytes } from 'crypto'
 import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
-import { _options } from './index'
+import { User } from './user'
+import { _options, _user } from './index'
 import { setInterval, clearInterval } from 'timers';
 /**
  * 程序设置
@@ -131,18 +132,17 @@ export class Options extends EventEmitter {
         , msg = ''
         , setConfig = <config>message.data || {}
       for (let i in config) {
-        if (typeof config[i] === typeof setConfig[i]) config[i] = setConfig[i]
-        else {
-          msg = '参数错误'
+        if (typeof config[i] !== typeof setConfig[i]) {
+          msg = i + '参数错误'
           break
         }
       }
       if (msg === '') {
-        _options.config = config
+        for (let i in config) config[i] = setConfig[i]
         tools.Options(_options)
         this._Send({ cmd, ts, data: config })
       }
-      else this._Send({ cmd, ts, msg, data: _options.config })
+      else this._Send({ cmd, ts, msg, data: config })
     }
     // 获取参数描述
     else if (cmd === 'getInfo') {
@@ -151,16 +151,14 @@ export class Options extends EventEmitter {
     }
     // 获取uid
     else if (cmd === 'getAllUID') {
-      let data = []
-        , user = _options.user
-      for (let uid in user) data.push(uid)
+      let data = Object.keys(_options.user)
       this._Send({ cmd, ts, data })
     }
     // 获取用户设置
     else if (cmd === 'getUserData') {
       let user = _options.user
         , getUID = message.uid
-      if (getUID != null && user[getUID] != null) this._Send({ cmd, ts, uid: getUID, data: user[getUID] })
+      if (typeof getUID === 'string' && user[getUID] != null) this._Send({ cmd, ts, uid: getUID, data: user[getUID] })
       else this._Send({ cmd, ts, msg: '未知用户' })
     }
     // 保存用户设置
@@ -172,18 +170,18 @@ export class Options extends EventEmitter {
           , msg = ''
           , setUserData = <userData>message.data || {}
         for (let i in userData) {
-          if (typeof userData[i] === typeof setUserData[i]) userData[i] = setUserData[i]
-          else {
-            msg = '参数错误'
+          if (typeof userData[i] !== typeof setUserData[i]) {
+            msg = i + '参数错误'
             break
           }
         }
         if (msg === '') {
-          _options.user[setUID] = userData
+          for (let i in userData) userData[i] = setUserData[i]
+          if (userData.status && !_user.has(setUID)) _user.set(setUID, new User(userData))
           tools.Options(_options)
           this._Send({ cmd, ts, uid: setUID, data: userData })
         }
-        else this._Send({ cmd, ts, uid: setUID, msg, data: _options.user[setUID] })
+        else this._Send({ cmd, ts, uid: setUID, msg, data: userData })
       }
       else this._Send({ cmd, ts, uid: setUID, msg: '未知用户' })
     }
@@ -194,6 +192,7 @@ export class Options extends EventEmitter {
       if (delUID != null && user[delUID] != null) {
         let userData = user[delUID]
         delete _options.user[delUID]
+        if (_user.has(delUID)) _user.delete(delUID)
         tools.Options(_options)
         this._Send({ cmd, ts, uid: delUID, data: userData })
       }

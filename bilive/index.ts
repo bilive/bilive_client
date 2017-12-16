@@ -3,6 +3,7 @@ import { Online } from './online'
 import { Options } from './options'
 import { Listener } from './listener'
 import { AppClient } from './lib/app_client'
+import { User } from './user'
 import { Raffle } from './raffle'
 /**
  * 主程序
@@ -23,8 +24,8 @@ export class BiLive {
     _options = option
     let user = option.user
     for (let uid in user) {
-      let userData = user[uid]
-      cookieJar[uid] = tools.setCookie(userData.cookie, [apiLiveOrigin])
+      if (!user[uid].status) continue
+      _user.set(uid, new User(user[uid]))
     }
     this.Options()
     this.Online()
@@ -70,35 +71,31 @@ export class BiLive {
    * @memberof BiLive
    */
   private _Raffle(raffleMSG: raffleMSG | appLightenMSG) {
-    let usersData = _options.user
-    for (let uid in usersData) {
-      let userData = usersData[uid], jar = cookieJar[uid]
-      if (userData.status && userData.raffle) {
-        let raffleOptions: raffleOptions = {
-          raffleId: raffleMSG.id,
-          roomID: raffleMSG.roomID,
-          userData,
-          jar
-        }
-        switch (raffleMSG.cmd) {
-          case 'smallTV':
-            new Raffle(raffleOptions).SmallTV().catch(error => { tools.Error(userData.nickname, error) })
-            break
-          case 'raffle':
-            new Raffle(raffleOptions).Raffle().catch(error => { tools.Error(userData.nickname, error) })
-            break
-          case 'lighten':
-            new Raffle(raffleOptions).Lighten().catch(error => { tools.Error(userData.nickname, error) })
-            break
-          case 'appLighten':
-            raffleOptions.type = raffleMSG.type
-            new Raffle(raffleOptions).AppLighten().catch(error => { tools.Error(userData.nickname, error) })
-            break
-          default:
-            break
-        }
+    _user.forEach(User => {
+      if (!User.userData.raffle) return
+      let raffleOptions: raffleOptions = {
+        raffleId: raffleMSG.id,
+        roomID: raffleMSG.roomID,
+        User: User
       }
-    }
+      switch (raffleMSG.cmd) {
+        case 'smallTV':
+          new Raffle(raffleOptions).SmallTV().catch(error => { tools.Error(User.userData.nickname, error) })
+          break
+        case 'raffle':
+          new Raffle(raffleOptions).Raffle().catch(error => { tools.Error(User.userData.nickname, error) })
+          break
+        case 'lighten':
+          new Raffle(raffleOptions).Lighten().catch(error => { tools.Error(User.userData.nickname, error) })
+          break
+        case 'appLighten':
+          raffleOptions.type = raffleMSG.type
+          new Raffle(raffleOptions).AppLighten().catch(error => { tools.Error(User.userData.nickname, error) })
+          break
+        default:
+          break
+      }
+    })
   }
   /**
    * 监听cookie失效事件
@@ -108,15 +105,19 @@ export class BiLive {
    * @memberof BiLive
    */
   private async _CookieError(uid: string) {
-    let userData = _options.user[uid]
-    tools.Log(userData.nickname, 'Cookie已失效')
-    let cookie = await AppClient.GetCookie(userData.accessToken)
+    let User = _user.get(uid)
+    if (User == null) {
+      tools.Log('Cookie更新', `uid ${uid} 无效`)
+      return
+    }
+    tools.Log(User.userData.nickname, 'Cookie已失效')
+    let cookie = await AppClient.GetCookie(User.userData.accessToken)
     if (cookie != null) {
-      cookieJar[uid] = cookie
-      _options.user[uid].cookie = cookie.getCookieString(apiLiveOrigin)
-      _options.user[uid].biliUID = parseInt(tools.getCookie(cookie, 'DedeUserID'))
+      User.jar = cookie
+      User.userData.cookie = cookie.getCookieString(apiLiveOrigin)
+      User.userData.biliUID = parseInt(tools.getCookie(cookie, 'DedeUserID'))
       tools.Options(_options)
-      tools.Log(userData.nickname, 'Cookie已更新')
+      tools.Log(User.userData.nickname, 'Cookie已更新')
     }
     else this._TokenError(uid)
   }
@@ -128,23 +129,28 @@ export class BiLive {
    * @memberof BiLive
    */
   private async _TokenError(uid: string) {
-    let userData = _options.user[uid]
-    tools.Log(userData.nickname, 'Token已失效')
+    let User = _user.get(uid)
+    if (User == null) {
+      tools.Log('Token更新', `uid ${uid} 无效`)
+      return
+    }
+    tools.Log(User.userData.nickname, 'Token已失效')
     let token = await AppClient.GetToken({
-      userName: userData.userName,
-      passWord: userData.passWord
+      userName: User.userData.userName,
+      passWord: User.userData.passWord
     })
     if (typeof token === 'string') {
-      _options.user[uid].accessToken = token
+      User.userData.accessToken = token
       tools.Options(_options)
-      tools.Log(userData.nickname, 'Token已更新')
+      tools.Log(User.userData.nickname, 'Token已更新')
     }
     else if (token != null && token.response.statusCode === 200) {
-      _options.user[uid].status = false
+      User.userData.status = false
+      _user.delete(uid)
       tools.Options(_options)
-      tools.Log(userData.nickname, 'Token更新失败', token.body)
+      tools.Log(User.userData.nickname, 'Token更新失败', token.body)
     }
-    else tools.Log(userData.nickname, 'Token更新失败')
+    else tools.Log(User.userData.nickname, 'Token更新失败')
   }
 }
 export let liveOrigin = 'http://live.bilibili.com'
@@ -152,5 +158,5 @@ export let liveOrigin = 'http://live.bilibili.com'
   , smallTVPathname = '/gift/v2/smalltv'
   , rafflePathname = '/activity/v1/Raffle'
   , lightenPathname = '/activity/v1/NeedYou'
-  , cookieJar: cookieJar = {}
+  , _user: Map<string, User> = new Map()
   , _options: _options
