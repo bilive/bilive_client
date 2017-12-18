@@ -71,9 +71,6 @@ interface configInfoData {
   tip: string
   type: string
 }
-interface cookieJar {
-  [index: string]: request.CookieJar
-}
 // app_client
 /**
  * 公钥返回
@@ -197,7 +194,6 @@ interface raffleOptions {
   roomID: number
   User: User
 }
-/**
 /**
  * 参与抽奖信息
  * 
@@ -452,15 +448,4 @@ interface signGroup {
 interface signGroupData {
   add_num: number
   status: number
-}
-// tools
-/**
- * XHR返回
- * 
- * @interface response
- * @template T 
- */
-interface response<T> {
-  response: request.RequestResponse
-  body: T
 }

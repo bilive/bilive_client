@@ -89,10 +89,10 @@ export class AppClient {
    * 
    * @private
    * @static
-   * @returns {Promise<response<getKeyResponse>>} 
+   * @returns {Promise<tools.response<getKeyResponse>>} 
    * @memberof AppClient
    */
-  private static _GetKey(): Promise<response<getKeyResponse>> {
+  private static _GetKey(): Promise<tools.response<getKeyResponse>> {
     let getKeyOrigin = 'https://passport.bilibili.com/api/oauth2/getKey'
       , getKeyQuery = AppClient.baseQuery
       , getKey: request.Options = {
@@ -110,10 +110,10 @@ export class AppClient {
    * @static
    * @param {userLogin} userLogin 
    * @param {getKeyResponseData} publicKey 
-   * @returns {Promise<response<loginResponse>>} 
+   * @returns {Promise<tools.response<loginResponse>>} 
    * @memberof AppClient
    */
-  private static _Login(userLogin: userLogin, publicKey: getKeyResponseData): Promise<response<loginResponse>> {
+  private static _Login(userLogin: userLogin, publicKey: getKeyResponseData): Promise<tools.response<loginResponse>> {
     // captcha=
     // Ste-Cookie JSESSIONID
     // https://passport.bilibili.com/captcha
@@ -133,10 +133,10 @@ export class AppClient {
    * 
    * @static
    * @param {userLogin} userLogin 
-   * @returns {(Promise<string | void | response<loginResponse> | response<getKeyResponse>>)} 
+   * @returns {(Promise<string | void | tools.response<loginResponse> | tools.response<getKeyResponse>>)} 
    * @memberof AppClient
    */
-  public static async GetToken(userLogin: userLogin): Promise<string | void | response<loginResponse> | response<getKeyResponse>> {
+  public static async GetToken(userLogin: userLogin): Promise<string | void | tools.response<loginResponse> | tools.response<getKeyResponse>> {
     let getKeyResponse = await AppClient._GetKey().catch(tools.Error)
     if (getKeyResponse != null && getKeyResponse.body.code === 0) {
       let loginResponse = await AppClient._Login(userLogin, getKeyResponse.body.data).catch(tools.Error)

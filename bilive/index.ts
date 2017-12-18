@@ -1,8 +1,6 @@
 import * as tools from './lib/tools'
-import { Online } from './online'
 import { Options } from './options'
 import { Listener } from './listener'
-import { AppClient } from './lib/app_client'
 import { User } from './user'
 import { Raffle } from './raffle'
 /**
@@ -14,6 +12,9 @@ import { Raffle } from './raffle'
 export class BiLive {
   constructor() {
   }
+  // 全局计时器
+  private _lastTime = ''
+  public loop: NodeJS.Timer
   /**
    * 开始主程序
    * 
@@ -22,14 +23,34 @@ export class BiLive {
   public async Start() {
     let option = await tools.Options()
     _options = option
-    let user = option.user
-    for (let uid in user) {
-      if (!user[uid].status) continue
-      _user.set(uid, new User(user[uid]))
+    for (let uid in _options.user) {
+      if (!_options.user[uid].status) continue
+      let user = new User(uid, _options.user[uid])
+      _user.set(uid, user)
+      await user.Start()
     }
     this.Options()
-    this.Online()
     this.Listener()
+    _user.forEach(user => user.daily())
+    this.loop = setInterval(() => this._loop(), 5e+4) // 50s
+  }
+  /**
+   * 计时器
+   * 
+   * @private
+   * @memberof BiLive
+   */
+  private async _loop() {
+    let csttime = Date.now() + 2.88e+7
+      , cst = new Date(csttime)
+      , cstString = cst.toUTCString().substr(17, 5) // 'hh:mm'
+    if (cstString === this._lastTime) return
+    this._lastTime = cstString
+    let cstHour = cst.getUTCHours()
+      , cstMin = cst.getUTCMinutes()
+    if (cstString === '00:10') _user.forEach(user => user.nextDay())
+    else if (cstString === '13:30') _user.forEach(user => user.sendGift().catch(error => { tools.Error(user.userData.nickname, error) }))
+    if (cstMin === 30 && cstHour % 8 === 0) _user.forEach(user => user.daily())
   }
   /**
    * 用户设置
@@ -39,18 +60,6 @@ export class BiLive {
   public Options() {
     const SOptions = new Options()
     SOptions.Start()
-  }
-  /**
-   * 在线挂机
-   * 
-   * @memberof BiLive
-   */
-  public Online() {
-    const SOnline = new Online()
-    SOnline
-      .on('cookieError', this._CookieError.bind(this))
-      .on('tokenError', this._TokenError.bind(this))
-      .Start()
   }
   /**
    * 监听
@@ -96,61 +105,6 @@ export class BiLive {
           break
       }
     })
-  }
-  /**
-   * 监听cookie失效事件
-   * 
-   * @private
-   * @param {string} uid
-   * @memberof BiLive
-   */
-  private async _CookieError(uid: string) {
-    let User = _user.get(uid)
-    if (User == null) {
-      tools.Log('Cookie更新', `uid ${uid} 无效`)
-      return
-    }
-    tools.Log(User.userData.nickname, 'Cookie已失效')
-    let cookie = await AppClient.GetCookie(User.userData.accessToken)
-    if (cookie != null) {
-      User.jar = cookie
-      User.userData.cookie = cookie.getCookieString(apiLiveOrigin)
-      User.userData.biliUID = parseInt(tools.getCookie(cookie, 'DedeUserID'))
-      tools.Options(_options)
-      tools.Log(User.userData.nickname, 'Cookie已更新')
-    }
-    else this._TokenError(uid)
-  }
-  /**
-   * 监听token失效事件
-   * 
-   * @private
-   * @param {string} uid
-   * @memberof BiLive
-   */
-  private async _TokenError(uid: string) {
-    let User = _user.get(uid)
-    if (User == null) {
-      tools.Log('Token更新', `uid ${uid} 无效`)
-      return
-    }
-    tools.Log(User.userData.nickname, 'Token已失效')
-    let token = await AppClient.GetToken({
-      userName: User.userData.userName,
-      passWord: User.userData.passWord
-    })
-    if (typeof token === 'string') {
-      User.userData.accessToken = token
-      tools.Options(_options)
-      tools.Log(User.userData.nickname, 'Token已更新')
-    }
-    else if (token != null && token.response.statusCode === 200) {
-      User.userData.status = false
-      _user.delete(uid)
-      tools.Options(_options)
-      tools.Log(User.userData.nickname, 'Token更新失败', token.body)
-    }
-    else tools.Log(User.userData.nickname, 'Token更新失败')
   }
 }
 export let liveOrigin = 'http://live.bilibili.com'

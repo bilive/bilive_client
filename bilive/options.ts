@@ -113,7 +113,7 @@ export class Options extends EventEmitter {
         tools.logs.onLog = data => this._Send({ cmd: 'log', ts: 'log', msg: data })
       })
   }
-  private _onCMD(message: message) {
+  private async _onCMD(message: message) {
     let cmd = message.cmd
       , ts = message.ts
     // 获取log
@@ -177,7 +177,16 @@ export class Options extends EventEmitter {
         }
         if (msg === '') {
           for (let i in userData) userData[i] = setUserData[i]
-          if (userData.status && !_user.has(setUID)) _user.set(setUID, new User(userData))
+          if (userData.status && !_user.has(setUID)) {
+            let newUser = new User(setUID, userData)
+            _user.set(setUID, newUser)
+            await newUser.Start()
+            if (_user.has(setUID)) newUser.daily()
+          }
+          if (!userData.status && _user.has(setUID)) {
+            let delUser = <User>_user.get(setUID)
+            delUser.Stop()
+          }
           tools.Options(_options)
           this._Send({ cmd, ts, uid: setUID, data: userData })
         }
@@ -192,7 +201,10 @@ export class Options extends EventEmitter {
       if (delUID != null && user[delUID] != null) {
         let userData = user[delUID]
         delete _options.user[delUID]
-        if (_user.has(delUID)) _user.delete(delUID)
+        if (_user.has(delUID)) {
+          let delUser = <User>_user.get(delUID)
+          delUser.Stop()
+        }
         tools.Options(_options)
         this._Send({ cmd, ts, uid: delUID, data: userData })
       }

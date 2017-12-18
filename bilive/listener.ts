@@ -3,7 +3,7 @@ import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
 import { AppClient } from './lib/app_client'
 import { CommentClient } from './lib/comment_client'
-import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, lightenPathname, _options } from './index'
+import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, _options } from './index'
 /**
  * 监听服务器消息
  * 

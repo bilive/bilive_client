@@ -185,3 +185,14 @@ export function Sleep(ms: number): Promise<{}> {
     setTimeout(resolve, ms, 'sleep')
   })
 }
+/**
+ * XHR返回
+ * 
+ * @export
+ * @interface response
+ * @template T 
+ */
+export interface response<T> {
+  response: request.RequestResponse
+  body: T
+}
