@@ -22,7 +22,6 @@ export class User {
   private _sign = false
   private _treasureBox = false
   private _eventRoom = false
-  private _sendGift = false
   private _signGroup = false
   /**
    * 如果抽奖做到外面的话应该有用
@@ -49,7 +48,6 @@ export class User {
   }
   public Stop() {
     _user.delete(this.uid)
-    this.nextDay()
     if (this._heartloop != null) clearInterval(this._heartloop)
   }
   /**
@@ -62,7 +60,6 @@ export class User {
     this._sign = false
     this._treasureBox = false
     this._eventRoom = false
-    this._sendGift = false
     this._signGroup = false
   }
   /**
@@ -152,10 +149,11 @@ export class User {
    * 
    * @memberof User
    */
-  public daily() {
-    this.sign().catch(error => { tools.Error(this.userData.nickname, error) })
+  public async daily() {
+    await this.sign().catch(error => { tools.Error(this.userData.nickname, error) })
     this.treasureBox().catch(error => { tools.Error(this.userData.nickname, error) })
     this.eventRoom().catch(error => { tools.Error(this.userData.nickname, error) })
+    this.sendGift().catch(error => { tools.Error(this.userData.nickname, error) })
     this.signGroup().catch(error => { tools.Error(this.userData.nickname, error) })
   }
   /**
@@ -265,7 +263,7 @@ export class User {
    * @memberof User
    */
   public async sendGift() {
-    if (this._sendGift || !this.userData.sendGift) return
+    if (!this.userData.sendGift) return
     let roomID = this.userData.sendGiftRoom
       // 获取房间信息
       , room: request.Options = {
@@ -283,7 +281,6 @@ export class User {
         }
         , bagInfo = await tools.XHR<bagInfo>(bag, 'Android')
       if (bagInfo.response.statusCode === 200 && bagInfo.body.code === 0) {
-        this._sendGift = true
         if (bagInfo.body.data.length > 0) {
           for (let giftData of bagInfo.body.data) {
             // 永久礼物expireat值为0

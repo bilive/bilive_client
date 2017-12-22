@@ -119,7 +119,7 @@ export class Raffle {
       , raffleReward = await tools.XHR<raffleReward>(reward)
     if (raffleReward.response.statusCode !== 200) return
     if (raffleReward.body.code === -400 || raffleReward.body.data.status === 3) {
-      await tools.Sleep(3e+4)
+      await tools.Sleep(3e+4) //30s
       this._RaffleReward()
     }
     else {
