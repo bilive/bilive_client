@@ -3,7 +3,7 @@ import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
 import { AppClient } from './lib/app_client'
 import { CommentClient } from './lib/comment_client'
-import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, lightenPathname, _options } from './index'
+import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, _options } from './index'
 /**
  * 监听服务器消息
  * 
@@ -92,34 +92,11 @@ export class Listener extends EventEmitter {
    * @memberof Listener
    */
   private async _SYSGiftHandler(dataJson: SYS_GIFT) {
-    if (dataJson.real_roomid == null) return
-    if (dataJson.giftId === 106) {
-      let url = apiLiveOrigin + rafflePathname
-        , roomID = dataJson.real_roomid
-      this._RaffleCheck(url, roomID, 'raffle')
-      // this._AppLightenCheck(roomID)
-    }
-    else if (dataJson.giftId === 84) {
-      let roomID = dataJson.real_roomid
-        , check: request.Options = {
-          uri: `${apiLiveOrigin}${lightenPathname}/getLiveInfo?roomid=${roomID}`,
-          json: true,
-          headers: {
-            'Referer': `${liveOrigin}/${roomID}`
-          }
-        }
-        , lightenCheck = await tools.XHR<lightenCheck>(check).catch(tools.Error)
-      if (lightenCheck != null && lightenCheck.body.code === 0 && lightenCheck.body.data.length > 0) {
-        lightenCheck.body.data.forEach(value => {
-          let message: raffleMSG = {
-            cmd: 'lighten',
-            roomID,
-            id: value.lightenId
-          }
-          this._RaffleHandler(message)
-        })
-      }
-    }
+    if (dataJson.real_roomid == null || dataJson.giftId == null) return
+    let url = apiLiveOrigin + rafflePathname
+      , roomID = dataJson.real_roomid
+    this._RaffleCheck(url, roomID, 'raffle')
+    // this._AppLightenCheck(roomID)
   }
   /**
    * 检查房间抽奖信息

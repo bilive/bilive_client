@@ -1,8 +1,7 @@
 import * as tools from './lib/tools'
-import { Online } from './online'
 import { Options } from './options'
 import { Listener } from './listener'
-import { AppClient } from './lib/app_client'
+import { User } from './user'
 import { Raffle } from './raffle'
 /**
  * 主程序
@@ -13,6 +12,9 @@ import { Raffle } from './raffle'
 export class BiLive {
   constructor() {
   }
+  // 全局计时器
+  private _lastTime = ''
+  public loop: NodeJS.Timer
   /**
    * 开始主程序
    * 
@@ -21,14 +23,34 @@ export class BiLive {
   public async Start() {
     let option = await tools.Options()
     _options = option
-    let user = option.user
-    for (let uid in user) {
-      let userData = user[uid]
-      cookieJar[uid] = tools.setCookie(userData.cookie, [apiLiveOrigin])
+    for (let uid in _options.user) {
+      if (!_options.user[uid].status) continue
+      let user = new User(uid, _options.user[uid])
+      _user.set(uid, user)
+      await user.Start()
     }
     this.Options()
-    this.Online()
     this.Listener()
+    _user.forEach(user => user.daily())
+    this.loop = setInterval(() => this._loop(), 5e+4) // 50s
+  }
+  /**
+   * 计时器
+   * 
+   * @private
+   * @memberof BiLive
+   */
+  private async _loop() {
+    let csttime = Date.now() + 2.88e+7
+      , cst = new Date(csttime)
+      , cstString = cst.toUTCString().substr(17, 5) // 'hh:mm'
+    if (cstString === this._lastTime) return
+    this._lastTime = cstString
+    let cstHour = cst.getUTCHours()
+      , cstMin = cst.getUTCMinutes()
+    if (cstString === '00:10') _user.forEach(user => user.nextDay())
+    else if (cstString === '13:30') _user.forEach(user => user.sendGift().catch(error => { tools.Error(user.userData.nickname, error) }))
+    if (cstMin === 30 && cstHour % 8 === 0) _user.forEach(user => user.daily())
   }
   /**
    * 用户设置
@@ -38,18 +60,6 @@ export class BiLive {
   public Options() {
     const SOptions = new Options()
     SOptions.Start()
-  }
-  /**
-   * 在线挂机
-   * 
-   * @memberof BiLive
-   */
-  public Online() {
-    const SOnline = new Online()
-    SOnline
-      .on('cookieError', this._CookieError.bind(this))
-      .on('tokenError', this._TokenError.bind(this))
-      .Start()
   }
   /**
    * 监听
@@ -70,81 +80,31 @@ export class BiLive {
    * @memberof BiLive
    */
   private _Raffle(raffleMSG: raffleMSG | appLightenMSG) {
-    let usersData = _options.user
-    for (let uid in usersData) {
-      let userData = usersData[uid], jar = cookieJar[uid]
-      if (userData.status && userData.raffle) {
-        let raffleOptions: raffleOptions = {
-          raffleId: raffleMSG.id,
-          roomID: raffleMSG.roomID,
-          userData,
-          jar
-        }
-        switch (raffleMSG.cmd) {
-          case 'smallTV':
-            new Raffle(raffleOptions).SmallTV().catch(error => { tools.Error(userData.nickname, error) })
-            break
-          case 'raffle':
-            new Raffle(raffleOptions).Raffle().catch(error => { tools.Error(userData.nickname, error) })
-            break
-          case 'lighten':
-            new Raffle(raffleOptions).Lighten().catch(error => { tools.Error(userData.nickname, error) })
-            break
-          case 'appLighten':
-            raffleOptions.type = raffleMSG.type
-            new Raffle(raffleOptions).AppLighten().catch(error => { tools.Error(userData.nickname, error) })
-            break
-          default:
-            break
-        }
+    _user.forEach(User => {
+      if (!User.userData.raffle) return
+      let raffleOptions: raffleOptions = {
+        raffleId: raffleMSG.id,
+        roomID: raffleMSG.roomID,
+        User: User
       }
-    }
-  }
-  /**
-   * 监听cookie失效事件
-   * 
-   * @private
-   * @param {string} uid
-   * @memberof BiLive
-   */
-  private async _CookieError(uid: string) {
-    let userData = _options.user[uid]
-    tools.Log(userData.nickname, 'Cookie已失效')
-    let cookie = await AppClient.GetCookie(userData.accessToken)
-    if (cookie != null) {
-      cookieJar[uid] = cookie
-      _options.user[uid].cookie = cookie.getCookieString(apiLiveOrigin)
-      _options.user[uid].biliUID = parseInt(tools.getCookie(cookie, 'DedeUserID'))
-      tools.Options(_options)
-      tools.Log(userData.nickname, 'Cookie已更新')
-    }
-    else this._TokenError(uid)
-  }
-  /**
-   * 监听token失效事件
-   * 
-   * @private
-   * @param {string} uid
-   * @memberof BiLive
-   */
-  private async _TokenError(uid: string) {
-    let userData = _options.user[uid]
-    tools.Log(userData.nickname, 'Token已失效')
-    let token = await AppClient.GetToken({
-      userName: userData.userName,
-      passWord: userData.passWord
+      switch (raffleMSG.cmd) {
+        case 'smallTV':
+          new Raffle(raffleOptions).SmallTV().catch(error => { tools.Error(User.userData.nickname, error) })
+          break
+        case 'raffle':
+          new Raffle(raffleOptions).Raffle().catch(error => { tools.Error(User.userData.nickname, error) })
+          break
+        case 'lighten':
+          new Raffle(raffleOptions).Lighten().catch(error => { tools.Error(User.userData.nickname, error) })
+          break
+        case 'appLighten':
+          raffleOptions.type = raffleMSG.type
+          new Raffle(raffleOptions).AppLighten().catch(error => { tools.Error(User.userData.nickname, error) })
+          break
+        default:
+          break
+      }
     })
-    if (typeof token === 'string') {
-      _options.user[uid].accessToken = token
-      tools.Options(_options)
-      tools.Log(userData.nickname, 'Token已更新')
-    }
-    else if (token != null && token.response.statusCode === 200) {
-      _options.user[uid].status = false
-      tools.Options(_options)
-      tools.Log(userData.nickname, 'Token更新失败', token.body)
-    }
-    else tools.Log(userData.nickname, 'Token更新失败')
   }
 }
 export let liveOrigin = 'http://live.bilibili.com'
@@ -152,5 +112,5 @@ export let liveOrigin = 'http://live.bilibili.com'
   , smallTVPathname = '/gift/v2/smalltv'
   , rafflePathname = '/activity/v1/Raffle'
   , lightenPathname = '/activity/v1/NeedYou'
-  , cookieJar: cookieJar = {}
+  , _user: Map<string, User> = new Map()
   , _options: _options

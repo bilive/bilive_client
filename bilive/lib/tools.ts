@@ -113,8 +113,7 @@ export function Options(options?: _options): Promise<_options> {
       resolve(option)
     }
     else {
-      let option = JSON.stringify(options)
-      fs.writeFileSync(dirname + '/options/options.json', option)
+      fs.writeFileSync(dirname + '/options/options.json', JSON.stringify(options))
       resolve(options)
     }
   })
@@ -156,7 +155,7 @@ export function Hash(algorithm: string, data: string | Buffer): string {
  */
 export function Log(message?: any, ...optionalParams: any[]) {
   let log = util.format(`${new Date().toString().slice(4, 24)} :`, message, ...optionalParams)
-  if (logs.data.length > 2000) logs.data.shift()
+  if (logs.data.length > 500) logs.data.shift()
   if (typeof logs.onLog === 'function') logs.onLog(log)
   logs.data.push(log)
   console.log(log)
@@ -185,4 +184,15 @@ export function Sleep(ms: number): Promise<{}> {
   return new Promise(resolve => {
     setTimeout(resolve, ms, 'sleep')
   })
+}
+/**
+ * XHR返回
+ * 
+ * @export
+ * @interface response
+ * @template T 
+ */
+export interface response<T> {
+  response: request.RequestResponse
+  body: T
 }

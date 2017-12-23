@@ -92,8 +92,8 @@
       "type": "boolean"
     },
     "eventRoom": {
-      "description": "活动道具",
-      "tip": "挂取活动道具",
+      "description": "每日任务",
+      "tip": "限时的三个每日任务",
       "type": "boolean"
     },
     "smallTV": {

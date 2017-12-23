@@ -40,8 +40,8 @@ interface userData {
   eventRoom: boolean
   smallTV: boolean
   raffle: boolean
-  sendGift: boolean,
-  sendGiftRoom: number,
+  sendGift: boolean
+  sendGiftRoom: number
   signGroup: boolean
 }
 interface optionsInfo {
@@ -70,9 +70,6 @@ interface configInfoData {
   description: string
   tip: string
   type: string
-}
-interface cookieJar {
-  [index: string]: request.CookieJar
 }
 // app_client
 /**
@@ -195,10 +192,8 @@ interface raffleOptions {
   type?: string
   raffleId: number
   roomID: number
-  userData: userData
-  jar: request.CookieJar
+  User: User
 }
-/**
 /**
  * 参与抽奖信息
  * 
@@ -453,15 +448,4 @@ interface signGroup {
 interface signGroupData {
   add_num: number
   status: number
-}
-// tools
-/**
- * XHR返回
- * 
- * @interface response
- * @template T 
- */
-interface response<T> {
-  response: request.RequestResponse
-  body: T
 }
