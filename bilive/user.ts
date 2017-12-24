@@ -274,6 +274,7 @@ export class User {
     if (roomInfo.response.statusCode === 200 && roomInfo.body.code === 0) {
       // masterID
       let mid = roomInfo.body.data.mid
+        , room_id = roomInfo.body.data.room_id
         // 获取包裹信息
         , bag: request.Options = {
           uri: `${apiLiveOrigin}/gift/v2/gift/m_bag_list?${AppClient.ParamsSign(this.baseQuery)}`,
@@ -289,7 +290,7 @@ export class User {
               let send: request.Options = {
                 method: 'POST',
                 uri: `${apiLiveOrigin}/gift/v2/live/bag_send`,
-                body: AppClient.ParamsSign(`bag_id=${giftData.id}&biz_code=live&biz_id=${roomID}&gift_id=${giftData.gift_id}&gift_num=${giftData.gift_num}&ruid=${mid}&uid=${giftData.uid}&rnd=${AppClient.RND}&${this.baseQuery}`),
+                body: AppClient.ParamsSign(`bag_id=${giftData.id}&biz_code=live&biz_id=${room_id}&gift_id=${giftData.gift_id}&gift_num=${giftData.gift_num}&ruid=${mid}&uid=${giftData.uid}&rnd=${AppClient.RND}&${this.baseQuery}`),
                 json: true
               }
                 , sendBag = await tools.XHR<sendBag>(send, 'Android')
