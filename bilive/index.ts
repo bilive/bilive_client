@@ -23,10 +23,10 @@ export class BiLive {
   public async Start() {
     let option = await tools.Options()
     _options = option
+    await tools.testIP(_options.apiIPs)
     for (let uid in _options.user) {
       if (!_options.user[uid].status) continue
       let user = new User(uid, _options.user[uid])
-      _user.set(uid, user)
       await user.Start()
     }
     this.Options()

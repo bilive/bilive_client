@@ -14,15 +14,15 @@
   "author": "lzghzr",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^8.0.53",
-    "@types/request": "^2.0.8",
-    "@types/ws": "^3.2.0",
+    "@types/node": "^8.5.2",
+    "@types/request": "^2.0.9",
+    "@types/ws": "^3.2.1",
     "npm-run-posix-or-windows": "^2.0.2",
     "rimraf": "^2.6.2",
-    "typescript": "^2.6.1"
+    "typescript": "^2.6.2"
   },
   "dependencies": {
     "request": "^2.83.0",
-    "ws": "^3.3.2"
+    "ws": "^3.3.3"
   }
 }
