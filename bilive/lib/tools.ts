@@ -12,7 +12,31 @@ import { apiLiveOrigin } from '../index'
  * @param {('PC' | 'Android' | 'WebView')} [platform='PC'] 
  * @returns {Promise<response<T>>} 
  */
-export function XHR<T>(options: request.Options, platform: 'PC' | 'Android' | 'WebView' = 'PC'): Promise<response<T>> {
+
+
+
+
+/**
+ *
+ * 也是计时器 <- 不是的
+ * 
+ * 用于延迟抽奖的相关代码，防止多用户环境下并发过高直接被Ban IP
+ * # 为了加这个，强行学习了一波Typescript和ES6，因为不想修改原有的抽奖代码，理论上来说使用异步队列的效果更好。
+ * 大概就是通过 _lastQueueTime的设计和_timeout函数，将每个await _QuestionQueue()的语句都延迟固定的时间才得到响应,
+ * */
+let _lastQueueTime:number = 0;//
+async function _QuestionQueue(delayTime:number){
+    let nowTime:number = (new Date()).valueOf(); //获取unix时间戳，精确到毫秒
+    if(nowTime - _lastQueueTime > delayTime){
+        _lastQueueTime = nowTime;
+        return;
+    }else{
+        _lastQueueTime+=delayTime;
+        await Sleep(_lastQueueTime - nowTime); //关键，强行延迟到目标时间的语句
+    }
+}
+export async function XHR<T>(options: request.Options, platform: 'PC' | 'Android' | 'WebView' = 'PC'): Promise<response<T>> {
+  await _QuestionQueue(50); // 每个请求都延迟50ms
   options.gzip = true
   // 添加头信息
   let headers: request.Headers
