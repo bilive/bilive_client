@@ -149,11 +149,11 @@ export class User {
    * @memberof User
    */
   public async daily() {
-    await this.sign().catch(error => { tools.Error(this.userData.nickname, error) })
-    this.treasureBox().catch(error => { tools.Error(this.userData.nickname, error) })
-    this.eventRoom().catch(error => { tools.Error(this.userData.nickname, error) })
-    this.sendGift().catch(error => { tools.Error(this.userData.nickname, error) })
-    this.signGroup().catch(error => { tools.Error(this.userData.nickname, error) })
+    await this.sign().catch(error => { tools.Error(this.userData.nickname, '每日签到', error) })
+    this.treasureBox().catch(error => { tools.Error(this.userData.nickname, '每日宝箱', error) })
+    this.eventRoom().catch(error => { tools.Error(this.userData.nickname, '每日任务', error) })
+    this.sendGift().catch(error => { tools.Error(this.userData.nickname, '自动送礼', error) })
+    this.signGroup().catch(error => { tools.Error(this.userData.nickname, '应援团签到', error) })
   }
   /**
    * 每日签到

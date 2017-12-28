@@ -204,7 +204,7 @@ export class CommentClient extends EventEmitter {
     }
     else {
       (<ws>this._Client).close();
-      (<ws>this._Client).terminate();
+      (<ws>this._Client).terminate()
     }
     this._Client.removeAllListeners()
   }

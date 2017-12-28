@@ -6,7 +6,6 @@ import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
 import { User } from './user'
 import { _options, _user } from './index'
-import { setInterval, clearInterval } from 'timers';
 /**
  * 程序设置
  * 

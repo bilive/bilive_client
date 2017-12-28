@@ -43,14 +43,22 @@ function getHeaders(platform: string): request.Headers {
 // 获取api的ip
 let api: IP
 class IP {
-  constructor(IPs: string[]) {
-    this._IPs = IPs
+  constructor() {
+    (<any>this.httpAgent).createConnection = (options: net.NetConnectOpts, callback: Function): net.Socket => {
+      (<net.TcpSocketConnectOpts>options).lookup = (hostname, options, callback) => {
+        let ip = this.ip
+        if (ip != null) callback(null, ip, 4)
+        else dns.lookup(hostname, options, callback)
+      }
+      return net.createConnection(options, callback)
+    }
   }
-  private _IPs: string[]
   private _lastIP: number = 0
+  public IPs: string[] = []
+  public httpAgent = new http.Agent()
   public get ip(): string {
-    if (this._lastIP >= this._IPs.length) this._lastIP = 0
-    return this._IPs[this._lastIP++]
+    if (this._lastIP >= this.IPs.length) this._lastIP = 0
+    return this.IPs[this._lastIP++]
   }
 }
 /**
@@ -60,8 +68,9 @@ class IP {
  * @param {string[]} apiIPs 
  */
 export async function testIP(apiIPs: string[]) {
-  let canUserIP: string[] = []
+  let useful: string[] = []
     , head: Promise<{}>[] = []
+  if (api == null) api = new IP()
   apiIPs.forEach(ip => {
     let headers = getHeaders('PC')
     headers['host'] = 'api.live.bilibili.com'
@@ -73,29 +82,14 @@ export async function testIP(apiIPs: string[]) {
     }
     head.push(new Promise(resolve => {
       request(options, (error, response) => {
-        if (error == null && response.statusCode === 200) canUserIP.push(ip)
+        if (error == null && response.statusCode === 200) useful.push(ip)
         resolve()
       })
     }))
   })
   await Promise.all(head)
-  if (canUserIP.length === 0) throw '没有可用ip'
-  else api = new IP(canUserIP)
-}
-/** 
- * 用户代理
- * 估计是没什么人用这个, v0.11.4就有的东西, 居然d.ts都不全
- */
-let httpAgent = new http.Agent();
-(<any>httpAgent).createConnection = (options: { port: number, host: string }, callback: Function) => {
-  return net.createConnection({
-    port: options.port,
-    host: options.host,
-    lookup: (hostname, options, callback) => {
-      if (hostname === 'api.live.bilibili.com' && typeof callback === 'function') return callback(null, api.ip, 4)
-      else return dns.lookup(hostname, options, callback)
-    }
-  }, callback)
+  if (useful.length === 0) Log('没有可用ip')
+  api.IPs = useful
 }
 /**
  * 添加request头信息
@@ -109,7 +103,7 @@ let httpAgent = new http.Agent();
 export function XHR<T>(options: request.OptionsWithUri, platform: 'PC' | 'Android' | 'WebView' = 'PC'): Promise<response<T>> {
   options.gzip = true
   // 添加用户代理
-  if ((<string>options.uri).includes(apiLiveOrigin)) options.agent = httpAgent
+  if (typeof options.uri === 'string' && options.uri.includes(apiLiveOrigin)) options.agent = api.httpAgent
   // 添加头信息
   let headers = getHeaders(platform)
   options.headers = options.headers == null ? headers : Object.assign(headers, options.headers)
