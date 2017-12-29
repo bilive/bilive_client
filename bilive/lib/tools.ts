@@ -40,15 +40,18 @@ function getHeaders(platform: string): request.Headers {
       }
   }
 }
-// 获取api的ip
-let api: IP
+/**
+ * 获取api的ip
+ * 
+ * @class IP
+ */
 class IP {
   constructor() {
     (<any>this.httpAgent).createConnection = (options: net.NetConnectOpts, callback: Function): net.Socket => {
       (<net.TcpSocketConnectOpts>options).lookup = (hostname, options, callback) => {
         let ip = this.ip
-        if (ip != null) callback(null, ip, 4)
-        else dns.lookup(hostname, options, callback)
+        if (ip === '') dns.lookup(hostname, options, callback)
+        else callback(null, ip, 4)
       }
       return net.createConnection(options, callback)
     }
@@ -57,10 +60,12 @@ class IP {
   public IPs: string[] = []
   public httpAgent = new http.Agent()
   public get ip(): string {
-    if (this._lastIP >= this.IPs.length) this._lastIP = 0
+    if (this.IPs.length === 0) return ''
+    else if (this._lastIP >= this.IPs.length) this._lastIP = 0
     return this.IPs[this._lastIP++]
   }
 }
+const api = new IP()
 /**
  * 测试可用ip
  * 
@@ -70,7 +75,6 @@ class IP {
 export async function testIP(apiIPs: string[]) {
   let useful: string[] = []
     , head: Promise<{}>[] = []
-  if (api == null) api = new IP()
   apiIPs.forEach(ip => {
     let headers = getHeaders('PC')
     headers['host'] = 'api.live.bilibili.com'
@@ -88,7 +92,7 @@ export async function testIP(apiIPs: string[]) {
     }))
   })
   await Promise.all(head)
-  if (useful.length === 0) Log('没有可用ip')
+  Log('可用ip数量为', useful.length)
   api.IPs = useful
 }
 /**
