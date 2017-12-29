@@ -6,6 +6,7 @@
  */
 interface _options {
   server: server
+  apiIPs: string[]
   config: config
   user: userCollection
   newUserData: userData
@@ -192,7 +193,7 @@ interface raffleOptions {
   type?: string
   raffleId: number
   roomID: number
-  User: User
+  User: any
 }
 /**
  * 参与抽奖信息

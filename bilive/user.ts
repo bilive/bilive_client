@@ -22,7 +22,6 @@ export class User {
   private _sign = false
   private _treasureBox = false
   private _eventRoom = false
-  private _signGroup = false
   /**
    * 如果抽奖做到外面的话应该有用
    * 
@@ -44,6 +43,7 @@ export class User {
     this.jar = tools.setCookie(this.userData.cookie, [apiLiveOrigin])
     let test = await this._heart().catch(error => { return error })
     if (test === 'stop') return
+    _user.set(this.uid, this)
     this._heartloop = setInterval(() => this._heart(), 3e+5) // 5min
   }
   public Stop() {
@@ -60,7 +60,6 @@ export class User {
     this._sign = false
     this._treasureBox = false
     this._eventRoom = false
-    this._signGroup = false
   }
   /**
    * 心跳以及检查cookie
@@ -150,11 +149,11 @@ export class User {
    * @memberof User
    */
   public async daily() {
-    await this.sign().catch(error => { tools.Error(this.userData.nickname, error) })
-    this.treasureBox().catch(error => { tools.Error(this.userData.nickname, error) })
-    this.eventRoom().catch(error => { tools.Error(this.userData.nickname, error) })
-    this.sendGift().catch(error => { tools.Error(this.userData.nickname, error) })
-    this.signGroup().catch(error => { tools.Error(this.userData.nickname, error) })
+    await this.sign().catch(error => { tools.Error(this.userData.nickname, '每日签到', error) })
+    this.treasureBox().catch(error => { tools.Error(this.userData.nickname, '每日宝箱', error) })
+    this.eventRoom().catch(error => { tools.Error(this.userData.nickname, '每日任务', error) })
+    this.sendGift().catch(error => { tools.Error(this.userData.nickname, '自动送礼', error) })
+    this.signGroup().catch(error => { tools.Error(this.userData.nickname, '应援团签到', error) })
   }
   /**
    * 每日签到
@@ -314,7 +313,7 @@ export class User {
    * @memberof User
    */
   public async signGroup() {
-    if (this._signGroup || !this.userData.signGroup) return
+    if (!this.userData.signGroup) return
     // 获取已加入应援团列表
     let group: request.Options = {
       uri: `${apiLiveOrigin}/link_group/v1/member/my_groups?${AppClient.ParamsSign(this.baseQuery)}`,
@@ -322,7 +321,6 @@ export class User {
     }
       , linkGroup = await tools.XHR<linkGroup>(group, 'Android')
     if (linkGroup.response.statusCode === 200 && linkGroup.body.code === 0) {
-      this._signGroup = true
       if (linkGroup.body.data.list.length > 0) {
         for (let groupInfo of linkGroup.body.data.list) {
           // 应援团自动签到

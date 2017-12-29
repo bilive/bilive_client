@@ -6,7 +6,6 @@ import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
 import { User } from './user'
 import { _options, _user } from './index'
-import { setInterval, clearInterval } from 'timers';
 /**
  * 程序设置
  * 
@@ -179,7 +178,6 @@ export class Options extends EventEmitter {
           for (let i in userData) userData[i] = setUserData[i]
           if (userData.status && !_user.has(setUID)) {
             let newUser = new User(setUID, userData)
-            _user.set(setUID, newUser)
             await newUser.Start()
             if (_user.has(setUID)) newUser.daily()
           }
