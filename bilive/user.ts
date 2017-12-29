@@ -40,10 +40,10 @@ export class User {
    */
   private _heartloop: NodeJS.Timer
   public async Start() {
+    _user.set(this.uid, this)
     this.jar = tools.setCookie(this.userData.cookie, [apiLiveOrigin])
     let test = await this._heart().catch(error => { return error })
     if (test === 'stop') return
-    _user.set(this.uid, this)
     this._heartloop = setInterval(() => this._heart(), 3e+5) // 5min
   }
   public Stop() {
