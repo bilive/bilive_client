@@ -27,7 +27,8 @@ export class BiLive {
     for (let uid in _options.user) {
       if (!_options.user[uid].status) continue
       let user = new User(uid, _options.user[uid])
-      await user.Start()
+        , status = await user.Start()
+      if (status === 'captcha') user.Stop()
     }
     this.Options()
     this.Listener()
@@ -84,7 +85,7 @@ export class BiLive {
    */
   private _Raffle(raffleMSG: raffleMSG | appLightenMSG) {
     _user.forEach(user => {
-      if (!user.userData.raffle) return
+      if (user.captcha !== '' || !user.userData.raffle) return
       let raffleOptions: raffleOptions = {
         raffleId: raffleMSG.id,
         roomID: raffleMSG.roomID,

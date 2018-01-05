@@ -167,6 +167,7 @@ export class Options extends EventEmitter {
       if (setUID != null && user[setUID] != null) {
         let userData = user[setUID]
           , msg = ''
+          , captcha = ''
           , setUserData = <userData>message.data || {}
         for (let i in userData) {
           if (typeof userData[i] !== typeof setUserData[i]) {
@@ -178,15 +179,24 @@ export class Options extends EventEmitter {
           for (let i in userData) userData[i] = setUserData[i]
           if (userData.status && !_user.has(setUID)) {
             let newUser = new User(setUID, userData)
-            await newUser.Start()
-            if (_user.has(setUID)) newUser.daily()
+              , status = await newUser.Start()
+            // 返回状态为'captcha'时, User.captcha为jpeg base64
+            if (status === 'captcha') captcha = newUser.captcha
+            else if (_user.has(setUID)) newUser.daily()
           }
-          if (!userData.status && _user.has(setUID)) {
-            let delUser = <User>_user.get(setUID)
-            delUser.Stop()
+          else if (userData.status && _user.has(setUID)) {
+            let captchaUser = <User>_user.get(setUID)
+            if (captchaUser.captcha !== '' && message.captcha != null) {
+              captchaUser.captcha = message.captcha
+              let status = await captchaUser.Start()
+              if (status === 'captcha') captcha = captchaUser.captcha
+              else if (_user.has(setUID)) captchaUser.daily()
+            }
           }
+          else if (!userData.status && _user.has(setUID)) (<User>_user.get(setUID)).Stop()
           tools.Options(_options)
-          this._Send({ cmd, ts, uid: setUID, data: userData })
+          if (captcha === '') this._Send({ cmd, ts, uid: setUID, data: userData })
+          else this._Send({ cmd, ts, uid: setUID, msg: 'captcha', data: userData, captcha })
         }
         else this._Send({ cmd, ts, uid: setUID, msg, data: userData })
       }
@@ -199,10 +209,7 @@ export class Options extends EventEmitter {
       if (delUID != null && user[delUID] != null) {
         let userData = user[delUID]
         delete _options.user[delUID]
-        if (_user.has(delUID)) {
-          let delUser = <User>_user.get(delUID)
-          delUser.Stop()
-        }
+        if (_user.has(delUID)) (<User>_user.get(delUID)).Stop()
         tools.Options(_options)
         this._Send({ cmd, ts, uid: delUID, data: userData })
       }
@@ -236,4 +243,5 @@ interface message {
   msg?: string
   uid?: string
   data?: config | optionsInfo | string[] | userData
+  captcha?: string
 }

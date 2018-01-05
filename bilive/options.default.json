@@ -64,6 +64,7 @@
     "passWord": "password",
     "biliUID": 0,
     "accessToken": "",
+    "refreshToken": "",
     "cookie": "",
     "status": false,
     "doSign": false,
@@ -110,11 +111,6 @@
       "description": "B站UID",
       "tip": "bilibili站内的UID, 自动获取, 一般无用",
       "type": "number"
-    },
-    "accessToken": {
-      "description": "Token",
-      "tip": "access token, 自动获取, 一般无用",
-      "type": "string"
     },
     "cookie": {
       "description": "Cookie",

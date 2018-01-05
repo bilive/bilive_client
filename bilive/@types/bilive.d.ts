@@ -34,6 +34,7 @@ interface userData {
   passWord: string
   biliUID: number
   accessToken: string
+  refreshToken: string
   cookie: string
   status: boolean
   doSign: boolean
@@ -46,6 +47,7 @@ interface userData {
   signGroup: boolean
 }
 interface optionsInfo {
+  [index: string]: configInfoData
   defaultUserID: configInfoData
   defaultRoomID: configInfoData
   apiOrigin: configInfoData
@@ -55,7 +57,6 @@ interface optionsInfo {
   userName: configInfoData
   passWord: configInfoData
   biliUID: configInfoData
-  accessToken: configInfoData
   cookie: configInfoData
   status: configInfoData
   doSign: configInfoData
@@ -71,46 +72,6 @@ interface configInfoData {
   description: string
   tip: string
   type: string
-}
-// app_client
-/**
- * 公钥返回
- * 
- * @interface getKeyResponse
- */
-interface getKeyResponse {
-  ts: number
-  code: number
-  data: getKeyResponseData
-}
-interface getKeyResponseData {
-  hash: string
-  key: string
-}
-/**
- * 登录返回
- * 
- * @interface loginResponse
- */
-interface loginResponse {
-  ts: number
-  code: number
-  data: loginResponseData
-}
-interface loginResponseData {
-  mid: number
-  access_token: string
-  refresh_token: string
-  expires_in: number
-}
-/**
- * 用户名, 密码
- * 
- * @interface userLogin
- */
-interface userLogin {
-  userName: string
-  passWord: string
 }
 // bilive_client
 /**

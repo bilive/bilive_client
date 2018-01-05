@@ -1,6 +1,6 @@
 import * as request from 'request'
 import * as tools from './lib/tools'
-import { AppClient } from './lib/app_client'
+import { AppClient, loginOptions, authResponse } from './lib/app_client'
 import { apiLiveOrigin, _options, liveOrigin, _user } from './index'
 
 export class User {
@@ -22,6 +22,8 @@ export class User {
   private _sign = false
   private _treasureBox = false
   private _eventRoom = false
+  // 验证码
+  public captcha = ''
   /**
    * 如果抽奖做到外面的话应该有用
    * 
@@ -29,7 +31,7 @@ export class User {
    * @memberof User
    */
   public get baseQuery() {
-    return `access_key=${this.userData.accessToken}&${AppClient.baseQuery}`
+    return `access_key=${this.userData.accessToken}`
   }
   /**
    * 负责心跳定时
@@ -39,16 +41,30 @@ export class User {
    * @memberof User
    */
   private _heartloop: NodeJS.Timer
+  /**
+   * 开始挂机
+   * 当账号出现异常时, 会返回'captcha'或'stop'
+   * 
+   * @returns 
+   * @memberof User
+   */
   public async Start() {
-    _user.set(this.uid, this)
-    this.jar = tools.setCookie(this.userData.cookie, [apiLiveOrigin])
-    let test = await this._heart().catch(error => { return error })
-    if (test === 'stop') return
-    this._heartloop = setInterval(() => this._heart(), 3e+5) // 5min
+    clearInterval(this._heartloop)
+    if (!_user.has(this.uid)) _user.set(this.uid, this)
+    if (this.jar == null) this.jar = tools.setCookie(this.userData.cookie)
+    let test = await this._heart()
+    if (typeof test === 'string') return test
+    this._heartloop = setInterval(async () => {
+      let test = await this._heart()
+      if (test === 'captcha') this.Stop()
+    }, 3e+5) // 5min
+    return
   }
   public Stop() {
+    clearInterval(this._heartloop)
     _user.delete(this.uid)
-    if (this._heartloop != null) clearInterval(this._heartloop)
+    this.userData.status = false
+    tools.Options(_options)
   }
   /**
    * 零点重置
@@ -68,8 +84,9 @@ export class User {
    * @memberof User
    */
   private async _heart() {
-    let heartTest = await this._onlineHeart().catch(error => { return error })
-    if (typeof heartTest === 'string') await this._cookieError().catch(error => { return error })
+    let heartTest = await this._onlineHeart()
+    if (typeof heartTest === 'string') return this._cookieError()
+    return
   }
   /**
    * 发送在线心跳包
@@ -87,16 +104,17 @@ export class User {
       }
     }
       , heartPC = await tools.XHR<userOnlineHeart>(online)
-    if (heartPC.response.statusCode === 200 && heartPC.body.code === 3) throw 'cookieError'
+    if (heartPC.response.statusCode === 200 && heartPC.body.code === 3) return 'cookieError'
     // 客户端
     let heartbeat: request.Options = {
       method: 'POST',
-      uri: `${apiLiveOrigin}/mobile/userOnlineHeart?${AppClient.ParamsSign(this.baseQuery)}`,
+      uri: `${apiLiveOrigin}/mobile/userOnlineHeart?${AppClient.signQueryBase(this.baseQuery)}`,
       body: `room_id=${_options.config.defaultRoomID}&scale=xxhdpi`,
       json: true
     }
       , heart = await tools.XHR<userOnlineHeart>(heartbeat, 'Android')
-    if (heart.response.statusCode === 200 && heart.body.code === 3) throw 'tokenError'
+    if (heart.response.statusCode === 200 && heart.body.code === 3) return 'tokenError'
+    return
   }
   /**
    * cookie失效
@@ -106,13 +124,11 @@ export class User {
    */
   private async _cookieError() {
     tools.Log(this.userData.nickname, 'Cookie已失效')
-    let cookie = await AppClient.GetCookie(this.userData.accessToken)
-    if (cookie != null) {
-      this.jar = cookie
-      this.userData.cookie = cookie.getCookieString(apiLiveOrigin)
-      this.userData.biliUID = parseInt(tools.getCookie(cookie, 'DedeUserID'))
-      tools.Options(_options)
+    let refresh = await AppClient.refresh(this.userData.accessToken, this.userData.refreshToken)
+    if (refresh.status === AppClient.status.success) {
+      this._upgrade(refresh.data)
       tools.Log(this.userData.nickname, 'Cookie已更新')
+      return
     }
     else return this._tokenError()
   }
@@ -124,24 +140,59 @@ export class User {
    */
   private async _tokenError() {
     tools.Log(this.userData.nickname, 'Token已失效')
-    let token = await AppClient.GetToken({
+    let loginOptions: loginOptions = {
       userName: this.userData.userName,
       passWord: this.userData.passWord
-    })
-    if (typeof token === 'string') {
-      this.userData.accessToken = token
-      tools.Options(_options)
-      tools.Log(this.userData.nickname, 'Token已更新')
-      await this._cookieError()
     }
-    else if (token != null && token.response.statusCode === 200) {
+    if (this.captcha !== '') {
+      loginOptions.captcha = this.captcha
+      loginOptions.jar = this.jar
+    }
+    let login = await AppClient.login(loginOptions)
+    if (login.status === AppClient.status.success) {
+      clearInterval(this._heartloop)
+      this.captcha = ''
+      this._upgrade(login.data)
+      tools.Log(this.userData.nickname, 'Token已更新')
+    }
+    else if (login.status === AppClient.status.captcha) {
+      tools.Log(this.userData.nickname, '验证码错误')
+      let captcha = await AppClient.getCaptcha(this.jar)
+      if (captcha.status === AppClient.status.success) this.captcha = `data:image/jpeg;base64,${captcha.data.toString('base64')}`
+      this._heartloop = setInterval(() => this.Stop(), 6e+4) // 60s;
+      return 'captcha'
+    }
+    else if (login.status === AppClient.status.error) {
       this.Stop()
-      this.userData.status = false
-      tools.Options(_options)
-      tools.Log(this.userData.nickname, 'Token更新失败', token.body)
-      throw 'stop'
+      tools.Log(this.userData.nickname, 'Token更新失败', login.data)
+      return 'stop'
     }
     else tools.Log(this.userData.nickname, 'Token更新失败')
+    return
+  }
+  /**
+   * 更新cookie
+   * 
+   * @private
+   * @param {authResponse} authResponse 
+   * @memberof User
+   */
+  private _upgrade(authResponse: authResponse) {
+    this.userData.accessToken = authResponse.data.token_info.access_token
+    this.userData.refreshToken = authResponse.data.token_info.refresh_token
+    this.userData.biliUID = authResponse.data.token_info.mid
+    let jar = request.jar()
+    for (let domain of authResponse.data.cookie_info.domains) {
+      for (let cookie of authResponse.data.cookie_info.cookies) {
+        // @ts-ignore 此处为d.ts错误
+        jar.setCookie(`${cookie.name}=${cookie.value}; Domain=${domain}; Path=/`, `http://${domain}`)
+        // @ts-ignore 此处为d.ts错误
+        jar.setCookie(`${cookie.name}=${cookie.value}; Domain=${domain}; Path=/`, `https://${domain}`)
+      }
+    }
+    this.userData.cookie = jar.getCookieString(apiLiveOrigin)
+    this.jar = jar
+    tools.Options(_options)
   }
   /**
    * 日常
@@ -165,7 +216,7 @@ export class User {
     let ok = 0
     // 签到
     let sign: request.Options = {
-      uri: `${apiLiveOrigin}/AppUser/getSignInfo?${AppClient.ParamsSign(this.baseQuery)}`,
+      uri: `${apiLiveOrigin}/AppUser/getSignInfo?${AppClient.signQueryBase(this.baseQuery)}`,
       json: true
     }
       , signInfo = await tools.XHR<signInfo>(sign, 'Android')
@@ -175,7 +226,7 @@ export class User {
     }
     // 道具包裹
     let getBag: request.Options = {
-      uri: `${apiLiveOrigin}/AppBag/getSendGift?${AppClient.ParamsSign(this.baseQuery)}`,
+      uri: `${apiLiveOrigin}/AppBag/getSendGift?${AppClient.signQueryBase(this.baseQuery)}`,
       json: true
     }
       , getBagGift = await tools.XHR<getBagGift>(getBag, 'Android')
@@ -194,7 +245,7 @@ export class User {
     if (this._treasureBox || !this.userData.treasureBox) return
     // 获取宝箱状态,换房间会重新冷却
     let current: request.Options = {
-      uri: `${apiLiveOrigin}/mobile/freeSilverCurrentTask?${AppClient.ParamsSign(this.baseQuery)}`,
+      uri: `${apiLiveOrigin}/mobile/freeSilverCurrentTask?${AppClient.signQueryBase(this.baseQuery)}`,
       json: true
     }
       , currentTask = await tools.XHR<currentTask>(current, 'Android')
@@ -202,7 +253,7 @@ export class User {
       if (currentTask.body.code === 0) {
         await tools.Sleep(currentTask.body.data.minute * 6e4)
         let award: request.Options = {
-          uri: `${apiLiveOrigin}/mobile/freeSilverAward?${AppClient.ParamsSign(this.baseQuery)}`,
+          uri: `${apiLiveOrigin}/mobile/freeSilverAward?${AppClient.signQueryBase(this.baseQuery)}`,
           json: true
         }
         await tools.XHR<award>(award, 'Android')
@@ -228,7 +279,7 @@ export class User {
       , sha1 = tools.Hash('sha1', `${md5}bilibili`)
       , baseQuery = `access_key=${this.userData.accessToken}&${AppClient.baseQuery}`
       , share: request.Options = {
-        uri: `${apiLiveOrigin}/activity/v1/Common/shareCallback?${AppClient.ParamsSign(`roomid=${roomID}&sharing_plat=weibo&share_sign=${sha1}&${baseQuery}`)}`,
+        uri: `${apiLiveOrigin}/activity/v1/Common/shareCallback?${AppClient.signQueryBase(`roomid=${roomID}&sharing_plat=weibo&share_sign=${sha1}&${baseQuery}`)}`,
         json: true
       }
     let shareCallback = await tools.XHR<shareCallback>(share, 'Android')
@@ -266,7 +317,7 @@ export class User {
     let roomID = this.userData.sendGiftRoom
       // 获取房间信息
       , room: request.Options = {
-        uri: `${apiLiveOrigin}/AppRoom/index?${AppClient.ParamsSign(`room_id=${roomID}&${AppClient.baseQuery}`)}`,
+        uri: `${apiLiveOrigin}/AppRoom/index?${AppClient.signQueryBase(`room_id=${roomID}`)}`,
         json: true
       }
       , roomInfo = await tools.XHR<roomInfo>(room, 'Android')
@@ -276,7 +327,7 @@ export class User {
         , room_id = roomInfo.body.data.room_id
         // 获取包裹信息
         , bag: request.Options = {
-          uri: `${apiLiveOrigin}/gift/v2/gift/m_bag_list?${AppClient.ParamsSign(this.baseQuery)}`,
+          uri: `${apiLiveOrigin}/gift/v2/gift/m_bag_list?${AppClient.signQueryBase(this.baseQuery)}`,
           json: true
         }
         , bagInfo = await tools.XHR<bagInfo>(bag, 'Android')
@@ -289,7 +340,7 @@ export class User {
               let send: request.Options = {
                 method: 'POST',
                 uri: `${apiLiveOrigin}/gift/v2/live/bag_send`,
-                body: AppClient.ParamsSign(`bag_id=${giftData.id}&biz_code=live&biz_id=${room_id}&gift_id=${giftData.gift_id}&gift_num=${giftData.gift_num}&ruid=${mid}&uid=${giftData.uid}&rnd=${AppClient.RND}&${this.baseQuery}`),
+                body: AppClient.signQueryBase(`bag_id=${giftData.id}&biz_code=live&biz_id=${room_id}&gift_id=${giftData.gift_id}&gift_num=${giftData.gift_num}&ruid=${mid}&uid=${giftData.uid}&rnd=${AppClient.RND}&${this.baseQuery}`),
                 json: true
               }
                 , sendBag = await tools.XHR<sendBag>(send, 'Android')
@@ -316,7 +367,7 @@ export class User {
     if (!this.userData.signGroup) return
     // 获取已加入应援团列表
     let group: request.Options = {
-      uri: `${apiLiveOrigin}/link_group/v1/member/my_groups?${AppClient.ParamsSign(this.baseQuery)}`,
+      uri: `${apiLiveOrigin}/link_group/v1/member/my_groups?${AppClient.signQueryBase(this.baseQuery)}`,
       json: true
     }
       , linkGroup = await tools.XHR<linkGroup>(group, 'Android')
@@ -325,7 +376,7 @@ export class User {
         for (let groupInfo of linkGroup.body.data.list) {
           // 应援团自动签到
           let sign: request.Options = {
-            uri: `${apiLiveOrigin}/link_setting/v1/link_setting/sign_in?${AppClient.ParamsSign(`group_id=${groupInfo.group_id}&owner_id=${groupInfo.owner_uid}&${this.baseQuery}`)}`,
+            uri: `${apiLiveOrigin}/link_setting/v1/link_setting/sign_in?${AppClient.signQueryBase(`group_id=${groupInfo.group_id}&owner_id=${groupInfo.owner_uid}&${this.baseQuery}`)}`,
             json: true
           }
             , signGroup = await tools.XHR<signGroup>(sign, 'Android')

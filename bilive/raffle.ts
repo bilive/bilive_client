@@ -155,9 +155,8 @@ export class Raffle {
    * @memberof Raffle
    */
   public async AppLighten() {
-    let baseQuery = `access_key=${this._User.userData.accessToken}&${AppClient.baseQuery}`
-      , reward: request.Options = {
-        uri: `${apiLiveOrigin}/YunYing/roomEvent?${AppClient.ParamsSign(`event_type=${this._type}-${this._raffleId}&room_id=${this._roomID}&${baseQuery}`)}`,
+    let reward: request.Options = {
+        uri: `${apiLiveOrigin}/YunYing/roomEvent?${AppClient.signQueryBase(`event_type=${this._type}-${this._raffleId}&room_id=${this._roomID}&access_key=${this._User.userData.accessToken}`)}`,
         json: true
       }
       , appLightenReward = await tools.XHR<appLightenReward>(reward, 'Android')

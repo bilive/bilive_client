@@ -146,7 +146,7 @@ export class Listener extends EventEmitter {
    */
   private async _AppLightenCheck(roomID: number) {
     let room: request.Options = {
-      uri: `${apiLiveOrigin}/AppRoom/index?${AppClient.ParamsSign(`room_id=${roomID}&${AppClient.baseQuery}`)}`,
+      uri: `${apiLiveOrigin}/AppRoom/index?${AppClient.signQueryBase(`room_id=${roomID}`)}`,
       json: true
     }
       , roomInfo = await tools.XHR<roomInfo>(room, 'Android')

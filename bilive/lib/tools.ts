@@ -47,7 +47,8 @@ function getHeaders(platform: string): request.Headers {
  */
 class IP {
   constructor() {
-    (<any>this.httpAgent).createConnection = (options: net.NetConnectOpts, callback: Function): net.Socket => {
+    // @ts-ignore 此处为d.ts错误
+    this.httpAgent.createConnection = (options: net.NetConnectOpts, callback: Function): net.Socket => {
       (<net.TcpSocketConnectOpts>options).lookup = (hostname, options, callback) => {
         let ip = this.ip
         if (ip === '') dns.lookup(hostname, options, callback)
@@ -125,16 +126,24 @@ export function XHR<T>(options: request.OptionsWithUri, platform: 'PC' | 'Androi
  * 
  * @export
  * @param {string} cookieString
- * @param {string[]} urls
  * @returns {request.CookieJar}
  */
-export function setCookie(cookieString: string, urls: string[]): request.CookieJar {
+export function setCookie(cookieString: string): request.CookieJar {
   let jar = request.jar()
-  urls.forEach(url => {
-    cookieString.split(';').forEach((cookie) => {
-      jar.setCookie(request.cookie(cookie), url)
-    })
-  })
+    , domains = [
+      '.bilibili.com',
+      '.biligame.com',
+      '.im9.com'
+    ]
+  for (let domain of domains) {
+    let cookies = cookieString.split(';')
+    for (let cookie of cookies) {
+      // @ts-ignore 此处为d.ts错误
+      jar.setCookie(`${cookie}; Domain=${domain}; Path=/`, `http://${domain}`)
+      // @ts-ignore 此处为d.ts错误
+      jar.setCookie(`${cookie}; Domain=${domain}; Path=/`, `https://${domain}`)
+    }
+  }
   return jar
 }
 /**
@@ -149,9 +158,11 @@ export function setCookie(cookieString: string, urls: string[]): request.CookieJ
 export function getCookie(jar: request.CookieJar, key: string, url = apiLiveOrigin): string {
   let cookies = jar.getCookies(url)
     , cookieFind = cookies.find(cookie => {
-      if ((<any>cookie).key === key) return (<any>cookie).value
+      // @ts-ignore 此处为d.ts错误
+      if (cookie.key === key) return cookie.value
     })
-  return cookieFind == null ? '' : (<any>cookieFind).value
+  // @ts-ignore 此处为d.ts错误
+  return cookieFind == null ? '' : cookieFind.value
 }
 /**
  * 操作数据文件, 为了可以快速应用不使用数据库

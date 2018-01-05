@@ -1,52 +1,55 @@
 {
   "compilerOptions": {
-    /* Basic Options */
-    "target": "es2017",                       /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', or 'ESNEXT'. */
-    "module": "commonjs",                     /* Specify module code generation: 'commonjs', 'amd', 'system', 'umd', 'es2015', or 'ESNext'. */
-    // "lib": [],                             /* Specify library files to be included in the compilation:  */
-    // "allowJs": true,                       /* Allow javascript files to be compiled. */
-    // "checkJs": true,                       /* Report errors in .js files. */
-    // "jsx": "preserve",                     /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */
-    "declaration": false,                     /* Generates corresponding '.d.ts' file. */
-    "sourceMap": false,                       /* Generates corresponding '.map' file. */
-    // "outFile": "./",                       /* Concatenate and emit output to single file. */
-    "outDir": "build",                        /* Redirect output structure to the directory. */
-    // "rootDir": "./",                       /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
-    "removeComments": true,                   /* Do not emit comments to output. */
-    // "noEmit": true,                        /* Do not emit outputs. */
-    // "importHelpers": true,                 /* Import emit helpers from 'tslib'. */
-    // "downlevelIteration": true,            /* Provide full support for iterables in 'for-of', spread, and destructuring when targeting 'ES5' or 'ES3'. */
-    // "isolatedModules": true,               /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
-    /* Strict Type-Checking Options */
-    "strict": true,                           /* Enable all strict type-checking options. */
-    // "noImplicitAny": true,                 /* Raise error on expressions and declarations with an implied 'any' type. */
-    // "strictNullChecks": true,              /* Enable strict null checks. */
-    // "noImplicitThis": true,                /* Raise error on 'this' expressions with an implied 'any' type. */
-    // "alwaysStrict": true,                  /* Parse in strict mode and emit "use strict" for each source file. */
-    /* Additional Checks */
-    "noUnusedLocals": true,                   /* Report errors on unused locals. */
-    "noUnusedParameters": true,               /* Report errors on unused parameters. */
-    "noImplicitReturns": true,                /* Report error when not all code paths in function return a value. */
-    // "noFallthroughCasesInSwitch": true,    /* Report errors for fallthrough cases in switch statement. */
-    /* Module Resolution Options */
-    "moduleResolution": "node",               /* Specify module resolution strategy: 'node' (Node.js) or 'classic' (TypeScript pre-1.6). */
-    // "baseUrl": "./",                       /* Base directory to resolve non-absolute module names. */
-    // "paths": {},                           /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
-    // "rootDirs": [],                        /* List of root folders whose combined content represents the structure of the project at runtime. */
-    // "typeRoots": [],                       /* List of folders to include type definitions from. */
-    // "types": [],                           /* Type declaration files to be included in compilation. */
-    // "allowSyntheticDefaultImports": true,  /* Allow default imports from modules with no default export. This does not affect code emit, just typechecking. */
-    /* Source Map Options */
-    // "sourceRoot": "./",                    /* Specify the location where debugger should locate TypeScript files instead of source locations. */
-    // "mapRoot": "./",                       /* Specify the location where debugger should locate map files instead of generated locations. */
-    // "inlineSourceMap": true,               /* Emit a single file with source maps instead of having a separate file. */
-    // "inlineSources": true,                 /* Emit the source alongside the sourcemaps within a single file; requires '--inlineSourceMap' or '--sourceMap' to be set. */
-    /* Experimental Options */
-    // "experimentalDecorators": true,        /* Enables experimental support for ES7 decorators. */
-    // "emitDecoratorMetadata": true,         /* Enables experimental support for emitting type metadata for decorators. */
-    "newLine": "LF"
-  },
-  "exclude": [
-    "node_modules"
-  ]
+    /* 基本选项 */
+    "target": "es2017",                       /* 指定 ECMAScript 目标版本: "ES3"(默认)、"ES5"、"ES2015"、"ES2016"、"ES2017" 或 "ESNEXT"。 */
+    "module": "commonjs",                     /* 指定模块代码生成: "none"、"commonjs"、"amd"、"system"、"umd"、"es2015"或 "ESNext"。 */
+    // "lib": [],                             /* 指定要在编译中包括的库文件:  */
+    // "allowJs": true,                       /* 允许编译 JavaScript 文件。 */
+    // "checkJs": true,                       /* .js 文件中的报表出错。 */
+    // "jsx": "preserve",                     /* 指定 JSX 代码生成: "preserve"、"react-native" 或 "react"。 */
+    "declaration": false,                     /* 生成相应的 ".d.ts" 文件。 */
+    "sourceMap": false,                       /* 生成相应的 ".map" 文件。 */
+    // "outFile": "./",                       /* 连接输出并将其发出到单个文件。 */
+    "outDir": "build",                        /* 将输出结构重定向到目录。 */
+    // "rootDir": "./",                       /* 指定输入文件的根目录。与 --outDir 一起用于控制输出目录结构。 */
+    "removeComments": true,                   /* 请勿将注释发出到输出。 */
+    // "noEmit": true,                        /* 请勿发出输出。 */
+    // "importHelpers": true,                 /* 从 "tslib" 导入发出帮助程序。 */
+    // "downlevelIteration": true,            /* 以 "ES5" 或 "ES3" 设为目标时，对 "for-of"、传播和析构中的可迭代项提供完全支持。 */
+    // "isolatedModules": true,               /* 将每个文件转换为单独的模块(类似 "ts.transpileModule")。 */
+
+    /* 严格类型检查选项 */
+    "strict": true,                           /* 启用所有严格类型检查选项。 */
+    // "noImplicitAny": true,                 /* 对具有隐式 "any" 类型的表达式和声明引发错误。 */
+    // "strictNullChecks": true,              /* 启用严格的 NULL 检查。 */
+    // "strictFunctionTypes": true,           /* 对函数类型启用严格检查。 */
+    // "noImplicitThis": true,                /* 在带隐式“any" 类型的 "this" 表达式上引发错误。 */
+    // "alwaysStrict": true,                  /* 以严格模式进行分析，并为每个源文件发出 "use strict" 指令。 */
+
+    /* 其他检查 */
+    "noUnusedLocals": true,                   /* 报告未使用的局部变量上的错误。 */
+    "noUnusedParameters": true,               /* 报告未使用的参数上的错误。 */
+    "noImplicitReturns": true,                /* 在函数中的所有代码路径并非都返回值时报告错误。 */
+    "noFallthroughCasesInSwitch": true,       /* 报告 switch 语句中遇到 fallthrough 情况的错误。 */
+
+    /* 模块分辨率选项 */
+    "moduleResolution": "node",               /* 指定模块解析策略: "node" (Node.js)或 "classic" (TypeScript pre-1.6)。 */
+    // "baseUrl": "./",                       /* 用于解析非绝对模块名的基目录。 */
+    // "paths": {},                           /* 一系列条目，这些条目将重新映射导入内容，以查找与 "baseUrl" 有关的位置。 */
+    // "rootDirs": [],                        /* 根文件夹列表，其组合内容表示在运行时的项目结构。 */
+    // "typeRoots": [],                       /* 包含类型定义来源的文件夹列表。 */
+    // "types": [],                           /* 要包含在编译中类型声明文件。 */
+    // "allowSyntheticDefaultImports": true,  /* 允许从不带默认输出的模块中默认输入。这不会影响代码发出，只是类型检查。 */
+    // "preserveSymlinks": true,              /* 不要解析 symlink 的真实路径。 */
+
+    /* 源映射选项 */
+    // "sourceRoot": "./",                    /* 指定调试调试程序应将 TypeScript 文件放置到的位置而不是源位置。 */
+    // "mapRoot": "./",                       /* 指定调试程序应将映射文件放置到的位置而不是生成的位置。 */
+    // "inlineSourceMap": true,               /* 发出包含源映射而非包含单独文件的单个文件。 */
+    // "inlineSources": true,                 /* 在单个文件内发出源以及源映射；需要设置 "--inlineSourceMap" 或 "--sourceMap"。 */
+
+    /* 实验性选项 */
+    // "experimentalDecorators": true,        /* 对 ES7 修饰器启用实验支持。 */
+    // "emitDecoratorMetadata": true,         /* 对发出修饰器的类型元数据启用实验支持。 */
+  }
 }
