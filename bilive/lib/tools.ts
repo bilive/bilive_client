@@ -18,13 +18,14 @@ function getHeaders(platform: string): request.Headers {
     case 'Android':
       return {
         'Connection': 'Keep-Alive',
-        'User-Agent': 'Mozilla/5.0 BiliDroid/5.19.0 (bbcallen@gmail.com)'
+        'User-Agent': 'Mozilla/5.0 BiliDroid/5.21.0 (bbcallen@gmail.com)'
       }
     case 'WebView':
       return {
         'Accept': 'application/json, text/javascript, */*',
         'Accept-Language': 'zh-CN',
         'Connection': 'keep-alive',
+        'Cookie': 'l=v',
         'Origin': liveOrigin,
         'User-Agent': 'Mozilla/5.0 (Linux; Android 7.1.1; E6883 Build/32.4.A.1.54; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/62.0.3202.84 Mobile Safari/537.36 BiliApp/1',
         'X-Requested-With': 'tv.danmaku.bili'
@@ -34,6 +35,7 @@ function getHeaders(platform: string): request.Headers {
         'Accept': 'application/json, text/javascript, */*',
         'Accept-Language': 'zh-CN',
         'Connection': 'keep-alive',
+        'Cookie': 'l=v',
         'DNT': '1',
         'Origin': liveOrigin,
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36'
@@ -130,20 +132,10 @@ export function XHR<T>(options: request.OptionsWithUri, platform: 'PC' | 'Androi
  */
 export function setCookie(cookieString: string): request.CookieJar {
   let jar = request.jar()
-    , domains = [
-      '.bilibili.com',
-      '.biligame.com',
-      '.im9.com'
-    ]
-  for (let domain of domains) {
-    let cookies = cookieString.split(';')
-    for (let cookie of cookies) {
-      // @ts-ignore 此处为d.ts错误
-      jar.setCookie(`${cookie}; Domain=${domain}; Path=/`, `http://${domain}`)
-      // @ts-ignore 此处为d.ts错误
-      jar.setCookie(`${cookie}; Domain=${domain}; Path=/`, `https://${domain}`)
-    }
-  }
+  cookieString.split(';').forEach(cookie => {
+    // @ts-ignore 此处为d.ts错误
+    jar.setCookie(`${cookie}; Domain=bilibili.com; Path=/`, 'https://bilibili.com')
+  })
   return jar
 }
 /**

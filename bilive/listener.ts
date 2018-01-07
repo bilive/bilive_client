@@ -111,9 +111,7 @@ export class Listener extends EventEmitter {
     let check: request.Options = {
       uri: `${url}/check?roomid=${roomID}`,
       json: true,
-      headers: {
-        'Referer': `${liveOrigin}/${roomID}`
-      }
+      headers: { 'Referer': `${liveOrigin}/${roomID}` }
     }
       , raffleCheck = await tools.XHR<raffleCheck>(check)
     if (raffleCheck.response.statusCode === 200 && raffleCheck.body.code === 0 && raffleCheck.body.data.length > 0) {
@@ -144,6 +142,7 @@ export class Listener extends EventEmitter {
    * @param {number} roomID 
    * @memberof Listener
    */
+  // @ts-ignore 暂时无用
   private async _AppLightenCheck(roomID: number) {
     let room: request.Options = {
       uri: `${apiLiveOrigin}/AppRoom/index?${AppClient.signQueryBase(`room_id=${roomID}`)}`,

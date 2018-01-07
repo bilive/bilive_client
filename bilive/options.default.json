@@ -70,6 +70,7 @@
     "doSign": false,
     "treasureBox": false,
     "eventRoom": false,
+    "silver2coin": false,
     "smallTV": false,
     "raffle": false,
     "sendGift": false,
@@ -135,6 +136,11 @@
     "eventRoom": {
       "description": "每日任务",
       "tip": "限时的三个每日任务",
+      "type": "boolean"
+    },
+    "silver2coin": {
+      "description": "银瓜子兑换硬币",
+      "tip": "自动将银瓜子兑换成硬币, 每天一个",
       "type": "boolean"
     },
     "smallTV": {

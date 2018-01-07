@@ -40,6 +40,7 @@ interface userData {
   doSign: boolean
   treasureBox: boolean
   eventRoom: boolean
+  silver2coin: boolean
   smallTV: boolean
   raffle: boolean
   sendGift: boolean
@@ -62,10 +63,11 @@ interface optionsInfo {
   doSign: configInfoData
   treasureBox: configInfoData
   eventRoom: configInfoData
+  silver2coin: configInfoData
   smallTV: configInfoData
   raffle: configInfoData
-  sendGift: configInfoData,
-  sendGiftRoom: configInfoData,
+  sendGift: configInfoData
+  sendGiftRoom: configInfoData
   signGroup: configInfoData
 }
 interface configInfoData {
@@ -104,7 +106,6 @@ interface appLightenMSG extends message {
   type: string
 }
 // listener
-
 /**
  * 抽奖检查
  * 
@@ -410,4 +411,21 @@ interface signGroup {
 interface signGroupData {
   add_num: number
   status: number
+}
+/**
+ * 银瓜子兑换硬币返回
+ * 
+ * @interface silver2coin
+ */
+interface silver2coin {
+  code: number
+  msg: string
+  message: string
+  data: silver2coinData;
+}
+interface silver2coinData {
+  silver: string
+  gold: string
+  tid: string
+  coin: number
 }

@@ -37,7 +37,7 @@ export class Options extends EventEmitter {
     let server = http.createServer((req, res) => {
       req.on('error', tools.Error)
       res.on('error', tools.Error)
-      res.writeHead(302, { 'Location': 'https://lzghzr.github.io/bilive_client_view/index.html' })
+      res.writeHead(302, { 'Location': '//lzghzr.github.io/bilive_client_view/index.html' })
       res.end()
     })
     server.on('error', tools.Error)
@@ -180,16 +180,15 @@ export class Options extends EventEmitter {
           if (userData.status && !_user.has(setUID)) {
             let newUser = new User(setUID, userData)
               , status = await newUser.Start()
-            // 返回状态为'captcha'时, User.captcha为jpeg base64
-            if (status === 'captcha') captcha = newUser.captcha
+            if (status === 'captcha') captcha = newUser.captchaJPEG
             else if (_user.has(setUID)) newUser.daily()
           }
           else if (userData.status && _user.has(setUID)) {
             let captchaUser = <User>_user.get(setUID)
-            if (captchaUser.captcha !== '' && message.captcha != null) {
+            if (captchaUser.captchaJPEG !== '' && message.captcha != null) {
               captchaUser.captcha = message.captcha
               let status = await captchaUser.Start()
-              if (status === 'captcha') captcha = captchaUser.captcha
+              if (status === 'captcha') captcha = captchaUser.captchaJPEG
               else if (_user.has(setUID)) captchaUser.daily()
             }
           }

@@ -85,7 +85,7 @@ export class BiLive {
    */
   private _Raffle(raffleMSG: raffleMSG | appLightenMSG) {
     _user.forEach(user => {
-      if (user.captcha !== '' || !user.userData.raffle) return
+      if (user.captchaJPEG !== '' || !user.userData.raffle) return
       let raffleOptions: raffleOptions = {
         raffleId: raffleMSG.id,
         roomID: raffleMSG.roomID,
