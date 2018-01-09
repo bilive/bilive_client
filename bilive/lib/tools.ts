@@ -242,6 +242,16 @@ export let logs: { data: string[], onLog?: (data: string) => void } = {
 export function Error(message?: any, ...optionalParams: any[]) {
   console.error(`${new Date().toString().slice(4, 24)} :`, message, ...optionalParams)
 }
+
+export function ErrorIP(error){
+  console.error(`${new Date().toString().slice(4, 24)} :`,'删除出错IP',error.address)
+  var index = -1
+  for(var i = 0;i < api.IPs.length; i++){
+    if(api.IPs[i] == error.address)index = i
+  }
+  api.IPs.slice(index,1)
+}
+
 /**
  * sleep
  * 
