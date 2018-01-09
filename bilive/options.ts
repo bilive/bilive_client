@@ -6,7 +6,6 @@ import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
 import { User } from './user'
 import { _options, _user } from './index'
-import { setInterval, clearInterval } from 'timers';
 /**
  * 程序设置
  * 
@@ -38,7 +37,7 @@ export class Options extends EventEmitter {
     let server = http.createServer((req, res) => {
       req.on('error', tools.Error)
       res.on('error', tools.Error)
-      res.writeHead(302, { 'Location': 'https://lzghzr.github.io/bilive_client_view/index.html' })
+      res.writeHead(302, { 'Location': '//lzghzr.github.io/bilive_client_view/index.html' })
       res.end()
     })
     server.on('error', tools.Error)
@@ -168,6 +167,7 @@ export class Options extends EventEmitter {
       if (setUID != null && user[setUID] != null) {
         let userData = user[setUID]
           , msg = ''
+          , captcha = ''
           , setUserData = <userData>message.data || {}
         for (let i in userData) {
           if (typeof userData[i] !== typeof setUserData[i]) {
@@ -179,16 +179,23 @@ export class Options extends EventEmitter {
           for (let i in userData) userData[i] = setUserData[i]
           if (userData.status && !_user.has(setUID)) {
             let newUser = new User(setUID, userData)
-            _user.set(setUID, newUser)
-            await newUser.Start()
-            if (_user.has(setUID)) newUser.daily()
+              , status = await newUser.Start()
+            if (status === 'captcha') captcha = newUser.captchaJPEG
+            else if (_user.has(setUID)) newUser.daily()
           }
-          if (!userData.status && _user.has(setUID)) {
-            let delUser = <User>_user.get(setUID)
-            delUser.Stop()
+          else if (userData.status && _user.has(setUID)) {
+            let captchaUser = <User>_user.get(setUID)
+            if (captchaUser.captchaJPEG !== '' && message.captcha != null) {
+              captchaUser.captcha = message.captcha
+              let status = await captchaUser.Start()
+              if (status === 'captcha') captcha = captchaUser.captchaJPEG
+              else if (_user.has(setUID)) captchaUser.daily()
+            }
           }
+          else if (!userData.status && _user.has(setUID)) (<User>_user.get(setUID)).Stop()
           tools.Options(_options)
-          this._Send({ cmd, ts, uid: setUID, data: userData })
+          if (captcha === '') this._Send({ cmd, ts, uid: setUID, data: userData })
+          else this._Send({ cmd, ts, uid: setUID, msg: 'captcha', data: userData, captcha })
         }
         else this._Send({ cmd, ts, uid: setUID, msg, data: userData })
       }
@@ -201,10 +208,7 @@ export class Options extends EventEmitter {
       if (delUID != null && user[delUID] != null) {
         let userData = user[delUID]
         delete _options.user[delUID]
-        if (_user.has(delUID)) {
-          let delUser = <User>_user.get(delUID)
-          delUser.Stop()
-        }
+        if (_user.has(delUID)) (<User>_user.get(delUID)).Stop()
         tools.Options(_options)
         this._Send({ cmd, ts, uid: delUID, data: userData })
       }
@@ -238,4 +242,5 @@ interface message {
   msg?: string
   uid?: string
   data?: config | optionsInfo | string[] | userData
+  captcha?: string
 }

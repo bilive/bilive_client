@@ -1,13 +1,33 @@
 import * as crypto from 'crypto'
 import * as request from 'request'
 import * as tools from './tools'
-import { apiLiveOrigin } from '../index'
 
+enum status {
+  'success',
+  'captcha',
+  'error',
+  'httpError'
+}
+/**
+ * Creates an instance of AppClient.
+ * 创建实例后务必init()
+ * 
+ * @export
+ * @class AppClient
+ */
 export class AppClient {
+  /**
+   * Creates an instance of AppClient.
+   * 创建实例后务必init()
+   * @memberof AppClient
+   */
+  constructor() {
+  }
   // bilibili客户端
-  private static readonly _secretKey: string = '560c52ccd288fed045859ed18bffd973'
+  private static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
+  public static readonly actionKey: string = 'appkey'
   public static readonly appKey: string = '1d8b6e7d45233436'
-  public static readonly build: string = '519000'
+  public static readonly build: string = '5210000'
   public static readonly mobiApp: string = 'android'
   public static readonly platform: string = 'android'
   // bilibili 国际版
@@ -47,10 +67,15 @@ export class AppClient {
   /**
    * 基本请求参数
    * 
+   * @readonly
    * @static
+   * @type {string}
    * @memberof AppClient
    */
-  public static readonly baseQuery = `appkey=${AppClient.appKey}&build=${AppClient.build}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}`
+  public static get baseQuery(): string {
+    return `actionKey=${this.actionKey}&appkey=${this.appKey}&build=${this.build}\
+&mobi_app=${this.mobiApp}&platform=${this.platform}&ts=${this.TS}`
+  }
   /**
    * 对参数签名
    * 
@@ -59,113 +84,330 @@ export class AppClient {
    * @returns {string}
    * @memberof AppClient
    */
-  public static ParamsSign(params: string): string {
-    let ts = AppClient.TS
-      , paramsBase = `${params}&ts=${ts}${AppClient._secretKey}`
-      , paramsHash = tools.Hash('md5', paramsBase)
-    return `${params}&ts=${ts}&sign=${paramsHash}`
+  public static signQuery(params: string): string {
+    let paramsSecret = params + this.__secretKey
+      , paramsHash = tools.Hash('md5', paramsSecret)
+    return `${params}&sign=${paramsHash}`
   }
+  /**
+   * 对参数加参后签名
+   * 
+   * @static
+   * @param {string} [params] 
+   * @returns {string} 
+   * @memberof AppClient
+   */
+  public static signQueryBase(params?: string): string {
+    let paramsBase = params == null ? this.baseQuery : `${params}&${this.baseQuery}`
+    return this.signQuery(paramsBase)
+  }
+  /**
+   * 登录状态
+   * 
+   * @static
+   * @type {typeof status}
+   * @memberof AppClient
+   */
+  public static readonly status: typeof status = status
+  /**
+   * 验证码, 登录时会自动清空
+   * 
+   * @type {string}
+   * @memberof AppClient
+   */
+  public captcha: string = ''
+  /**
+   * 用户名, 推荐邮箱或电话号
+   * 
+   * @type {string}
+   * @memberof AppClient
+   */
+  public userName: string
+  /**
+   * 密码
+   * 
+   * @type {string}
+   * @memberof AppClient
+   */
+  public passWord: string
+  /**
+   * 登录后获取的B站UID
+   * 
+   * @type {number}
+   * @memberof AppClient
+   */
+  public biliUID: number
+  /**
+   * 登录后获取的access_token
+   * 
+   * @type {string}
+   * @memberof AppClient
+   */
+  public accessToken: string
+  /**
+   * 登录后获取的refresh_token
+   * 
+   * @type {string}
+   * @memberof AppClient
+   */
+  public refreshToken: string
+  /**
+   * 登录后获取的cookieString
+   * 
+   * @type {string}
+   * @memberof AppClient
+   */
+  public cookieString: string
+  /**
+   * 请求头
+   * 
+   * @type {request.Headers}
+   * @memberof AppClient
+   */
+  public headers: request.Headers = {
+    'Buvid': '7A4C4919-20A6-4012-BBA4-6FAA1561542845107infoc',
+    'Connection': 'Keep-Alive',
+    'User-Agent': 'Mozilla/5.0 BiliDroid/5.21.0 (bbcallen@gmail.com)'
+  }
+  /**
+   * cookieJar
+   * 
+   * @private
+   * @type {request.CookieJar}
+   * @memberof AppClient
+   */
+  private __jar: request.CookieJar = request.jar()
   /**
    * 对密码进行加密
    * 
-   * @private
-   * @static
-   * @param {string} passWord
-   * @param {getKeyResponseData} publicKey
-   * @returns {string}
+   * @protected
+   * @param {getKeyResponseData} publicKey 
+   * @returns {string} 
    * @memberof AppClient
    */
-  private static _RSAPassWord(passWord: string, publicKey: getKeyResponseData): string {
+  protected _RSAPassWord(publicKey: getKeyResponseData): string {
     let padding = {
       key: publicKey.key,
-      padding: (<any>crypto).constants.RSA_PKCS1_PADDING
+      // @ts-ignore 此处为d.ts错误
+      padding: crypto.constants.RSA_PKCS1_PADDING
     }
-      , hashPassWord = publicKey.hash + passWord
+      , hashPassWord = publicKey.hash + this.passWord
       , encryptPassWord = crypto.publicEncrypt(padding, Buffer.from(hashPassWord)).toString('base64')
     return encodeURIComponent(encryptPassWord)
   }
   /**
    * 获取公钥
    * 
-   * @private
-   * @static
+   * @protected
    * @returns {Promise<tools.response<getKeyResponse>>} 
    * @memberof AppClient
    */
-  private static _GetKey(): Promise<tools.response<getKeyResponse>> {
-    let getKeyOrigin = 'https://passport.bilibili.com/api/oauth2/getKey'
-      , getKeyQuery = AppClient.baseQuery
-      , getKey: request.Options = {
-        method: 'POST',
-        uri: getKeyOrigin,
-        body: AppClient.ParamsSign(getKeyQuery),
-        json: true
-      }
+  protected _getKey(): Promise<tools.response<getKeyResponse>> {
+    let getKey: request.Options = {
+      method: 'POST',
+      uri: 'https://passport.bilibili.com/api/oauth2/getKey',
+      body: AppClient.signQueryBase(),
+      jar: this.__jar,
+      json: true,
+      headers: this.headers
+    }
     return tools.XHR<getKeyResponse>(getKey, 'Android')
+  }
+  /**
+   * 验证登录信息
+   * 
+   * @protected
+   * @param {getKeyResponseData} publicKey 
+   * @returns {Promise<tools.response<authResponse>>} 
+   * @memberof AppClient
+   */
+  protected _auth(publicKey: getKeyResponseData): Promise<tools.response<authResponse>> {
+    let passWord = this._RSAPassWord(publicKey)
+      , captcha = this.captcha === '' ? '' : `&captcha=${this.captcha}`
+      , authQuery = `appkey=${AppClient.appKey}&build=${AppClient.build}${captcha}&mobi_app=${AppClient.mobiApp}\
+&password=${passWord}&platform=${AppClient.platform}&ts=${AppClient.TS}&username=${encodeURIComponent(this.userName)}`
+      , auth: request.Options = {
+        method: 'POST',
+        uri: 'https://passport.bilibili.com/api/v2/oauth2/login',
+        body: AppClient.signQuery(authQuery),
+        jar: this.__jar,
+        json: true,
+        headers: this.headers
+      }
+    this.captcha = ''
+    return tools.XHR<authResponse>(auth, 'Android')
+  }
+  /**
+   * 更新用户凭证
+   * 
+   * @protected
+   * @param {authResponseData} authResponseData 
+   * @memberof AppClient
+   */
+  protected _update(authResponseData: authResponseData) {
+    let tokenInfo = authResponseData.token_info
+      , cookies = authResponseData.cookie_info.cookies
+    this.biliUID = +tokenInfo.mid
+    this.accessToken = tokenInfo.access_token
+    this.refreshToken = tokenInfo.refresh_token
+    this.cookieString = cookies.reduce((cookieString, cookie) => {
+      if (cookieString === '') return `${cookie.name}=${cookie.value}`
+      return `${cookieString}; ${cookie.name}=${cookie.value}`
+    }, '')
+  }
+  /**
+   * 初始化获取Buvid
+   * 
+   * @memberof AppClient
+   */
+  public async init() {
+    let buvid = await tools.XHR<string>({ uri: 'http://data.bilibili.com/gv/' }, 'Android').catch(tools.Error)
+    if (buvid != null && buvid.response.statusCode === 200 && buvid.body.length === 46)
+      this.headers['Buvid'] = buvid.body
+  }
+  /**
+   * 获取验证码
+   * 
+   * @returns {Promise<captchaResponse>} 
+   * @memberof AppClient
+   */
+  public async getCaptcha(): Promise<captchaResponse> {
+    let captcha: request.Options = {
+      uri: 'https://passport.bilibili.com/captcha',
+      encoding: null,
+      jar: this.__jar,
+      headers: this.headers
+    }
+    let captchaResponse = await tools.XHR<Buffer>(captcha, 'Android').catch(tools.Error)
+    if (captchaResponse != null && captchaResponse.response.statusCode === 200) return {
+      status: status.success,
+      data: captchaResponse.body,
+    }
+    else return { status: status.error, data: captchaResponse }
   }
   /**
    * 客户端登录
    * 
-   * @private
-   * @static
-   * @param {userLogin} userLogin 
-   * @param {getKeyResponseData} publicKey 
-   * @returns {Promise<tools.response<loginResponse>>} 
+   * @returns {Promise<loginResponse>} 
    * @memberof AppClient
    */
-  private static _Login(userLogin: userLogin, publicKey: getKeyResponseData): Promise<tools.response<loginResponse>> {
-    // captcha=
-    // Ste-Cookie JSESSIONID
-    // https://passport.bilibili.com/captcha
-    let passWord = AppClient._RSAPassWord(userLogin.passWord, publicKey)
-      , loginOrigin = 'https://passport.bilibili.com/api/oauth2/login'
-      , loginQuery = `appkey=${AppClient.appKey}&build=${AppClient.build}&mobi_app=${AppClient.mobiApp}&password=${passWord}&platform=${AppClient.platform}&ts=${AppClient.TS}&username=${encodeURIComponent(userLogin.userName)}`
-      , login: request.Options = {
+  public async login(): Promise<loginResponse> {
+    let getKeyResponse = await this._getKey().catch(tools.Error)
+    if (getKeyResponse != null && getKeyResponse.response.statusCode === 200 && getKeyResponse.body.code === 0) {
+      let authResponse = await this._auth(getKeyResponse.body.data).catch(tools.Error)
+      if (authResponse != null && authResponse.response.statusCode === 200) {
+        if (authResponse.body.code === 0) {
+          this._update(authResponse.body.data)
+          return { status: status.success, data: authResponse.body }
+        }
+        if (authResponse.body.code === -105) return { status: status.captcha, data: authResponse.body }
+        else return { status: status.error, data: authResponse.body }
+      }
+      else return { status: status.httpError, data: authResponse }
+    }
+    else return { status: status.httpError, data: getKeyResponse }
+  }
+  /**
+   * 更新access_token
+   * 
+   * @returns {Promise<loginResponse>} 
+   * @memberof AppClient
+   */
+  public async refresh(): Promise<loginResponse> {
+    let refreshQuery = `access_token=${this.accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}\
+&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}&refresh_token=${this.refreshToken}&ts=${AppClient.TS}`
+      , refresh: request.Options = {
         method: 'POST',
-        uri: loginOrigin,
-        body: `${loginQuery}&sign=${tools.Hash('md5', loginQuery + AppClient._secretKey)}`,
-        json: true
+        uri: 'https://passport.bilibili.com/api/v2/oauth2/refresh_token',
+        body: AppClient.signQuery(refreshQuery),
+        json: true,
+        headers: this.headers
       }
-    return tools.XHR<loginResponse>(login, 'Android')
-  }
-  /**
-   * 获取token
-   * 
-   * @static
-   * @param {userLogin} userLogin 
-   * @returns {(Promise<string | void | tools.response<loginResponse> | tools.response<getKeyResponse>>)} 
-   * @memberof AppClient
-   */
-  public static async GetToken(userLogin: userLogin): Promise<string | void | tools.response<loginResponse> | tools.response<getKeyResponse>> {
-    let getKeyResponse = await AppClient._GetKey().catch(tools.Error)
-    if (getKeyResponse != null && getKeyResponse.body.code === 0) {
-      let loginResponse = await AppClient._Login(userLogin, getKeyResponse.body.data).catch(tools.Error)
-      if (loginResponse != null && loginResponse.body.code === 0) return loginResponse.body.data.access_token
-      else return loginResponse
-    }
-    else return getKeyResponse
-  }
-  /**
-   * 获取cookie
-   * 
-   * @static
-   * @param {string} accessToken 
-   * @returns {(Promise<void | request.CookieJar>)} 
-   * @memberof AppClient
-   */
-  public static async GetCookie(accessToken: string): Promise<void | request.CookieJar> {
-    let ssoOrigin = 'https://passport.bilibili.com/api/login/sso'
-      , ssoQuery = `access_key=${accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}&gourl=${encodeURIComponent(apiLiveOrigin)}&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}`
-      , jar = request.jar()
-      , sso: request.Options = {
-        uri: `${ssoOrigin}?${AppClient.ParamsSign(ssoQuery)}`,
-        jar
+    let refreshResponse = await tools.XHR<authResponse>(refresh, 'Android').catch(tools.Error)
+    if (refreshResponse != null && refreshResponse.response.statusCode === 200) {
+      if (refreshResponse.body.code === 0) {
+        this._update(refreshResponse.body.data)
+        return { status: status.success, data: refreshResponse.body }
       }
-    let gourl = await tools.XHR(sso, 'WebView').catch(tools.Error)
-    if (gourl != null) {
-      let cookie = jar.getCookieString(apiLiveOrigin)
-      if (cookie.includes('SESSDATA')) return jar
+      else return { status: status.error, data: refreshResponse.body }
     }
-    else return gourl
+    else return { status: status.httpError, data: refreshResponse }
   }
+}
+/**
+ * 公钥返回
+ * 
+ * @interface getKeyResponse
+ */
+interface getKeyResponse {
+  ts: number
+  code: number
+  data: getKeyResponseData
+}
+interface getKeyResponseData {
+  hash: string
+  key: string
+}
+/**
+ * 登录返回
+ * 
+ * @interface authResponse
+ */
+interface authResponse {
+  ts: number
+  code: number
+  data: authResponseData
+}
+interface authResponseData {
+  status: number
+  token_info: authResponseTokeninfo
+  cookie_info: authResponseCookieinfo
+}
+interface authResponseCookieinfo {
+  cookies: authResponseCookie[]
+  domains: string[]
+}
+interface authResponseCookie {
+  name: string
+  value: string
+  http_only: number
+  expires: number
+}
+interface authResponseTokeninfo {
+  mid: number
+  access_token: string
+  refresh_token: string
+  expires_in: number
+}
+/**
+ * 登录返回信息
+ */
+type loginResponse = loginResponseSuccess | loginResponseCaptcha | loginResponseError | loginResponseHttp
+interface loginResponseSuccess {
+  status: status.success
+  data: authResponse
+}
+interface loginResponseCaptcha {
+  status: status.captcha
+  data: authResponse
+}
+interface loginResponseError {
+  status: status.error
+  data: authResponse
+}
+interface loginResponseHttp {
+  status: status.httpError
+  data: tools.response<getKeyResponse> | tools.response<authResponse> | void
+}
+/**
+ * 验证码返回信息
+ */
+type captchaResponse = captchaResponseSuccess | captchaResponseError
+interface captchaResponseSuccess {
+  status: status.success
+  data: Buffer
+}
+interface captchaResponseError {
+  status: status.error
+  data: tools.response<Buffer> | void
 }

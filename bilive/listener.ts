@@ -66,7 +66,7 @@ export class Listener extends EventEmitter {
       , userID = config.defaultUserID
     this._CommentClient = new CommentClient({ roomID, userID })
     this._CommentClient
-      .on('serverError', (error) => { tools.Log('与弹幕服务器断开五分钟', error) })
+      .on('serverError', error => { tools.Error('弹幕服务器监听', error) })
       .on('SYS_MSG', this._SYSMSGHandler.bind(this))
       .on('SYS_GIFT', this._SYSGiftHandler.bind(this))
       .Connect()
@@ -82,7 +82,7 @@ export class Listener extends EventEmitter {
     if (dataJson.real_roomid == null || dataJson.tv_id == null) return
     let url = apiLiveOrigin + smallTVPathname
       , roomID = dataJson.real_roomid
-    this._RaffleCheck(url, roomID, 'smallTV')
+    this._RaffleCheck(url, roomID, 'smallTV').catch(error => { tools.Error('系统消息', roomID, error) })
   }
   /**
    * 监听系统礼物消息
@@ -91,12 +91,12 @@ export class Listener extends EventEmitter {
    * @param {SYS_GIFT} dataJson
    * @memberof Listener
    */
-  private async _SYSGiftHandler(dataJson: SYS_GIFT) {
+  private _SYSGiftHandler(dataJson: SYS_GIFT) {
     if (dataJson.real_roomid == null || dataJson.giftId == null) return
     let url = apiLiveOrigin + rafflePathname
       , roomID = dataJson.real_roomid
-    this._RaffleCheck(url, roomID, 'raffle')
-    // this._AppLightenCheck(roomID)
+    this._RaffleCheck(url, roomID, 'raffle').catch(error => { tools.Error('系统礼物消息', roomID, error) })
+    // this._AppLightenCheck(roomID).catch(error => { tools.Error('系统礼物消息', roomID, error) })
   }
   /**
    * 检查房间抽奖信息
@@ -111,9 +111,7 @@ export class Listener extends EventEmitter {
     let check: request.Options = {
       uri: `${url}/check?roomid=${roomID}`,
       json: true,
-      headers: {
-        'Referer': `${liveOrigin}/${roomID}`
-      }
+      headers: { 'Referer': `${liveOrigin}/${roomID}` }
     }
       , raffleCheck = await tools.XHR<raffleCheck>(check)
     if (raffleCheck.response.statusCode === 200 && raffleCheck.body.code === 0 && raffleCheck.body.data.length > 0) {
@@ -121,7 +119,7 @@ export class Listener extends EventEmitter {
         let message: raffleMSG = {
           cmd: raffle,
           roomID,
-          id: data.raffleId
+          id: +data.raffleId
         }
         this._RaffleHandler(message)
         // 临时
@@ -129,7 +127,7 @@ export class Listener extends EventEmitter {
           let message: appLightenMSG = {
             cmd: 'appLighten',
             roomID,
-            id: data.raffleId,
+            id: +data.raffleId,
             type: 'openfire'
           }
           this._RaffleHandler(message)
@@ -144,9 +142,10 @@ export class Listener extends EventEmitter {
    * @param {number} roomID 
    * @memberof Listener
    */
+  // @ts-ignore 暂时无用
   private async _AppLightenCheck(roomID: number) {
     let room: request.Options = {
-      uri: `${apiLiveOrigin}/AppRoom/index?${AppClient.ParamsSign(`room_id=${roomID}&${AppClient.baseQuery}`)}`,
+      uri: `${apiLiveOrigin}/AppRoom/index?${AppClient.signQueryBase(`room_id=${roomID}`)}`,
       json: true
     }
       , roomInfo = await tools.XHR<roomInfo>(room, 'Android')
@@ -157,7 +156,7 @@ export class Listener extends EventEmitter {
         let message: appLightenMSG = {
           cmd: 'appLighten',
           roomID,
-          id: parseInt(type[1]),
+          id: +type[1],
           type: type[0]
         }
         this._RaffleHandler(message)

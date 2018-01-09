@@ -23,11 +23,12 @@ export class BiLive {
   public async Start() {
     let option = await tools.Options()
     _options = option
+    tools.testIP(_options.apiIPs)
     for (let uid in _options.user) {
       if (!_options.user[uid].status) continue
       let user = new User(uid, _options.user[uid])
-      _user.set(uid, user)
-      await user.Start()
+        , status = await user.Start()
+      if (status === 'captcha') user.Stop()
     }
     this.Options()
     this.Listener()
@@ -40,7 +41,7 @@ export class BiLive {
    * @private
    * @memberof BiLive
    */
-  private async _loop() {
+  private _loop() {
     let csttime = Date.now() + 2.88e+7
       , cst = new Date(csttime)
       , cstString = cst.toUTCString().substr(17, 5) // 'hh:mm'
@@ -48,7 +49,10 @@ export class BiLive {
     this._lastTime = cstString
     let cstHour = cst.getUTCHours()
       , cstMin = cst.getUTCMinutes()
-    if (cstString === '00:10') _user.forEach(user => user.nextDay())
+    if (cstString === '00:10') {
+      _user.forEach(user => user.nextDay())
+      tools.testIP(_options.apiIPs).catch(tools.Error)
+    }
     else if (cstString === '13:30') _user.forEach(user => user.sendGift().catch(error => { tools.Error(user.userData.nickname, error) }))
     if (cstMin === 30 && cstHour % 8 === 0) _user.forEach(user => user.daily())
   }
@@ -80,26 +84,26 @@ export class BiLive {
    * @memberof BiLive
    */
   private _Raffle(raffleMSG: raffleMSG | appLightenMSG) {
-    _user.forEach(User => {
-      if (!User.userData.raffle) return
+    _user.forEach(user => {
+      if (user.captchaJPEG !== '' || !user.userData.raffle) return
       let raffleOptions: raffleOptions = {
         raffleId: raffleMSG.id,
         roomID: raffleMSG.roomID,
-        User: User
+        User: user
       }
       switch (raffleMSG.cmd) {
         case 'smallTV':
-          new Raffle(raffleOptions).SmallTV().catch(error => { tools.Error(User.userData.nickname, error) })
+          new Raffle(raffleOptions).SmallTV().catch(error => { tools.Error(user.userData.nickname, raffleMSG.cmd, raffleMSG.id, error) })
           break
         case 'raffle':
-          new Raffle(raffleOptions).Raffle().catch(error => { tools.Error(User.userData.nickname, error) })
+          new Raffle(raffleOptions).Raffle().catch(error => { tools.Error(user.userData.nickname, raffleMSG.cmd, raffleMSG.id, error) })
           break
         case 'lighten':
-          new Raffle(raffleOptions).Lighten().catch(error => { tools.Error(User.userData.nickname, error) })
+          new Raffle(raffleOptions).Lighten().catch(error => { tools.Error(user.userData.nickname, raffleMSG.cmd, raffleMSG.id, error) })
           break
         case 'appLighten':
           raffleOptions.type = raffleMSG.type
-          new Raffle(raffleOptions).AppLighten().catch(error => { tools.Error(User.userData.nickname, error) })
+          new Raffle(raffleOptions).AppLighten().catch(error => { tools.Error(user.userData.nickname, raffleMSG.cmd, raffleMSG.id, error) })
           break
         default:
           break

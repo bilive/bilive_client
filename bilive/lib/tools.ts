@@ -1,49 +1,118 @@
 import * as fs from 'fs'
+import * as dns from 'dns'
+import * as net from 'net'
+import * as http from 'http'
 import * as util from 'util'
 import * as crypto from 'crypto'
 import * as request from 'request'
-import { apiLiveOrigin } from '../index'
+import { apiLiveOrigin, liveOrigin } from '../index'
+
+/**
+ * 请求头
+ * 
+ * @param {string} platform 
+ * @returns {request.Headers} 
+ */
+function getHeaders(platform: string): request.Headers {
+  switch (platform) {
+    case 'Android':
+      return {
+        'Connection': 'Keep-Alive',
+        'User-Agent': 'Mozilla/5.0 BiliDroid/5.21.0 (bbcallen@gmail.com)'
+      }
+    case 'WebView':
+      return {
+        'Accept': 'application/json, text/javascript, */*',
+        'Accept-Language': 'zh-CN',
+        'Connection': 'keep-alive',
+        'Cookie': 'l=v',
+        'Origin': liveOrigin,
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 7.1.1; E6883 Build/32.4.A.1.54; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/62.0.3202.84 Mobile Safari/537.36 BiliApp/1',
+        'X-Requested-With': 'tv.danmaku.bili'
+      }
+    default:
+      return {
+        'Accept': 'application/json, text/javascript, */*',
+        'Accept-Language': 'zh-CN',
+        'Connection': 'keep-alive',
+        'Cookie': 'l=v',
+        'DNT': '1',
+        'Origin': liveOrigin,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36'
+      }
+  }
+}
+/**
+ * 获取api的ip
+ * 
+ * @class IP
+ */
+class IP {
+  constructor() {
+    // @ts-ignore 此处为d.ts错误
+    this.httpAgent.createConnection = (options: net.NetConnectOpts, callback: Function): net.Socket => {
+      (<net.TcpSocketConnectOpts>options).lookup = (hostname, options, callback) => {
+        let ip = this.ip
+        if (ip === '') dns.lookup(hostname, options, callback)
+        else callback(null, ip, 4)
+      }
+      return net.createConnection(options, callback)
+    }
+  }
+  private _lastIP: number = 0
+  public IPs: string[] = []
+  public httpAgent = new http.Agent()
+  public get ip(): string {
+    if (this.IPs.length === 0) return ''
+    else if (this._lastIP >= this.IPs.length) this._lastIP = 0
+    return this.IPs[this._lastIP++]
+  }
+}
+const api = new IP()
+/**
+ * 测试可用ip
+ * 
+ * @export
+ * @param {string[]} apiIPs 
+ */
+export async function testIP(apiIPs: string[]) {
+  let useful: string[] = []
+    , head: Promise<{}>[] = []
+  apiIPs.forEach(ip => {
+    let headers = getHeaders('PC')
+    headers['host'] = 'api.live.bilibili.com'
+    let options = {
+      uri: `http://${ip}/`,
+      method: 'HEAD',
+      timeout: 2000,
+      headers
+    }
+    head.push(new Promise(resolve => {
+      request(options, (error, response) => {
+        if (error == null && response.statusCode === 200) useful.push(ip)
+        resolve()
+      })
+    }))
+  })
+  await Promise.all(head)
+  Log('可用ip数量为', useful.length)
+  api.IPs = useful
+}
 /**
  * 添加request头信息
  * 
  * @export
  * @template T 
- * @param {request.Options} options 
+ * @param {request.OptionsWithUri} options 
  * @param {('PC' | 'Android' | 'WebView')} [platform='PC'] 
  * @returns {Promise<response<T>>} 
  */
-export function XHR<T>(options: request.Options, platform: 'PC' | 'Android' | 'WebView' = 'PC'): Promise<response<T>> {
+export function XHR<T>(options: request.OptionsWithUri, platform: 'PC' | 'Android' | 'WebView' = 'PC'): Promise<response<T>> {
   options.gzip = true
+  // 添加用户代理
+  if (typeof options.uri === 'string' && options.uri.includes(apiLiveOrigin)) options.agent = api.httpAgent
   // 添加头信息
-  let headers: request.Headers
-  switch (platform) {
-    case 'Android':
-      headers = {
-        'Connection': 'Keep-Alive',
-        'User-Agent': 'Mozilla/5.0 BiliDroid/5.19.0 (bbcallen@gmail.com)'
-      }
-      break
-    case 'WebView':
-      headers = {
-        'Accept': 'application/json, text/javascript, */*',
-        'Accept-Language': 'zh-CN',
-        'Connection': 'keep-alive',
-        'Origin': 'https://live.bilibili.com',
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 7.1.1; E6883 Build/32.4.A.1.54; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/62.0.3202.84 Mobile Safari/537.36 BiliApp/1',
-        'X-Requested-With': 'tv.danmaku.bili'
-      }
-      break
-    default:
-      headers = {
-        'Accept': 'application/json, text/javascript, */*',
-        'Accept-Language': 'zh-CN',
-        'Connection': 'keep-alive',
-        'DNT': '1',
-        'Origin': 'https://live.bilibili.com',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36'
-      }
-      break
-  }
+  let headers = getHeaders(platform)
   options.headers = options.headers == null ? headers : Object.assign(headers, options.headers)
   if (options.method === 'POST') options.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
   // 返回异步request
@@ -59,15 +128,13 @@ export function XHR<T>(options: request.Options, platform: 'PC' | 'Android' | 'W
  * 
  * @export
  * @param {string} cookieString
- * @param {string[]} urls
  * @returns {request.CookieJar}
  */
-export function setCookie(cookieString: string, urls: string[]): request.CookieJar {
+export function setCookie(cookieString: string): request.CookieJar {
   let jar = request.jar()
-  urls.forEach(url => {
-    cookieString.split(';').forEach((cookie) => {
-      jar.setCookie(request.cookie(cookie), url)
-    })
+  cookieString.split(';').forEach(cookie => {
+    // @ts-ignore 此处为d.ts错误
+    jar.setCookie(`${cookie}; Domain=bilibili.com; Path=/`, 'https://bilibili.com')
   })
   return jar
 }
@@ -83,8 +150,10 @@ export function setCookie(cookieString: string, urls: string[]): request.CookieJ
 export function getCookie(jar: request.CookieJar, key: string, url = apiLiveOrigin): string {
   let cookies = jar.getCookies(url)
     , cookieFind = cookies.find(cookie => {
+      // @ts-ignore 此处为d.ts错误
       if (cookie.key === key) return cookie.value
     })
+  // @ts-ignore 此处为d.ts错误
   return cookieFind == null ? '' : cookieFind.value
 }
 /**
@@ -107,10 +176,10 @@ export function Options(options?: _options): Promise<_options> {
         , defaultOption = await JsonParse<_options>(defaultOptionBuffer.toString())
         , optionBuffer = fs.readFileSync(dirname + '/options/options.json')
         , option = await JsonParse<_options>(optionBuffer.toString())
-      option.newUserData = Object.freeze(defaultOption.newUserData)
-      option.info = Object.freeze(defaultOption.info)
-      for (let uid in option.user) option.user[uid] = Object.assign({}, option.newUserData, option.user[uid])
-      resolve(option)
+      defaultOption.server = Object.assign({}, defaultOption.server, option.server)
+      defaultOption.config = Object.assign({}, defaultOption.config, option.config)
+      for (let uid in option.user) defaultOption.user[uid] = Object.assign({}, defaultOption.newUserData, option.user[uid])
+      resolve(defaultOption)
     }
     else {
       fs.writeFileSync(dirname + '/options/options.json', JSON.stringify(options))
