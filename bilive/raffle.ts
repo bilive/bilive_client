@@ -96,7 +96,7 @@ export class Raffle {
     if (raffleJoin.response.statusCode === 200 && raffleJoin.body.code === 0) {
       let time = raffleJoin.body.data.time * 1e+3 + 3e+4
       await tools.Sleep(time)
-      this._RaffleReward().catch(error => { tools.Error(this._User.nickname, '获取抽奖结果', this._raffleId, error) })
+      this._RaffleReward().catch(error => { tools.ErrorIP(this._User.nickname, '获取抽奖结果', this._raffleId, error) })
     }
   }
   /**
