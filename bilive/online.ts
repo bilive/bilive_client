@@ -126,7 +126,7 @@ class Online extends AppClient {
   protected async _onlineHeart(): Promise<'cookieError' | 'tokenError' | void> {
     const online: request.Options = {
       method: 'POST',
-      uri: `${apiLiveOrigin}/Online/userOnlineHeart`,
+      uri: `${apiLiveOrigin}/User/userOnlineHeart`,
       jar: this.jar,
       json: true,
       headers: { 'Referer': `${liveOrigin}/${_options.config.defaultRoomID}` }
