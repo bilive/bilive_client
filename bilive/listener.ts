@@ -1,17 +1,16 @@
 import * as request from 'request'
-import * as tools from './lib/tools'
 import { EventEmitter } from 'events'
-import { AppClient } from './lib/app_client'
-import { CommentClient } from './lib/comment_client'
+import * as tools from './lib/tools'
+import AppClient from './lib/app_client'
+import DMclient from './dm_client_re'
 import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, _options } from './index'
 /**
  * 监听服务器消息
  * 
- * @export
  * @class Listener
  * @extends {EventEmitter}
  */
-export class Listener extends EventEmitter {
+class Listener extends EventEmitter {
   constructor() {
     super()
   }
@@ -19,10 +18,10 @@ export class Listener extends EventEmitter {
    * 用于接收弹幕消息
    * 
    * @private
-   * @type {CommentClient}
+   * @type {DMclient}
    * @memberof Listener
    */
-  private _CommentClient: CommentClient
+  private _DMclient: DMclient
   /**
    * 小电视ID
    * 
@@ -61,14 +60,13 @@ export class Listener extends EventEmitter {
    * @memberof Listener
    */
   public Start() {
-    let config = _options.config
-      , roomID = config.defaultRoomID
-      , userID = config.defaultUserID
-    this._CommentClient = new CommentClient({ roomID, userID })
-    this._CommentClient
-      .on('serverError', error => { tools.Error('弹幕服务器监听', error) })
-      .on('SYS_MSG', this._SYSMSGHandler.bind(this))
-      .on('SYS_GIFT', this._SYSGiftHandler.bind(this))
+    const config = _options.config
+    const roomID = config.defaultRoomID
+    const userID = config.defaultUserID
+    this._DMclient = new DMclient({ roomID, userID })
+    this._DMclient
+      .on('SYS_MSG', dataJson => this._SYSMSGHandler(dataJson))
+      .on('SYS_GIFT', dataJson => this._SYSGiftHandler(dataJson))
       .Connect()
   }
   /**
@@ -79,10 +77,10 @@ export class Listener extends EventEmitter {
    * @memberof Listener
    */
   private _SYSMSGHandler(dataJson: SYS_MSG) {
-    if (dataJson.real_roomid == null || dataJson.tv_id == null) return
-    let url = apiLiveOrigin + smallTVPathname
-      , roomID = dataJson.real_roomid
-    this._RaffleCheck(url, roomID, 'smallTV').catch(error => { tools.Error('系统消息', roomID, error) })
+    if (dataJson.real_roomid === undefined || dataJson.tv_id === undefined) return
+    const url = apiLiveOrigin + smallTVPathname
+    const roomID = dataJson.real_roomid
+    this._RaffleCheck(url, roomID, 'smallTV')
   }
   /**
    * 监听系统礼物消息
@@ -92,11 +90,11 @@ export class Listener extends EventEmitter {
    * @memberof Listener
    */
   private _SYSGiftHandler(dataJson: SYS_GIFT) {
-    if (dataJson.real_roomid == null || dataJson.giftId == null) return
-    let url = apiLiveOrigin + rafflePathname
-      , roomID = dataJson.real_roomid
-    this._RaffleCheck(url, roomID, 'raffle').catch(error => { tools.Error('系统礼物消息', roomID, error) })
-    // this._AppLightenCheck(roomID).catch(error => { tools.Error('系统礼物消息', roomID, error) })
+    if (dataJson.real_roomid === undefined || dataJson.giftId === undefined) return
+    const url = apiLiveOrigin + rafflePathname
+    const roomID = dataJson.real_roomid
+    this._AppLightenCheck(roomID)
+    this._RaffleCheck(url, roomID, 'raffle')
   }
   /**
    * 检查房间抽奖信息
@@ -108,30 +106,21 @@ export class Listener extends EventEmitter {
    * @memberof Listener
    */
   private async _RaffleCheck(url: string, roomID: number, raffle: 'smallTV' | 'raffle' | 'lighten') {
-    let check: request.Options = {
+    const check: request.Options = {
       uri: `${url}/check?roomid=${roomID}`,
       json: true,
       headers: { 'Referer': `${liveOrigin}/${roomID}` }
     }
-      , raffleCheck = await tools.XHR<raffleCheck>(check)
-    if (raffleCheck.response.statusCode === 200 && raffleCheck.body.code === 0 && raffleCheck.body.data.length > 0) {
+    const raffleCheck = await tools.XHR<raffleCheck>(check)
+    if (raffleCheck !== undefined && raffleCheck.response.statusCode === 200
+      && raffleCheck.body.code === 0 && raffleCheck.body.data.length > 0) {
       raffleCheck.body.data.forEach(data => {
-        let message: raffleMSG = {
+        const message: raffleMSG = {
           cmd: raffle,
           roomID,
           id: +data.raffleId
         }
         this._RaffleHandler(message)
-        // 临时
-        if (raffle === 'raffle') {
-          let message: appLightenMSG = {
-            cmd: 'appLighten',
-            roomID,
-            id: +data.raffleId,
-            type: 'openfire'
-          }
-          this._RaffleHandler(message)
-        }
       })
     }
   }
@@ -142,18 +131,18 @@ export class Listener extends EventEmitter {
    * @param {number} roomID 
    * @memberof Listener
    */
-  // @ts-ignore 暂时无用
   private async _AppLightenCheck(roomID: number) {
-    let room: request.Options = {
+    const room: request.Options = {
       uri: `${apiLiveOrigin}/AppRoom/index?${AppClient.signQueryBase(`room_id=${roomID}`)}`,
       json: true
     }
-      , roomInfo = await tools.XHR<roomInfo>(room, 'Android')
-    if (roomInfo.response.statusCode === 200 && roomInfo.body.code === 0 && roomInfo.body.data.event_corner.length > 0) {
+    const roomInfo = await tools.XHR<roomInfo>(room, 'Android')
+    if (roomInfo !== undefined && roomInfo.response.statusCode === 200
+      && roomInfo.body.code === 0 && roomInfo.body.data.event_corner.length > 0) {
       roomInfo.body.data.event_corner.forEach(event => {
-        let type = event.event_type.split('-')
+        const type = event.event_type.split('-')
         if (type.length !== 2) return
-        let message: appLightenMSG = {
+        const message: appLightenMSG = {
           cmd: 'appLighten',
           roomID,
           id: +type[1],
@@ -171,9 +160,9 @@ export class Listener extends EventEmitter {
    * @memberof Listener
    */
   private _RaffleHandler(raffleMSG: raffleMSG | appLightenMSG) {
-    let roomID = raffleMSG.roomID
-      , id = raffleMSG.id
-      , msg = ''
+    const roomID = raffleMSG.roomID
+    const id = raffleMSG.id
+    let msg = ''
     switch (raffleMSG.cmd) {
       case 'smallTV':
         if (this._smallTVID >= id) return
@@ -200,3 +189,4 @@ export class Listener extends EventEmitter {
     tools.Log(`房间 ${roomID} 开启了第 ${id} 轮${msg}抽奖`)
   }
 }
+export default Listener
