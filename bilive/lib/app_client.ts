@@ -1,21 +1,24 @@
 import * as crypto from 'crypto'
 import * as request from 'request'
 import * as tools from './tools'
-
+/**
+ * 登录状态
+ * 
+ * @enum {number}
+ */
 enum status {
   'success',
   'captcha',
   'error',
-  'httpError'
+  'httpError',
 }
 /**
  * Creates an instance of AppClient.
  * 创建实例后务必init()
  * 
- * @export
  * @class AppClient
  */
-export class AppClient {
+class AppClient {
   /**
    * Creates an instance of AppClient.
    * 创建实例后务必init()
@@ -85,8 +88,8 @@ export class AppClient {
    * @memberof AppClient
    */
   public static signQuery(params: string): string {
-    let paramsSecret = params + this.__secretKey
-      , paramsHash = tools.Hash('md5', paramsSecret)
+    const paramsSecret = params + this.__secretKey
+    const paramsHash = tools.Hash('md5', paramsSecret)
     return `${params}&sign=${paramsHash}`
   }
   /**
@@ -98,7 +101,7 @@ export class AppClient {
    * @memberof AppClient
    */
   public static signQueryBase(params?: string): string {
-    let paramsBase = params == null ? this.baseQuery : `${params}&${this.baseQuery}`
+    const paramsBase = params === undefined ? this.baseQuery : `${params}&${this.baseQuery}`
     return this.signQuery(paramsBase)
   }
   /**
@@ -186,24 +189,24 @@ export class AppClient {
    * @memberof AppClient
    */
   protected _RSAPassWord(publicKey: getKeyResponseData): string {
-    let padding = {
+    const padding = {
       key: publicKey.key,
       // @ts-ignore 此处为d.ts错误
       padding: crypto.constants.RSA_PKCS1_PADDING
     }
-      , hashPassWord = publicKey.hash + this.passWord
-      , encryptPassWord = crypto.publicEncrypt(padding, Buffer.from(hashPassWord)).toString('base64')
+    const hashPassWord = publicKey.hash + this.passWord
+    const encryptPassWord = crypto.publicEncrypt(padding, Buffer.from(hashPassWord)).toString('base64')
     return encodeURIComponent(encryptPassWord)
   }
   /**
    * 获取公钥
    * 
    * @protected
-   * @returns {Promise<tools.response<getKeyResponse>>} 
+   * @returns {(Promise<tools.response<getKeyResponse> | undefined>)} 
    * @memberof AppClient
    */
-  protected _getKey(): Promise<tools.response<getKeyResponse>> {
-    let getKey: request.Options = {
+  protected _getKey(): Promise<tools.response<getKeyResponse> | undefined> {
+    const getKey: request.Options = {
       method: 'POST',
       uri: 'https://passport.bilibili.com/api/oauth2/getKey',
       body: AppClient.signQueryBase(),
@@ -218,22 +221,22 @@ export class AppClient {
    * 
    * @protected
    * @param {getKeyResponseData} publicKey 
-   * @returns {Promise<tools.response<authResponse>>} 
+   * @returns {Promise<tools.response<authResponse> | undefined>)} 
    * @memberof AppClient
    */
-  protected _auth(publicKey: getKeyResponseData): Promise<tools.response<authResponse>> {
-    let passWord = this._RSAPassWord(publicKey)
-      , captcha = this.captcha === '' ? '' : `&captcha=${this.captcha}`
-      , authQuery = `appkey=${AppClient.appKey}&build=${AppClient.build}${captcha}&mobi_app=${AppClient.mobiApp}\
+  protected _auth(publicKey: getKeyResponseData): Promise<tools.response<authResponse> | undefined> {
+    const passWord = this._RSAPassWord(publicKey)
+    const captcha = this.captcha === '' ? '' : `&captcha=${this.captcha}`
+    const authQuery = `appkey=${AppClient.appKey}&build=${AppClient.build}${captcha}&mobi_app=${AppClient.mobiApp}\
 &password=${passWord}&platform=${AppClient.platform}&ts=${AppClient.TS}&username=${encodeURIComponent(this.userName)}`
-      , auth: request.Options = {
-        method: 'POST',
-        uri: 'https://passport.bilibili.com/api/v2/oauth2/login',
-        body: AppClient.signQuery(authQuery),
-        jar: this.__jar,
-        json: true,
-        headers: this.headers
-      }
+    const auth: request.Options = {
+      method: 'POST',
+      uri: 'https://passport.bilibili.com/api/v2/oauth2/login',
+      body: AppClient.signQuery(authQuery),
+      jar: this.__jar,
+      json: true,
+      headers: this.headers
+    }
     this.captcha = ''
     return tools.XHR<authResponse>(auth, 'Android')
   }
@@ -245,15 +248,15 @@ export class AppClient {
    * @memberof AppClient
    */
   protected _update(authResponseData: authResponseData) {
-    let tokenInfo = authResponseData.token_info
-      , cookies = authResponseData.cookie_info.cookies
+    const tokenInfo = authResponseData.token_info
+    const cookies = authResponseData.cookie_info.cookies
     this.biliUID = +tokenInfo.mid
     this.accessToken = tokenInfo.access_token
     this.refreshToken = tokenInfo.refresh_token
-    this.cookieString = cookies.reduce((cookieString, cookie) => {
-      if (cookieString === '') return `${cookie.name}=${cookie.value}`
-      return `${cookieString}; ${cookie.name}=${cookie.value}`
-    }, '')
+    this.cookieString = cookies.reduce((cookieString, cookie) => cookieString === ''
+      ? `${cookie.name}=${cookie.value}`
+      : `${cookieString}; ${cookie.name}=${cookie.value}`
+      , '')
   }
   /**
    * 初始化获取Buvid
@@ -261,8 +264,8 @@ export class AppClient {
    * @memberof AppClient
    */
   public async init() {
-    let buvid = await tools.XHR<string>({ uri: 'http://data.bilibili.com/gv/' }, 'Android').catch(tools.Error)
-    if (buvid != null && buvid.response.statusCode === 200 && buvid.body.length === 46)
+    const buvid = await tools.XHR<string>({ uri: 'http://data.bilibili.com/gv/' }, 'Android')
+    if (buvid !== undefined && buvid.response.statusCode === 200 && buvid.body.length === 46)
       this.headers['Buvid'] = buvid.body
   }
   /**
@@ -272,18 +275,16 @@ export class AppClient {
    * @memberof AppClient
    */
   public async getCaptcha(): Promise<captchaResponse> {
-    let captcha: request.Options = {
+    const captcha: request.Options = {
       uri: 'https://passport.bilibili.com/captcha',
       encoding: null,
       jar: this.__jar,
       headers: this.headers
     }
-    let captchaResponse = await tools.XHR<Buffer>(captcha, 'Android').catch(tools.Error)
-    if (captchaResponse != null && captchaResponse.response.statusCode === 200) return {
-      status: status.success,
-      data: captchaResponse.body,
-    }
-    else return { status: status.error, data: captchaResponse }
+    const captchaResponse = await tools.XHR<Buffer>(captcha, 'Android')
+    if (captchaResponse !== undefined && captchaResponse.response.statusCode === 200)
+      return { status: status.success, data: captchaResponse.body, }
+    return { status: status.error, data: captchaResponse }
   }
   /**
    * 客户端登录
@@ -292,20 +293,20 @@ export class AppClient {
    * @memberof AppClient
    */
   public async login(): Promise<loginResponse> {
-    let getKeyResponse = await this._getKey().catch(tools.Error)
-    if (getKeyResponse != null && getKeyResponse.response.statusCode === 200 && getKeyResponse.body.code === 0) {
-      let authResponse = await this._auth(getKeyResponse.body.data).catch(tools.Error)
-      if (authResponse != null && authResponse.response.statusCode === 200) {
+    const getKeyResponse = await this._getKey()
+    if (getKeyResponse !== undefined && getKeyResponse.response.statusCode === 200 && getKeyResponse.body.code === 0) {
+      const authResponse = await this._auth(getKeyResponse.body.data)
+      if (authResponse !== undefined && authResponse.response.statusCode === 200) {
         if (authResponse.body.code === 0) {
           this._update(authResponse.body.data)
           return { status: status.success, data: authResponse.body }
         }
         if (authResponse.body.code === -105) return { status: status.captcha, data: authResponse.body }
-        else return { status: status.error, data: authResponse.body }
+        return { status: status.error, data: authResponse.body }
       }
-      else return { status: status.httpError, data: authResponse }
+      return { status: status.httpError, data: authResponse }
     }
-    else return { status: status.httpError, data: getKeyResponse }
+    return { status: status.httpError, data: getKeyResponse }
   }
   /**
    * 更新access_token
@@ -314,24 +315,24 @@ export class AppClient {
    * @memberof AppClient
    */
   public async refresh(): Promise<loginResponse> {
-    let refreshQuery = `access_token=${this.accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}\
+    const refreshQuery = `access_token=${this.accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}\
 &mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}&refresh_token=${this.refreshToken}&ts=${AppClient.TS}`
-      , refresh: request.Options = {
-        method: 'POST',
-        uri: 'https://passport.bilibili.com/api/v2/oauth2/refresh_token',
-        body: AppClient.signQuery(refreshQuery),
-        json: true,
-        headers: this.headers
-      }
-    let refreshResponse = await tools.XHR<authResponse>(refresh, 'Android').catch(tools.Error)
-    if (refreshResponse != null && refreshResponse.response.statusCode === 200) {
+    const refresh: request.Options = {
+      method: 'POST',
+      uri: 'https://passport.bilibili.com/api/v2/oauth2/refresh_token',
+      body: AppClient.signQuery(refreshQuery),
+      json: true,
+      headers: this.headers
+    }
+    const refreshResponse = await tools.XHR<authResponse>(refresh, 'Android')
+    if (refreshResponse !== undefined && refreshResponse.response.statusCode === 200) {
       if (refreshResponse.body.code === 0) {
         this._update(refreshResponse.body.data)
         return { status: status.success, data: refreshResponse.body }
       }
-      else return { status: status.error, data: refreshResponse.body }
+      return { status: status.error, data: refreshResponse.body }
     }
-    else return { status: status.httpError, data: refreshResponse }
+    return { status: status.httpError, data: refreshResponse }
   }
 }
 /**
@@ -349,7 +350,7 @@ interface getKeyResponseData {
   key: string
 }
 /**
- * 登录返回
+ * 验证返回
  * 
  * @interface authResponse
  */
@@ -397,7 +398,7 @@ interface loginResponseError {
 }
 interface loginResponseHttp {
   status: status.httpError
-  data: tools.response<getKeyResponse> | tools.response<authResponse> | void
+  data: tools.response<getKeyResponse> | tools.response<authResponse> | undefined
 }
 /**
  * 验证码返回信息
@@ -409,5 +410,7 @@ interface captchaResponseSuccess {
 }
 interface captchaResponseError {
   status: status.error
-  data: tools.response<Buffer> | void
+  data: tools.response<Buffer> | undefined
 }
+export default AppClient
+export { getKeyResponse, authResponse, loginResponse, captchaResponse }

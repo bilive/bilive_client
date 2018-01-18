@@ -155,7 +155,7 @@ interface raffleOptions {
   type?: string
   raffleId: number
   roomID: number
-  User: any
+  user: any
 }
 /**
  * 参与抽奖信息

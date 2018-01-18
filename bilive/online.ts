@@ -1,15 +1,14 @@
 import * as request from 'request'
 import * as tools from './lib/tools'
-import { AppClient } from './lib/app_client'
+import AppClient from './lib/app_client'
 import { apiLiveOrigin, _options, liveOrigin } from './index'
 /**
  * Creates an instance of Online.
  * 
- * @export
  * @class Online
  * @extends {AppClient}
  */
-export class Online extends AppClient {
+class Online extends AppClient {
   /**
    * Creates an instance of Online.
    * @param {userData} userData 
@@ -35,7 +34,11 @@ export class Online extends AppClient {
   public get cookieString(): string { return this.userData.cookie }
   public set cookieString(cookieString: string) { this.userData.cookie = cookieString }
   public jar: request.CookieJar
-  // 验证码
+  /**
+   * 验证码 DataURL
+   * 
+   * @memberof Online
+   */
   public captchaJPEG = ''
   /**
    * 如果抽奖做到外面的话应该有用
@@ -63,11 +66,11 @@ export class Online extends AppClient {
    */
   public async Start(): Promise<'captcha' | 'stop' | void> {
     clearTimeout(this._heartTimer)
-    if (this.jar == null) {
+    if (this.jar === undefined) {
       await this.init()
       this.jar = tools.setCookie(this.cookieString)
     }
-    let test = await this.getOnlineInfo()
+    const test = await this.getOnlineInfo()
     if (typeof test === 'string') return test
     this._heartLoop()
   }
@@ -89,13 +92,14 @@ export class Online extends AppClient {
    * @memberof Online
    */
   public async getOnlineInfo(roomID = _options.config.defaultRoomID): Promise<'captcha' | 'stop' | void> {
-    let isLogin = await tools.XHR<{ code: number | string }>({
+    const isLogin = await tools.XHR<{ code: number | string }>({
       uri: 'https://live.bilibili.com/user/getuserinfo',
       jar: this.jar,
       json: true,
       headers: { 'Referer': `${liveOrigin}/${roomID}` }
-    }).catch(tools.Error)
-    if (isLogin != null && isLogin.response.statusCode === 200 && isLogin.body.code === -101) return this._cookieError()
+    })
+    if (isLogin !== undefined && isLogin.response.statusCode === 200 && isLogin.body.code === -101)
+      return this._cookieError()
   }
   /**
    * 设置心跳循环
@@ -104,44 +108,41 @@ export class Online extends AppClient {
    * @memberof Online
    */
   protected async _heartLoop() {
-    let heartTest = await this._onlineHeart().catch(tools.Error)
+    const heartTest = await this._onlineHeart()
     if (typeof heartTest === 'string') {
-      let test = await this._cookieError()
+      const test = await this._cookieError()
       if (test === 'captcha') this.Stop()
     }
-    else {
-      this._heartTimer = setTimeout(() => {
-        this._heartLoop()
-      }, 3e+5) // 5min
-    }
+    else this._heartTimer = setTimeout(() => this._heartLoop(), 5 * 60 * 1000)
   }
   /**
    * 发送在线心跳包
+   * B站改版以后纯粹用来检查登录凭证是否失效
    * 
    * @protected
    * @returns {(Promise<'cookieError' | 'tokenError' | void>)} 
    * @memberof Online
    */
   protected async _onlineHeart(): Promise<'cookieError' | 'tokenError' | void> {
-    let online: request.Options = {
+    const online: request.Options = {
       method: 'POST',
       uri: `${apiLiveOrigin}/Online/userOnlineHeart`,
       jar: this.jar,
       json: true,
       headers: { 'Referer': `${liveOrigin}/${_options.config.defaultRoomID}` }
     }
-      , heartPC = await tools.XHR<userOnlineHeart>(online)
-    if (heartPC.response.statusCode === 200 && heartPC.body.code === 3) return 'cookieError'
+    const heartPC = await tools.XHR<userOnlineHeart>(online)
+    if (heartPC !== undefined && heartPC.response.statusCode === 200 && heartPC.body.code === 3) return 'cookieError'
     // 客户端
-    let heartbeat: request.Options = {
+    const heartbeat: request.Options = {
       method: 'POST',
       uri: `${apiLiveOrigin}/mobile/userOnlineHeart?${AppClient.signQueryBase(this.tokenQuery)}`,
       body: `room_id=${_options.config.defaultRoomID}&scale=xxhdpi`,
       json: true,
       headers: this.headers
     }
-      , heart = await tools.XHR<userOnlineHeart>(heartbeat, 'Android')
-    if (heart.response.statusCode === 200 && heart.body.code === 3) return 'tokenError'
+    const heart = await tools.XHR<userOnlineHeart>(heartbeat, 'Android')
+    if (heart !== undefined && heart.response.statusCode === 200 && heart.body.code === 3) return 'tokenError'
   }
   /**
    * cookie失效
@@ -152,7 +153,7 @@ export class Online extends AppClient {
    */
   protected async _cookieError(): Promise<'captcha' | 'stop' | void> {
     tools.Log(this.nickname, 'Cookie已失效')
-    let refresh = await this.refresh()
+    const refresh = await this.refresh()
     if (refresh.status === AppClient.status.success) {
       this.jar = tools.setCookie(this.cookieString)
       await this.getOnlineInfo()
@@ -171,7 +172,7 @@ export class Online extends AppClient {
    */
   protected async _tokenError(): Promise<'captcha' | 'stop' | void> {
     tools.Log(this.nickname, 'Token已失效')
-    let login = await this.login()
+    const login = await this.login()
     if (login.status === AppClient.status.success) {
       clearTimeout(this._heartTimer)
       this.captchaJPEG = ''
@@ -182,9 +183,10 @@ export class Online extends AppClient {
       tools.Log(this.nickname, 'Token已更新')
     }
     else if (login.status === AppClient.status.captcha) {
-      let captcha = await this.getCaptcha()
-      if (captcha.status === AppClient.status.success) this.captchaJPEG = `data:image/jpeg;base64,${captcha.data.toString('base64')}`
-      this._heartTimer = setTimeout(() => this.Stop(), 6e+4) // 60s
+      const captcha = await this.getCaptcha()
+      if (captcha.status === AppClient.status.success)
+        this.captchaJPEG = `data:image/jpeg;base64,${captcha.data.toString('base64')}`
+      this._heartTimer = setTimeout(() => this.Stop(), 60 * 1000)
       tools.Log(this.nickname, '验证码错误')
       return 'captcha'
     }
@@ -196,3 +198,4 @@ export class Online extends AppClient {
     else tools.Log(this.nickname, 'Token更新失败')
   }
 }
+export default Online
