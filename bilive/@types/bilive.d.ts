@@ -58,6 +58,8 @@ interface optionsInfo {
   userName: configInfoData
   passWord: configInfoData
   biliUID: configInfoData
+  accessToken: configInfoData
+  refreshToken: configInfoData
   cookie: configInfoData
   status: configInfoData
   doSign: configInfoData
@@ -94,6 +96,7 @@ interface message {
  */
 interface raffleMSG extends message {
   cmd: 'smallTV' | 'raffle' | 'lighten'
+  time: number
 }
 /**
  * app快速抽奖信息
@@ -153,6 +156,7 @@ interface lightenCheckData {
  */
 interface raffleOptions {
   type?: string
+  time?: number
   raffleId: number
   roomID: number
   user: any
@@ -284,7 +288,7 @@ interface awardData {
   isEnd: number
 }
 /**
- * 房间信息
+ * 房间信息app
  * 
  * @interface roomInfo
  */
@@ -300,6 +304,29 @@ interface roomInfoData {
 interface roomInfoDataEvent {
   event_type: string
   event_img: string
+}
+/**
+ * 房间信息
+ * 
+ * @interface roomInit
+ */
+interface roomInit {
+  code: number
+  msg: string
+  message: string
+  data: roomInitData
+}
+interface roomInitData {
+  encrypted: boolean
+  hidden_till: number
+  is_hidden: boolean
+  is_locked: boolean
+  lock_till: number
+  need_p2p: number
+  pwd_verified: boolean
+  room_id: number
+  short_id: number
+  uid: number
 }
 /**
  * 分享房间返回
@@ -428,4 +455,20 @@ interface silver2coinData {
   gold: string
   tid: string
   coin: number
+}
+/**
+ * 每日任务
+ * 
+ * @interface taskInfo
+ */
+interface taskInfo {
+  code: number
+  msg: string
+  data: taskInfoData
+}
+interface taskInfoData {
+  [index: string]: taskInfoDoublewatchinfo
+}
+interface taskInfoDoublewatchinfo {
+  task_id: string | undefined
 }

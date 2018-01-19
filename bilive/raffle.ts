@@ -16,6 +16,7 @@ class Raffle {
    */
   constructor(raffleOptions: raffleOptions) {
     if (raffleOptions.type !== undefined) this._type = raffleOptions.type
+    if (raffleOptions.time !== undefined) this._time = raffleOptions.time
     this._raffleId = raffleOptions.raffleId
     this._roomID = raffleOptions.roomID
     this._user = raffleOptions.user
@@ -28,6 +29,14 @@ class Raffle {
    * @memberof Raffle
    */
   private _type?: string
+  /**
+   * time
+   * 
+   * @private
+   * @type {number}
+   * @memberof Raffle
+   */
+  private _time: number = 100
   /**
    * 参与ID
    * 
@@ -93,7 +102,7 @@ class Raffle {
     }
     const raffleJoin = await tools.XHR<raffleJoin>(join)
     if (raffleJoin !== undefined && raffleJoin.response.statusCode === 200 && raffleJoin.body.code === 0) {
-      await tools.Sleep(120 * 1000)
+      await tools.Sleep(this._time * 1000 + 15 * 1000)
       this._RaffleReward()
     }
   }

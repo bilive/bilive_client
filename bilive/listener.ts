@@ -118,7 +118,8 @@ class Listener extends EventEmitter {
         const message: raffleMSG = {
           cmd: raffle,
           roomID,
-          id: +data.raffleId
+          id: +data.raffleId,
+          time: +data.time
         }
         this._RaffleHandler(message)
       })

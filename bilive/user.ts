@@ -142,40 +142,41 @@ class User extends Online {
    */
   public async eventRoom() {
     if (this._eventRoom || !this.userData.eventRoom) return
-    // 分享房间
+    const tasks = []
+    // 获取任务列表
     const roomID = _options.config.eventRooms[0]
-    const biliUID = this.biliUID
-    const md5 = tools.Hash('md5', `${biliUID}${roomID}bilibili`)
-    const sha1 = tools.Hash('sha1', `${md5}bilibili`)
-    const share: request.Options = {
-      uri: `${apiLiveOrigin}/activity/v1/Common/shareCallback?${AppClient.signQueryBase(`roomid=${roomID}\
-&sharing_plat=weibo&share_sign=${sha1}&${this.tokenQuery}`)}`,
+    const taskInfo = await tools.XHR<taskInfo>({
+      uri: `${apiLiveOrigin}/i/api/taskInfo`,
+      jar: this.jar,
       json: true,
-      headers: this.headers
-    }
-    const shareCallback = await tools.XHR<shareCallback>(share, 'Android')
-    if (shareCallback === undefined || shareCallback.response.statusCode !== 200) return
-    if (shareCallback.body.code === 0)
-      tools.Log(this.nickname, '每日任务', `分享房间 ${roomID} 成功`)
-    else tools.Log(this.nickname, '每日任务', shareCallback.body.msg)
-    // 做任务
-    const task = ['single_watch_task', 'double_watch_task', 'share_task']
-    let ok = 0
-    task.forEach(value => {
-      const task: request.Options = {
-        method: 'POST',
-        uri: `${apiLiveOrigin}/activity/v1/task/receive_award`,
-        body: `task_id=${value}&csrf_token=${tools.getCookie(this.jar, 'bili_jct')}`,
-        jar: this.jar,
-        json: true,
-        headers: { 'Referer': `${liveOrigin}/${roomID}` }
-      }
-      tools.XHR(task, 'WebView')
-        .then(taskres => {
-          if (taskres !== undefined && taskres.response.statusCode === 200) ok += 1
-          if (ok = 3) this._eventRoom = true
-        })
+      headers: { 'Referer': `${liveOrigin}/${roomID}` }
     })
+    if (taskInfo === undefined || taskInfo.response.statusCode !== 200) return
+    if (taskInfo.body.code == 0) {
+      const taskData = taskInfo.body.data
+      for (let i in taskData) if (taskData[i].task_id !== undefined) tasks.push(taskData[i].task_id)
+      // 做任务
+      let ok = 0
+      for (let taskID of tasks) {
+        const task: request.Options = {
+          method: 'POST',
+          uri: `${apiLiveOrigin}/activity/v1/task/receive_award`,
+          body: `task_id=${taskID}`,
+          jar: this.jar,
+          json: true,
+          headers: { 'Referer': `${liveOrigin}/${roomID}` }
+        }
+        const taskres = await tools.XHR(task)
+        if (taskres !== undefined && taskres.response.statusCode === 200
+          && (taskres.response.body.code === 0 || taskres.response.body.code === -400)) ok += 1
+        if (ok === tasks.length) {
+          this._eventRoom = true
+          tools.Log(this.nickname, '每日任务', '每日任务已完成')
+        }
+        await tools.Sleep(3000)
+      }
+    }
+    else tools.Log(this.nickname, '每日任务', taskInfo.body.msg)
   }
   /**
    * 银瓜子兑换硬币

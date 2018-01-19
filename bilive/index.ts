@@ -80,10 +80,13 @@ class BiLive {
       }
       switch (raffleMSG.cmd) {
         case 'smallTV':
+          raffleOptions.time = raffleMSG.time
           return new Raffle(raffleOptions).SmallTV()
         case 'raffle':
+          raffleOptions.time = raffleMSG.time
           return new Raffle(raffleOptions).Raffle()
         case 'lighten':
+          raffleOptions.time = raffleMSG.time
           return new Raffle(raffleOptions).Lighten()
         case 'appLighten':
           raffleOptions.type = raffleMSG.type
