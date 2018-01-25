@@ -26,25 +26,33 @@ class AppClient {
    */
   constructor() {
   }
-  // bilibili客户端
-  private static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
   public static readonly actionKey: string = 'appkey'
-  public static readonly appKey: string = '1d8b6e7d45233436'
-  public static readonly build: string = '5210000'
-  public static readonly mobiApp: string = 'android'
   public static readonly platform: string = 'android'
+  // bilibili 客户端
+  private static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
+  public static readonly appKey: string = '1d8b6e7d45233436'
+  public static readonly build: string = '521200'
+  public static readonly mobiApp: string = 'android'
   // bilibili 国际版
-  // private static readonly _secretKey: string = '36efcfed79309338ced0380abd824ac1'
+  // private static readonly __secretKey: string = '36efcfed79309338ced0380abd824ac1'
   // public static readonly appKey: string = 'bb3101000e232e27'
-  // public static readonly build: string = '110001'
+  // public static readonly build: string = '112000'
   // public static readonly mobiApp: string = 'android_i'
-  // public static readonly platform: string = 'android'
+  // bilibili 概念版
+  // private static readonly __secretKey: string = '25bdede4e1581c836cab73a48790ca6e'
+  // public static readonly appKey: string = '07da50c9a0bf829f'
+  // public static readonly build: string = '591204'
+  // public static readonly mobiApp: string = 'android_b'
+  // bilibili TV
+  // private static readonly __secretKey: string = '59b43e04ad6965f34319062b478f83dd'
+  // public static readonly appKey: string = '4409e2ce8ffd12b8'
+  // public static readonly build: string = '140600'
+  // public static readonly mobiApp: string = 'android_tv'
   // bilibili link
-  // private static readonly _secretKey: string = 'e988e794d4d4b6dd43bc0e89d6e90c43'
+  // private static readonly __secretKey: string = 'e988e794d4d4b6dd43bc0e89d6e90c43'
   // public static readonly appKey: string = '37207f2beaebf8d7'
-  // public static readonly build: string = '211109'
+  // public static readonly build: string = '212000'
   // public static readonly mobiApp: string = 'biliLink'
-  // public static readonly platform: string = 'android'
   /**
    * 谜一样的TS
    * 
