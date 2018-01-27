@@ -149,7 +149,7 @@ class User extends Online {
       uri: `${apiLiveOrigin}/i/api/taskInfo`,
       jar: this.jar,
       json: true,
-      headers: { 'Referer': `${liveOrigin}/${roomID}` }
+      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
     })
     if (taskInfo === undefined || taskInfo.response.statusCode !== 200) return
     if (taskInfo.body.code == 0) {
@@ -164,7 +164,7 @@ class User extends Online {
           body: `task_id=${taskID}`,
           jar: this.jar,
           json: true,
-          headers: { 'Referer': `${liveOrigin}/${roomID}` }
+          headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
         }
         const taskres = await tools.XHR(task)
         if (taskres !== undefined && taskres.response.statusCode === 200

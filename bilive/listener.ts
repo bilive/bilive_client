@@ -3,7 +3,7 @@ import { EventEmitter } from 'events'
 import * as tools from './lib/tools'
 import AppClient from './lib/app_client'
 import DMclient from './dm_client_re'
-import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, _options } from './index'
+import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, _options, _user } from './index'
 /**
  * 监听服务器消息
  * 
@@ -61,7 +61,7 @@ class Listener extends EventEmitter {
    */
   public Start() {
     const config = _options.config
-    const roomID = config.defaultRoomID
+    const roomID = tools.getLongRoomID(config.defaultRoomID)
     const userID = config.defaultUserID
     this._DMclient = new DMclient({ roomID, userID })
     this._DMclient
@@ -109,7 +109,7 @@ class Listener extends EventEmitter {
     const check: request.Options = {
       uri: `${url}/check?roomid=${roomID}`,
       json: true,
-      headers: { 'Referer': `${liveOrigin}/${roomID}` }
+      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
     }
     const raffleCheck = await tools.XHR<raffleCheck>(check)
     if (raffleCheck !== undefined && raffleCheck.response.statusCode === 200
@@ -187,7 +187,7 @@ class Listener extends EventEmitter {
         return
     }
     this.emit('raffle', raffleMSG)
-    tools.Log(`房间 ${roomID} 开启了第 ${id} 轮${msg}抽奖`)
+    tools.Log(`房间 ${tools.getShortRoomID(roomID)} 开启了第 ${id} 轮${msg}抽奖`)
   }
 }
 export default Listener

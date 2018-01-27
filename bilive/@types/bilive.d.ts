@@ -6,11 +6,12 @@
  */
 interface _options {
   server: server
-  apiIPs: string[]
   config: config
   user: userCollection
   newUserData: userData
   info: optionsInfo
+  apiIPs: string[]
+  roomList: [number, number][]
 }
 interface server {
   path: string
@@ -41,7 +42,6 @@ interface userData {
   treasureBox: boolean
   eventRoom: boolean
   silver2coin: boolean
-  smallTV: boolean
   raffle: boolean
   sendGift: boolean
   sendGiftRoom: number
@@ -66,7 +66,6 @@ interface optionsInfo {
   treasureBox: configInfoData
   eventRoom: configInfoData
   silver2coin: configInfoData
-  smallTV: configInfoData
   raffle: configInfoData
   sendGift: configInfoData
   sendGiftRoom: configInfoData

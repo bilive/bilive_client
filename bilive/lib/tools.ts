@@ -100,6 +100,26 @@ async function testIP(apiIPs: string[]) {
   await Promise.all(test)
   Log('可用ip数量为', api.IPs.size)
 }
+const shortRoomID = new Map<number, number>()
+const longRoomID = new Map<number, number>()
+/**
+ * 获取短id
+ * 
+ * @param {number} roomID 
+ * @returns {number} 
+ */
+function getShortRoomID(roomID: number): number {
+  return shortRoomID.get(roomID) || roomID
+}
+/**
+ * 获取长id
+ * 
+ * @param {number} roomID 
+ * @returns {number} 
+ */
+function getLongRoomID(roomID: number): number {
+  return longRoomID.get(roomID) || roomID
+}
 /**
  * 添加request头信息
  * 
@@ -132,6 +152,41 @@ function XHR<T>(options: request.OptionsWithUri, platform: 'PC' | 'Android' | 'W
   })
 }
 /**
+ * 操作数据文件, 为了可以快速应用不使用数据库
+ * 
+ * @param {_options} [options]
+ * @returns {Promise<options>}
+ */
+function Options(options?: _options): Promise<_options> {
+  return new Promise(async resolve => {
+    const dirname = __dirname + (process.env.npm_package_scripts_start === 'node build/app.js' ? '/../../..' : '/../..')
+    const hasDir = fs.existsSync(dirname + '/options/')
+    if (!hasDir) fs.mkdirSync(dirname + '/options/')
+    const hasFile = fs.existsSync(dirname + '/options/options.json')
+    if (!hasFile) fs.copyFileSync(dirname + '/bilive/options.default.json', dirname + '/options/options.json')
+    if (options === undefined) {
+      const defaultOptionBuffer = fs.readFileSync(dirname + '/bilive/options.default.json')
+      const defaultOption = await JSONparse<_options>(defaultOptionBuffer.toString())
+      const optionBuffer = fs.readFileSync(dirname + '/options/options.json')
+      const option = await JSONparse<_options>(optionBuffer.toString())
+      if (defaultOption === undefined || option === undefined) throw new TypeError('文件格式化失败')
+      defaultOption.server = Object.assign({}, defaultOption.server, option.server)
+      defaultOption.config = Object.assign({}, defaultOption.config, option.config)
+      for (const uid in option.user)
+        defaultOption.user[uid] = Object.assign({}, defaultOption.newUserData, option.user[uid])
+      defaultOption.roomList.forEach(([long, short]) => {
+        shortRoomID.set(long, short)
+        longRoomID.set(short, long)
+      })
+      return resolve(defaultOption)
+    }
+    else {
+      fs.writeFileSync(dirname + '/options/options.json', JSON.stringify(options))
+      return resolve(options)
+    }
+  })
+}
+/**
  * 设置cookie
  * 
  * @param {string} cookieString
@@ -156,37 +211,6 @@ function getCookie(jar: request.CookieJar, key: string, url = apiLiveOrigin): st
   const cookies = jar.getCookies(url)
   const cookieFind = cookies.find(cookie => cookie.key === key)
   return cookieFind === undefined ? '' : cookieFind.value
-}
-/**
- * 操作数据文件, 为了可以快速应用不使用数据库
- * 
- * @param {_options} [options]
- * @returns {Promise<options>}
- */
-function Options(options?: _options): Promise<_options> {
-  return new Promise(async resolve => {
-    const dirname = __dirname + (process.env.npm_package_scripts_start === 'node build/app.js' ? '/../../..' : '/../..')
-    const hasDir = fs.existsSync(dirname + '/options/')
-    if (!hasDir) fs.mkdirSync(dirname + '/options/')
-    const hasFile = fs.existsSync(dirname + '/options/options.json')
-    if (!hasFile) fs.copyFileSync(dirname + '/bilive/options.default.json', dirname + '/options/options.json')
-    if (options === undefined) {
-      const defaultOptionBuffer = fs.readFileSync(dirname + '/bilive/options.default.json')
-      const defaultOption = await JSONparse<_options>(defaultOptionBuffer.toString())
-      const optionBuffer = fs.readFileSync(dirname + '/options/options.json')
-      const option = await JSONparse<_options>(optionBuffer.toString())
-      if (defaultOption === undefined || option === undefined) throw new TypeError('文件格式化失败')
-      defaultOption.server = Object.assign({}, defaultOption.server, option.server)
-      defaultOption.config = Object.assign({}, defaultOption.config, option.config)
-      for (const uid in option.user) defaultOption.user[uid] = Object.assign({}
-        , defaultOption.newUserData, option.user[uid])
-      return resolve(defaultOption)
-    }
-    else {
-      fs.writeFileSync(dirname + '/options/options.json', JSON.stringify(options))
-      return resolve(options)
-    }
-  })
 }
 /**
  * 格式化JSON
@@ -260,4 +284,4 @@ interface response<T> {
   response: request.RequestResponse
   body: T
 }
-export { testIP, XHR, setCookie, getCookie, Options, JSONparse, Hash, Log, logs, ErrorLog, Sleep, response }
+export { testIP, XHR, setCookie, getCookie, Options, getShortRoomID, getLongRoomID, JSONparse, Hash, Log, logs, ErrorLog, Sleep, response }

@@ -92,13 +92,13 @@ class Online extends AppClient {
    * @memberof Online
    */
   public async getOnlineInfo(roomID = _options.config.defaultRoomID): Promise<'captcha' | 'stop' | void> {
-    const isLogin = await tools.XHR<{ code: number | string }>({
+    const isLogin = await tools.XHR<{ code: number }>({
       uri: 'https://live.bilibili.com/user/getuserinfo',
       jar: this.jar,
       json: true,
-      headers: { 'Referer': `${liveOrigin}/${roomID}` }
+      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
     })
-    if (isLogin !== undefined && isLogin.response.statusCode === 200 && isLogin.body.code === -101)
+    if (isLogin !== undefined && isLogin.response.statusCode === 200 && isLogin.body.code === -500)
       return this._cookieError()
   }
   /**
@@ -124,12 +124,13 @@ class Online extends AppClient {
    * @memberof Online
    */
   protected async _onlineHeart(): Promise<'cookieError' | 'tokenError' | void> {
+    const roomID = _options.config.defaultRoomID
     const online: request.Options = {
       method: 'POST',
       uri: `${apiLiveOrigin}/User/userOnlineHeart`,
       jar: this.jar,
       json: true,
-      headers: { 'Referer': `${liveOrigin}/${_options.config.defaultRoomID}` }
+      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
     }
     const heartPC = await tools.XHR<userOnlineHeart>(online)
     if (heartPC !== undefined && heartPC.response.statusCode === 200 && heartPC.body.code === 3) return 'cookieError'
@@ -137,7 +138,7 @@ class Online extends AppClient {
     const heartbeat: request.Options = {
       method: 'POST',
       uri: `${apiLiveOrigin}/mobile/userOnlineHeart?${AppClient.signQueryBase(this.tokenQuery)}`,
-      body: `room_id=${_options.config.defaultRoomID}&scale=xxhdpi`,
+      body: `room_id=${tools.getLongRoomID(roomID)}&scale=xxhdpi`,
       json: true,
       headers: this.headers
     }

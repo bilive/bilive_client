@@ -98,7 +98,7 @@ class Raffle {
       uri: `${this._url}/join?roomid=${this._roomID}&raffleId=${this._raffleId}`,
       jar: this._user.jar,
       json: true,
-      headers: { 'Referer': `${liveOrigin}/${this._roomID}` }
+      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(this._roomID)}` }
     }
     const raffleJoin = await tools.XHR<raffleJoin>(join)
     if (raffleJoin !== undefined && raffleJoin.response.statusCode === 200 && raffleJoin.body.code === 0) {
@@ -117,7 +117,7 @@ class Raffle {
       uri: `${this._url}/notice?roomid=${this._roomID}&raffleId=${this._raffleId}`,
       jar: this._user.jar,
       json: true,
-      headers: { 'Referer': `${liveOrigin}/${this._roomID}` }
+      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(this._roomID)}` }
     }
     const raffleReward = await tools.XHR<raffleReward>(reward)
     if (raffleReward === undefined || raffleReward.response.statusCode !== 200) return
@@ -144,7 +144,7 @@ class Raffle {
       body: `roomid=${this._roomID}&lightenId=${this._raffleId}}`,
       jar: this._user.jar,
       json: true,
-      headers: { 'Referer': `${liveOrigin}/${this._roomID}` }
+      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(this._roomID)}` }
     }
     const lightenReward = await tools.XHR<lightenReward>(getCoin)
     if (lightenReward !== undefined && lightenReward.response.statusCode === 200 && lightenReward.body.code === 0)
