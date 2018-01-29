@@ -93,7 +93,7 @@ class Online extends AppClient {
    */
   public async getOnlineInfo(roomID = _options.config.defaultRoomID): Promise<'captcha' | 'stop' | void> {
     const isLogin = await tools.XHR<{ code: number }>({
-      uri: 'https://live.bilibili.com/user/getuserinfo',
+      uri: `${liveOrigin}/user/getuserinfo`,
       jar: this.jar,
       json: true,
       headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }

@@ -31,7 +31,7 @@ class AppClient {
   // bilibili 客户端
   private static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
   public static readonly appKey: string = '1d8b6e7d45233436'
-  public static readonly build: string = '521200'
+  public static readonly build: string = '5220000'
   public static readonly mobiApp: string = 'android'
   // bilibili 国际版
   // private static readonly __secretKey: string = '36efcfed79309338ced0380abd824ac1'
@@ -85,17 +85,19 @@ class AppClient {
    */
   public static get baseQuery(): string {
     return `actionKey=${this.actionKey}&appkey=${this.appKey}&build=${this.build}\
-&mobi_app=${this.mobiApp}&platform=${this.platform}&ts=${this.TS}`
+&mobi_app=${this.mobiApp}&platform=${this.platform}`
   }
   /**
    * 对参数签名
    * 
    * @static
-   * @param {string} params
-   * @returns {string}
+   * @param {string} params 
+   * @param {boolean} [ts=true] 
+   * @returns {string} 
    * @memberof AppClient
    */
-  public static signQuery(params: string): string {
+  public static signQuery(params: string, ts = true): string {
+    if (ts) params = `${params}&ts=${this.TS}`
     const paramsSecret = params + this.__secretKey
     const paramsHash = tools.Hash('md5', paramsSecret)
     return `${params}&sign=${paramsHash}`
@@ -176,9 +178,9 @@ class AppClient {
    * @memberof AppClient
    */
   public headers: request.Headers = {
-    'Buvid': '7A4C4919-20A6-4012-BBA4-6FAA1561542845107infoc',
     'Connection': 'Keep-Alive',
-    'User-Agent': 'Mozilla/5.0 BiliDroid/5.21.0 (bbcallen@gmail.com)'
+    'Device-ID': 'Pwc3BzUCYwJjUWAGegZ6',
+    'User-Agent': 'Mozilla/5.0 BiliDroid/5.22.0 (bbcallen@gmail.com)'
   }
   /**
    * cookieJar
@@ -240,7 +242,7 @@ class AppClient {
     const auth: request.Options = {
       method: 'POST',
       uri: 'https://passport.bilibili.com/api/v2/oauth2/login',
-      body: AppClient.signQuery(authQuery),
+      body: AppClient.signQuery(authQuery, false),
       jar: this.__jar,
       json: true,
       headers: this.headers
@@ -272,9 +274,22 @@ class AppClient {
    * @memberof AppClient
    */
   public async init() {
-    const buvid = await tools.XHR<string>({ uri: 'http://data.bilibili.com/gv/' }, 'Android')
-    if (buvid !== undefined && buvid.response.statusCode === 200 && buvid.body.length === 46)
+    // 设置 Buvid
+    const buvid = await tools.XHR<string>({
+      uri: 'http://data.bilibili.com/gv/',
+      headers: this.headers
+    }, 'Android')
+    if (buvid !== undefined && buvid.response.statusCode === 200 && buvid.body.endsWith('infoc'))
       this.headers['Buvid'] = buvid.body
+    // 设置 Display-ID
+    const displayid = await tools.XHR<{ code: number, data: { id: string } }>({
+      uri: 'http://app.bilibili.com/x/v2/display/id?' + AppClient.signQueryBase(),
+      json: true,
+      headers: this.headers
+    }, 'Android')
+    if (displayid !== undefined && displayid.response.statusCode === 200
+      && displayid.body.code === 0 && displayid.body.data.id.length > 20)
+      this.headers['Display-ID'] = displayid.body.data.id
   }
   /**
    * 获取验证码
@@ -317,6 +332,28 @@ class AppClient {
     return { status: status.httpError, data: getKeyResponse }
   }
   /**
+   * 客户端登出
+   * 
+   * @returns {Promise<logoutResponse>} 
+   * @memberof AppClient
+   */
+  public async logout(): Promise<logoutResponse> {
+    const revokeQuery = `${this.cookieString.replace(/; */g, '&')}&access_token=${this.accessToken}`
+    const revoke: request.Options = {
+      method: 'POST',
+      uri: 'https://passport.bilibili.com/api/v2/oauth2/revoke',
+      body: AppClient.signQueryBase(revokeQuery),
+      json: true,
+      headers: this.headers
+    }
+    const revokeResponse = await tools.XHR<revokeResponse>(revoke, 'Android')
+    if (revokeResponse !== undefined && revokeResponse.response.statusCode === 200) {
+      if (revokeResponse.body.code === 0) return { status: status.success, data: revokeResponse.body }
+      return { status: status.error, data: revokeResponse.body }
+    }
+    return { status: status.httpError, data: revokeResponse }
+  }
+  /**
    * 更新access_token
    * 
    * @returns {Promise<loginResponse>} 
@@ -324,7 +361,7 @@ class AppClient {
    */
   public async refresh(): Promise<loginResponse> {
     const refreshQuery = `access_token=${this.accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}\
-&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}&refresh_token=${this.refreshToken}&ts=${AppClient.TS}`
+&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}&refresh_token=${this.refreshToken}`
     const refresh: request.Options = {
       method: 'POST',
       uri: 'https://passport.bilibili.com/api/v2/oauth2/refresh_token',
@@ -389,6 +426,16 @@ interface authResponseTokeninfo {
   expires_in: number
 }
 /**
+ * 注销返回
+ * 
+ * @interface revokeResponse
+ */
+interface revokeResponse {
+  message: string
+  ts: number
+  code: number
+}
+/**
  * 登录返回信息
  */
 type loginResponse = loginResponseSuccess | loginResponseCaptcha | loginResponseError | loginResponseHttp
@@ -407,6 +454,22 @@ interface loginResponseError {
 interface loginResponseHttp {
   status: status.httpError
   data: tools.response<getKeyResponse> | tools.response<authResponse> | undefined
+}
+/**
+ * 登出返回信息
+ */
+type logoutResponse = revokeResponseSuccess | revokeResponseError | revokeResponseHttp
+interface revokeResponseSuccess {
+  status: status.success
+  data: revokeResponse
+}
+interface revokeResponseError {
+  status: status.error
+  data: revokeResponse
+}
+interface revokeResponseHttp {
+  status: status.httpError
+  data: tools.response<revokeResponse> | undefined
 }
 /**
  * 验证码返回信息

@@ -3,7 +3,7 @@ import { EventEmitter } from 'events'
 import * as tools from './lib/tools'
 import AppClient from './lib/app_client'
 import DMclient from './dm_client_re'
-import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, _options, _user } from './index'
+import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, _options } from './index'
 /**
  * 监听服务器消息
  * 

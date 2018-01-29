@@ -1,7 +1,4 @@
 import * as fs from 'fs'
-import * as dns from 'dns'
-import * as net from 'net'
-import * as http from 'http'
 import * as util from 'util'
 import * as crypto from 'crypto'
 import * as request from 'request'
@@ -18,7 +15,7 @@ function getHeaders(platform: string): request.Headers {
     case 'Android':
       return {
         'Connection': 'Keep-Alive',
-        'User-Agent': 'Mozilla/5.0 BiliDroid/5.21.0 (bbcallen@gmail.com)'
+        'User-Agent': 'Mozilla/5.0 BiliDroid/5.22.0 (bbcallen@gmail.com)'
       }
     case 'WebView':
       return {
@@ -27,7 +24,7 @@ function getHeaders(platform: string): request.Headers {
         'Connection': 'keep-alive',
         'Cookie': 'l=v',
         'Origin': liveOrigin,
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 7.1.1; E6883 Build/32.4.A.1.54; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/62.0.3202.84 Mobile Safari/537.36 BiliApp/1',
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 7.1.1; E6883 Build/32.4.A.1.54; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/64.0.3282.119 Mobile Safari/537.36 BiliApp/5220000',
         'X-Requested-With': 'tv.danmaku.bili'
       }
     default:
@@ -38,7 +35,7 @@ function getHeaders(platform: string): request.Headers {
         'Cookie': 'l=v',
         'DNT': '1',
         'Origin': liveOrigin,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36'
       }
   }
 }
@@ -49,20 +46,9 @@ function getHeaders(platform: string): request.Headers {
  */
 class IP {
   constructor() {
-    // @ts-ignore 此处为d.ts错误
-    this.httpAgent.createConnection = (options: net.NetConnectOpts, callback: Function): net.Socket => {
-      // @ts-ignore ts对于联合类型的推断还在讨论中
-      options.lookup = (hostname, options, callback) => {
-        const ip = this.ip
-        if (ip === '') return dns.lookup(hostname, options, callback)
-        return callback(null, ip, 4)
-      }
-      return net.createConnection(options, callback)
-    }
   }
   public IPs: Set<string> = new Set()
   private __IPiterator: IterableIterator<string> = this.IPs.values()
-  public httpAgent = new http.Agent()
   public get ip(): string {
     if (this.IPs.size === 0) return ''
     const ip = this.__IPiterator.next()
@@ -78,8 +64,9 @@ const api = new IP()
  * 测试可用ip
  * 
  * @param {string[]} apiIPs 
+ * @returns {Promise<number>} 
  */
-async function testIP(apiIPs: string[]) {
+async function testIP(apiIPs: string[]): Promise<number> {
   const test: Promise<undefined>[] = []
   apiIPs.forEach(ip => {
     const headers = getHeaders('PC')
@@ -98,7 +85,9 @@ async function testIP(apiIPs: string[]) {
     }))
   })
   await Promise.all(test)
-  Log('可用ip数量为', api.IPs.size)
+  const num = api.IPs.size
+  Log('可用ip数量为', num)
+  return num
 }
 const shortRoomID = new Map<number, number>()
 const longRoomID = new Map<number, number>()
@@ -133,7 +122,13 @@ function XHR<T>(options: request.OptionsWithUri, platform: 'PC' | 'Android' | 'W
   return new Promise<response<T> | undefined>(resolve => {
     options.gzip = true
     // 添加用户代理
-    if (typeof options.uri === 'string' && options.uri.startsWith(apiLiveOrigin)) options.agent = api.httpAgent
+    if (typeof options.uri === 'string' && options.uri.startsWith(apiLiveOrigin)) {
+      const ip = api.ip
+      if (ip !== '') {
+        options.proxy = `http://${ip}/`
+        options.tunnel = false
+      }
+    }
     // 添加头信息
     const headers = getHeaders(platform)
     options.headers = options.headers === undefined ? headers : Object.assign(headers, options.headers)
