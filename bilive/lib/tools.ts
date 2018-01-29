@@ -70,9 +70,10 @@ async function testIP(apiIPs: string[]): Promise<number> {
   const test: Promise<undefined>[] = []
   apiIPs.forEach(ip => {
     const headers = getHeaders('PC')
-    headers['host'] = 'api.live.bilibili.com'
     const options = {
-      uri: `http://${ip}/`,
+      uri: 'http://api.live.bilibili.com',
+      proxy: `http://${ip}/`,
+      tunnel: false,
       method: 'HEAD',
       timeout: 1000,
       headers
