@@ -1,5 +1,5 @@
-import * as request from 'request'
-import * as tools from './lib/tools'
+import request from 'request'
+import tools from './lib/tools'
 import AppClient from './lib/app_client'
 import { apiLiveOrigin, _options, liveOrigin } from './index'
 /**
@@ -33,7 +33,7 @@ class Online extends AppClient {
   public set refreshToken(refreshToken: string) { this.userData.refreshToken = refreshToken }
   public get cookieString(): string { return this.userData.cookie }
   public set cookieString(cookieString: string) { this.userData.cookie = cookieString }
-  public jar: request.CookieJar
+  public jar!: request.CookieJar
   /**
    * 验证码 DataURL
    * 
@@ -56,7 +56,7 @@ class Online extends AppClient {
    * @type {NodeJS.Timer}
    * @memberof Online
    */
-  protected _heartTimer: NodeJS.Timer
+  protected _heartTimer!: NodeJS.Timer
   /**
    * 当账号出现异常时, 会返回'captcha'或'stop'
    * 'captcha'为登录需要验证码, 若无法处理需Stop()

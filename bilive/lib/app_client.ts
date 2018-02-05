@@ -1,6 +1,6 @@
-import * as crypto from 'crypto'
-import * as request from 'request'
-import * as tools from './tools'
+import crypto from 'crypto'
+import request from 'request'
+import tools, { response } from './tools'
 /**
  * 登录状态
  * 
@@ -132,45 +132,51 @@ class AppClient {
   /**
    * 用户名, 推荐邮箱或电话号
    * 
+   * @abstract
    * @type {string}
    * @memberof AppClient
    */
-  public userName: string
+  public userName!: string
   /**
    * 密码
    * 
+   * @abstract
    * @type {string}
    * @memberof AppClient
    */
-  public passWord: string
+  public passWord!: string
   /**
    * 登录后获取的B站UID
    * 
+   * @abstract
    * @type {number}
    * @memberof AppClient
    */
-  public biliUID: number
+  public biliUID!: number
   /**
    * 登录后获取的access_token
    * 
+   * @abstract
    * @type {string}
    * @memberof AppClient
    */
-  public accessToken: string
+  public accessToken!: string
   /**
    * 登录后获取的refresh_token
    * 
+   * @abstract
    * @type {string}
    * @memberof AppClient
    */
-  public refreshToken: string
+  public refreshToken!: string
   /**
    * 登录后获取的cookieString
    * 
+   * @abstract
    * @type {string}
    * @memberof AppClient
    */
-  public cookieString: string
+  public cookieString!: string
   /**
    * 请求头
    * 
@@ -212,10 +218,10 @@ class AppClient {
    * 获取公钥
    * 
    * @protected
-   * @returns {(Promise<tools.response<getKeyResponse> | undefined>)} 
+   * @returns {(Promise<response<getKeyResponse> | undefined>)} 
    * @memberof AppClient
    */
-  protected _getKey(): Promise<tools.response<getKeyResponse> | undefined> {
+  protected _getKey(): Promise<response<getKeyResponse> | undefined> {
     const getKey: request.Options = {
       method: 'POST',
       uri: 'https://passport.bilibili.com/api/oauth2/getKey',
@@ -231,10 +237,10 @@ class AppClient {
    * 
    * @protected
    * @param {getKeyResponseData} publicKey 
-   * @returns {Promise<tools.response<authResponse> | undefined>)} 
+   * @returns {Promise<response<authResponse> | undefined>)} 
    * @memberof AppClient
    */
-  protected _auth(publicKey: getKeyResponseData): Promise<tools.response<authResponse> | undefined> {
+  protected _auth(publicKey: getKeyResponseData): Promise<response<authResponse> | undefined> {
     const passWord = this._RSAPassWord(publicKey)
     const captcha = this.captcha === '' ? '' : `&captcha=${this.captcha}`
     const authQuery = `appkey=${AppClient.appKey}&build=${AppClient.build}${captcha}&mobi_app=${AppClient.mobiApp}\
@@ -453,7 +459,7 @@ interface loginResponseError {
 }
 interface loginResponseHttp {
   status: status.httpError
-  data: tools.response<getKeyResponse> | tools.response<authResponse> | undefined
+  data: response<getKeyResponse> | response<authResponse> | undefined
 }
 /**
  * 登出返回信息
@@ -469,7 +475,7 @@ interface revokeResponseError {
 }
 interface revokeResponseHttp {
   status: status.httpError
-  data: tools.response<revokeResponse> | undefined
+  data: response<revokeResponse> | undefined
 }
 /**
  * 验证码返回信息
@@ -481,7 +487,7 @@ interface captchaResponseSuccess {
 }
 interface captchaResponseError {
   status: status.error
-  data: tools.response<Buffer> | undefined
+  data: response<Buffer> | undefined
 }
 export default AppClient
 export { getKeyResponse, authResponse, loginResponse, captchaResponse }

@@ -1,5 +1,5 @@
-import * as request from 'request'
-import * as tools from './lib/tools'
+import request from 'request'
+import tools from './lib/tools'
 import Online from './online'
 import AppClient from './lib/app_client'
 import { apiLiveOrigin, _options, liveOrigin, _user } from './index'

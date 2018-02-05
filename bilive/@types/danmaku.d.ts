@@ -18,54 +18,89 @@ interface danmuJson {
  * @extends {danmuJson}
  */
 interface DANMU_MSG extends danmuJson {
-  info: [
-    [
-      number,
-      number, // 模式
-      number, // 字号
-      number, // 颜色
-      number, // 发送时间
-      number | string, // rnd
-      number,
-      string, // uid crc32
-      number
-    ],
-    string, // 弹幕
-    [
-      number, // 用户uid
-      string, // 用户名
-      number, // 管理员
-      number, // 月费老爷
-      number, // 年费老爷
-      number, // rank
-      number,
-      string // #32进制颜色代码
-    ],
-    [
-      number, // 徽章等级
-      string, // 勋章名
-      string, // 主播名
-      number | string, // 直播间, 字符串的貌似是原始房间号
-      number,
-      'union' | string // 特殊样式
-    ],
-    [
-      number, // 用户等级
-      number,
-      number,
-      number | string // 等级排名, 具体值为number
-    ],
-    [
-      string, // 头衔标识
-      string // 头衔图片
-    ],
-    number, // teamid
-    number, // 舰队等级
-    {
-      /** #32进制颜色代码 */
-      uname_color: string
-    }
-  ]
+  info: DANMU_MSG_info
+}
+interface DANMU_MSG_info extends Array<number | string | DANMU_MSG_info_danmu | DANMU_MSG_info_user | DANMU_MSG_info_medal | DANMU_MSG_info_rank | DANMU_MSG_info_other> {
+  /** 弹幕信息 */
+  0: DANMU_MSG_info_danmu
+  /** 弹幕内容 */
+  1: string
+  /** 用户信息 */
+  2: DANMU_MSG_info_user
+  /** 用户徽章 */
+  3: DANMU_MSG_info_medal
+  /** 用户排行 */
+  4: DANMU_MSG_info_rank
+  /** teamid */
+  5: number
+  /** 舰队等级 */
+  6: number
+  7: DANMU_MSG_info_other
+}
+interface DANMU_MSG_info_danmu extends Array<number | string> {
+  0: number
+  /** 模式 */
+  1: number
+  /** 字号 */
+  2: number
+  /** 颜色 */
+  3: number
+  /** 发送时间 */
+  4: number
+  /** rnd */
+  5: number | string
+  6: number
+  /** uid crc32 */
+  7: string
+  8: number
+}
+interface DANMU_MSG_info_user extends Array<number | string> {
+  /** 用户uid */
+  0: number
+  /** 用户名 */
+  1: string
+  /** 是否为管理员 */
+  2: 0 | 1
+  /** 是否为月费老爷 */
+  3: 0 | 1
+  /** 是否为年费老爷 */
+  4: 0 | 1
+  /** 直播间排行 */
+  5: number
+  6: number
+  /** #32进制颜色代码 */
+  7: string
+}
+interface DANMU_MSG_info_medal extends Array<number | string> {
+  /** 徽章等级 */
+  0: number
+  /** 勋章名 */
+  1: string
+  /** 主播名 */
+  2: string
+  /** 直播间, 字符串的貌似是原始房间号 */
+  3: number | string
+  4: number,
+  /** 特殊样式 */
+  5: 'union' | string
+}
+interface DANMU_MSG_info_rank extends Array<number | string> {
+  /** 用户等级 */
+  0: number
+  1: number
+  2: number
+  /** 等级排名, 具体值为number */
+  3: number | string
+}
+interface DANMU_MSG_info_title extends Array<string> {
+  /** 头衔标识 */
+  0: string
+  /** 头衔图片 */
+  1: string
+}
+interface DANMU_MSG_info_other {
+  /** #32进制颜色代码 */
+  uname_color: string
 }
 /**
  * 礼物消息, 用户包裹和瓜子的数据直接在里面, 真是窒息
@@ -383,7 +418,7 @@ interface RAFFLE_END_data {
   from: string
   /** 赠送人头像地址 */
   fromFace: string
-  win: string
+  win: RAFFLE_END_data_win
 }
 interface RAFFLE_END_data_win {
   /** 获赠人 */
@@ -407,19 +442,13 @@ interface RAFFLE_END_data_win {
 interface TV_START extends danmuJson {
   data: TV_START_data
 }
-interface TV_START_data {
+interface TV_START_data extends RAFFLE_START_data {
   /** 小电视编号 */
   id: string
   /** 持续时间 */
   dtime: number
   msg: SYS_MSG
-  /** 小电视编号 */
-  raffleId: number
   type: 'small_tv'
-  /** 赠送人 */
-  from: string
-  /** 持续时间 */
-  time: number
 }
 /**
  * 小电视抽奖结束
@@ -515,7 +544,7 @@ interface SPECIAL_GIFT_data_beatStorm_start {
   content: string
   /** 节奏开始 */
   action: 'start'
-  /**  */
+  /** 节奏风暴图标地址 */
   storm_gif: string
 }
 interface SPECIAL_GIFT_data_beatStorm_end {
@@ -663,7 +692,7 @@ interface WISH_BOTTLE_data_wish {
   status: number
   /** 礼物说明 */
   content: string
-  /** 开始时间 yyyy-MM-dd HH:mm:ss格式 */
+  /** 开始时间 yyyy-MM-dd HH:mm:ss 格式 */
   ctime: string
   /** 礼物选择数量 */
   count_map: number[]

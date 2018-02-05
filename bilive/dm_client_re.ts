@@ -1,4 +1,4 @@
-import * as tools from './lib/tools'
+import tools from './lib/tools'
 import DMclient, { DMclientOptions } from './lib/dm_client'
 /**
  * 弹幕客户端, 可自动重连

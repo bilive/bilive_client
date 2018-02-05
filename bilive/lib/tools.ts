@@ -1,9 +1,8 @@
-import * as fs from 'fs'
-import * as util from 'util'
-import * as crypto from 'crypto'
-import * as request from 'request'
+import fs from 'fs'
+import util from 'util'
+import crypto from 'crypto'
+import request from 'request'
 import { apiLiveOrigin, liveOrigin } from '../index'
-
 /**
  * 请求头
  * 
@@ -280,4 +279,5 @@ interface response<T> {
   response: request.RequestResponse
   body: T
 }
-export { testIP, XHR, setCookie, getCookie, Options, getShortRoomID, getLongRoomID, JSONparse, Hash, Log, logs, ErrorLog, Sleep, response }
+export default { testIP, XHR, setCookie, getCookie, Options, getShortRoomID, getLongRoomID, JSONparse, Hash, Log, logs, ErrorLog, Sleep }
+export { response }

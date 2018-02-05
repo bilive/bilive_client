@@ -1,8 +1,8 @@
 import { Socket } from 'net'
 import { inflate } from 'zlib'
 import { EventEmitter } from 'events'
-import * as ws from 'ws'
-import * as tools from './tools'
+import ws from 'ws'
+import tools from './tools'
 /**
  * 错误类型
  * 
@@ -72,7 +72,7 @@ class DMclient extends EventEmitter {
    * @type {string}
    * @memberof DMclient
    */
-  protected _server: string
+  protected _server!: string
   /**
    * 当前连接的弹幕服务器
    * 
@@ -91,7 +91,7 @@ class DMclient extends EventEmitter {
    * @type {number}
    * @memberof DMclient
    */
-  protected _port: number
+  protected _port!: number
   /**
    * 当前连接的弹幕服务器端口
    * 
@@ -145,7 +145,7 @@ class DMclient extends EventEmitter {
    * @type {NodeJS.Timer}
    * @memberof DMclient
    */
-  protected _Timer: NodeJS.Timer
+  protected _Timer!: NodeJS.Timer
   /**
    * 心跳超时
    * 
@@ -153,7 +153,7 @@ class DMclient extends EventEmitter {
    * @type {NodeJS.Timer}
    * @memberof DMclient
    */
-  protected _timeout: NodeJS.Timer
+  protected _timeout!: NodeJS.Timer
   /**
    * 模仿客户端与服务器进行通讯
    * 
@@ -161,7 +161,7 @@ class DMclient extends EventEmitter {
    * @type {(Socket | ws)}
    * @memberof DMclient
    */
-  protected _client: Socket | ws
+  protected _client!: Socket | ws
   /**
    * 缓存数据
    * 
@@ -169,7 +169,7 @@ class DMclient extends EventEmitter {
    * @type {Buffer}
    * @memberof DMclient
    */
-  private __data: Buffer
+  private __data!: Buffer
   /**
    * 错误类型
    * 

@@ -1,9 +1,9 @@
-import * as ws from 'ws'
-import * as fs from 'fs'
-import * as http from 'http'
+import ws from 'ws'
+import fs from 'fs'
+import http from 'http'
 import { randomBytes } from 'crypto'
 import { EventEmitter } from 'events'
-import * as tools from './lib/tools'
+import tools from './lib/tools'
 import User from './user'
 import { _options, _user } from './index'
 /**
@@ -16,7 +16,7 @@ class Options extends EventEmitter {
   constructor() {
     super()
   }
-  private _wsClient: ws
+  private _wsClient!: ws
   /**
    * 启动HTTP以及WebSocket服务
    * 

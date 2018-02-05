@@ -1,5 +1,5 @@
-import * as request from 'request'
-import * as tools from './lib/tools'
+import request from 'request'
+import tools from './lib/tools'
 import User from './user'
 import AppClient from './lib/app_client'
 import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, lightenPathname } from './index'
@@ -68,7 +68,7 @@ class Raffle {
    * @type {string}
    * @memberof Raffle
    */
-  private _url: string
+  private _url!: string
   /**
    * 参与小电视抽奖
    * 

@@ -1,4 +1,4 @@
-import * as tools from './lib/tools'
+import tools from './lib/tools'
 import User from './user'
 import Raffle from './raffle'
 import Options from './options'
@@ -13,7 +13,7 @@ class BiLive {
   }
   // 全局计时器
   private _lastTime = ''
-  public loop: NodeJS.Timer
+  public loop!: NodeJS.Timer
   /**
    * 开始主程序
    * 
@@ -44,7 +44,7 @@ class BiLive {
   private _loop() {
     const csttime = Date.now() + 8 * 60 * 60 * 1000
     const cst = new Date(csttime)
-    const cstString = cst.toUTCString().substr(17, 5) // 'hh:mm'
+    const cstString = cst.toUTCString().substr(17, 5) // 'HH:mm'
     if (cstString === this._lastTime) return
     this._lastTime = cstString
     const cstHour = cst.getUTCHours()

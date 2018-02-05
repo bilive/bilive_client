@@ -1,6 +1,6 @@
-import * as request from 'request'
+import request from 'request'
 import { EventEmitter } from 'events'
-import * as tools from './lib/tools'
+import tools from './lib/tools'
 import AppClient from './lib/app_client'
 import DMclient from './dm_client_re'
 import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, _options } from './index'
@@ -21,7 +21,7 @@ class Listener extends EventEmitter {
    * @type {DMclient}
    * @memberof Listener
    */
-  private _DMclient: DMclient
+  private _DMclient!: DMclient
   /**
    * 小电视ID
    * 
