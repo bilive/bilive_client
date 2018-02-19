@@ -3,6 +3,11 @@ import util from 'util'
 import crypto from 'crypto'
 import request from 'request'
 import { apiLiveOrigin, liveOrigin } from '../index'
+const FSmkdir = util.promisify(fs.mkdir)
+const FSexists = util.promisify(fs.exists)
+const FScopyFile = util.promisify(fs.copyFile)
+const FSreadFile = util.promisify(fs.readFile)
+const FSwriteFile = util.promisify(fs.writeFile)
 /**
  * 请求头
  * 
@@ -154,21 +159,26 @@ function XHR<T>(options: request.OptionsWithUri, platform: 'PC' | 'Android' | 'W
  */
 function Options(options?: _options): Promise<_options> {
   return new Promise(async resolve => {
+    // 根据npm start参数不同设置不同路径
     const dirname = __dirname + (process.env.npm_package_scripts_start === 'node build/app.js' ? '/../../..' : '/../..')
-    const hasDir = fs.existsSync(dirname + '/options/')
-    if (!hasDir) fs.mkdirSync(dirname + '/options/')
-    const hasFile = fs.existsSync(dirname + '/options/options.json')
-    if (!hasFile) fs.copyFileSync(dirname + '/bilive/options.default.json', dirname + '/options/options.json')
+    // 检查是否有options目录
+    const hasDir = await FSexists(dirname + '/options/')
+    if (!hasDir) await FSmkdir(dirname + '/options/')
     if (options === undefined) {
-      const defaultOptionBuffer = fs.readFileSync(dirname + '/bilive/options.default.json')
+      // 复制默认设置文件到用户设置文件
+      const hasFile = await FSexists(dirname + '/options/options.json')
+      if (!hasFile) await FScopyFile(dirname + '/bilive/options.default.json', dirname + '/options/options.json')
+      // 读取默认设置文件
+      const defaultOptionBuffer = await FSreadFile(dirname + '/bilive/options.default.json')
       const defaultOption = await JSONparse<_options>(defaultOptionBuffer.toString())
-      const optionBuffer = fs.readFileSync(dirname + '/options/options.json')
-      const option = await JSONparse<_options>(optionBuffer.toString())
-      if (defaultOption === undefined || option === undefined) throw new TypeError('文件格式化失败')
-      defaultOption.server = Object.assign({}, defaultOption.server, option.server)
-      defaultOption.config = Object.assign({}, defaultOption.config, option.config)
-      for (const uid in option.user)
-        defaultOption.user[uid] = Object.assign({}, defaultOption.newUserData, option.user[uid])
+      // 读取用户设置文件
+      const userOptionBuffer = await FSreadFile(dirname + '/options/options.json')
+      const userOption = await JSONparse<_options>(userOptionBuffer.toString())
+      if (defaultOption === undefined || userOption === undefined) throw new TypeError('文件格式化失败')
+      defaultOption.server = Object.assign({}, defaultOption.server, userOption.server)
+      defaultOption.config = Object.assign({}, defaultOption.config, userOption.config)
+      for (const uid in userOption.user)
+        defaultOption.user[uid] = Object.assign({}, defaultOption.newUserData, userOption.user[uid])
       defaultOption.roomList.forEach(([long, short]) => {
         shortRoomID.set(long, short)
         longRoomID.set(short, long)
@@ -176,8 +186,11 @@ function Options(options?: _options): Promise<_options> {
       return resolve(defaultOption)
     }
     else {
-      fs.writeFileSync(dirname + '/options/options.json', JSON.stringify(options))
-      return resolve(options)
+      const blacklist = ['newUserData', 'info', 'apiIPs', 'roomList']
+      const error = await FSwriteFile(dirname + '/options/options.json'
+        , JSON.stringify(options, (key, value) => blacklist.includes(key) ? undefined : value, 2))
+      if (error !== undefined) ErrorLog(error)
+      resolve(options)
     }
   })
 }

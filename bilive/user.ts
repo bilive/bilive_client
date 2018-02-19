@@ -154,10 +154,10 @@ class User extends Online {
     if (taskInfo === undefined || taskInfo.response.statusCode !== 200) return
     if (taskInfo.body.code == 0) {
       const taskData = taskInfo.body.data
-      for (let i in taskData) if (taskData[i].task_id !== undefined) tasks.push(taskData[i].task_id)
+      for (const i in taskData) if (taskData[i].task_id !== undefined) tasks.push(taskData[i].task_id)
       // 做任务
       let ok = 0
-      for (let taskID of tasks) {
+      for (const taskID of tasks) {
         const task: request.Options = {
           method: 'POST',
           uri: `${apiLiveOrigin}/activity/v1/task/receive_award`,
