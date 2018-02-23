@@ -1,5 +1,5 @@
 import request from 'request'
-import tools from './lib/tools'
+import tools, { response } from './lib/tools'
 import Online from './online'
 import AppClient from './lib/app_client'
 import { apiLiveOrigin, _options, liveOrigin, _user } from './index'
@@ -27,6 +27,7 @@ class User extends Online {
   private _treasureBox = false
   private _eventRoom = false
   private _silver2coin = false
+  private _getCapsule = false
   /**
    * 当账号出现异常时, 会返回'captcha'或'stop'
    * 'captcha'为登录需要验证码, 若无法处理需Stop()
@@ -58,6 +59,7 @@ class User extends Online {
     this._treasureBox = false
     this._eventRoom = false
     this._silver2coin = false
+    this._getCapsule = false
   }
   /**
    * 日常
@@ -71,6 +73,7 @@ class User extends Online {
     this.silver2coin()
     this.sendGift()
     this.signGroup()
+    this.getCapsule()
   }
   /**
    * 每日签到
@@ -185,6 +188,21 @@ class User extends Online {
    */
   public async silver2coin() {
     if (this._silver2coin || !this.userData.silver2coin) return
+    const roomID = _options.config.defaultRoomID
+    let ok = 0
+    const checkExchange = (exchangeRes: response<silver2coin> | undefined) => {
+      if (exchangeRes === undefined || exchangeRes.response.statusCode !== 200) return
+      if (exchangeRes.body.code === 0) {
+        ok++
+        tools.Log(this.nickname, '银瓜子兑换硬币', '成功兑换 1 个硬币')
+      }
+      else if (exchangeRes.body.code === 403 || exchangeRes.body.code === -403) {
+        ok++
+        tools.Log(this.nickname, '银瓜子兑换硬币', exchangeRes.body.msg)
+      }
+      else tools.Log(this.nickname, '银瓜子兑换硬币', '兑换失败', exchangeRes.body)
+      if (ok === 2) this._silver2coin = true
+    }
     const exchange: request.Options = {
       method: 'POST',
       uri: `${apiLiveOrigin}/AppExchange/silver2coin?${AppClient.signQueryBase(this.tokenQuery)}`,
@@ -192,16 +210,43 @@ class User extends Online {
       headers: this.headers
     }
     const silver2coin = await tools.XHR<silver2coin>(exchange, 'Android')
-    if (silver2coin === undefined || silver2coin.response.statusCode !== 200) return
-    if (silver2coin.body.code === 0) {
-      this._silver2coin = true
-      tools.Log(this.nickname, '银瓜子兑换硬币', '成功兑换 1 个硬币')
+    checkExchange(silver2coin)
+    await tools.Sleep(3000)
+    const exchangeWeb: request.Options = {
+      method: 'POST',
+      uri: `${apiLiveOrigin}/exchange/silver2coin`,
+      jar: this.jar,
+      json: true,
+      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
     }
-    else if (silver2coin.body.code === 403) {
-      this._silver2coin = true
-      tools.Log(this.nickname, '银瓜子兑换硬币', silver2coin.body.msg)
+    const silver2coinWeb = await tools.XHR<silver2coin>(exchangeWeb)
+    checkExchange(silver2coinWeb)
+  }
+  /**
+   * 获取扭蛋币
+   * 
+   * @memberof User
+   */
+  public async getCapsule() {
+    if (this._getCapsule || !this.userData.getCapsule) return
+    const roomID = _options.config.defaultRoomID
+    const capsule: request.Options = {
+      uri: `${apiLiveOrigin}/redLeaf/kingMoneyGift`,
+      jar: this.jar,
+      json: true,
+      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
     }
-    else tools.Log(this.nickname, '银瓜子兑换硬币', '兑换失败', silver2coin.body)
+    const getCapsule = await tools.XHR<capsule>(capsule)
+    if (getCapsule === undefined || getCapsule.response.statusCode !== 200) return
+    if (getCapsule.body.code === 0) {
+      this._getCapsule = true
+      tools.Log(this.nickname, '获取扭蛋币', getCapsule.body.msg)
+    }
+    else if (getCapsule.body.code === -400) {
+      this._getCapsule = true
+      tools.Log(this.nickname, '获取扭蛋币', getCapsule.body.msg)
+    }
+    else tools.Log(this.nickname, '获取扭蛋币', '兑换失败', getCapsule.body)
   }
   /**
    * 自动送礼

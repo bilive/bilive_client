@@ -42,6 +42,7 @@ interface userData {
   treasureBox: boolean
   eventRoom: boolean
   silver2coin: boolean
+  getCapsule: boolean
   raffle: boolean
   sendGift: boolean
   sendGiftRoom: number
@@ -66,6 +67,7 @@ interface optionsInfo {
   treasureBox: configInfoData
   eventRoom: configInfoData
   silver2coin: configInfoData
+  getCapsule: configInfoData
   raffle: configInfoData
   sendGift: configInfoData
   sendGiftRoom: configInfoData
@@ -470,4 +472,17 @@ interface taskInfoData {
 }
 interface taskInfoDoublewatchinfo {
   task_id: string | undefined
+}
+/**
+ * 兑换扭蛋币
+ * 
+ * @interface capsule
+ */
+interface capsule {
+  code: number
+  msg: string
+  data: capsuleData | any[]
+}
+interface capsuleData {
+  capsule: SEND_GIFT_data_capsule
 }
