@@ -2,7 +2,7 @@ import fs from 'fs'
 import util from 'util'
 import crypto from 'crypto'
 import request from 'request'
-import { apiLiveOrigin, liveOrigin } from '../index'
+import { apiLiveOrigin, liveOrigin, _options } from '../index'
 const FSmkdir = util.promisify(fs.mkdir)
 const FSexists = util.promisify(fs.exists)
 const FScopyFile = util.promisify(fs.copyFile)
@@ -274,6 +274,22 @@ function ErrorLog(...message: any[]) {
   console.error(`${new Date().toString().slice(4, 24)} :`, ...message)
 }
 /**
+ * 发送Server酱消息
+ * 
+ * @param {string} message 
+ */
+function sendSCMSG(message: string) {
+  const adminServerChan = _options.config.adminServerChan
+  if (adminServerChan !== '') {
+    const sendtoadmin: request.Options = {
+      method: 'POST',
+      uri: `https://sc.ftqq.com/${adminServerChan}.send`,
+      body: `text=bilive_client&desp=${message}`
+    }
+    XHR<serverChan>(sendtoadmin)
+  }
+}
+/**
  * sleep
  * 
  * @param {number} ms
@@ -292,5 +308,5 @@ interface response<T> {
   response: request.RequestResponse
   body: T
 }
-export default { testIP, XHR, setCookie, getCookie, Options, getShortRoomID, getLongRoomID, JSONparse, Hash, Log, logs, ErrorLog, Sleep }
+export default { testIP, XHR, setCookie, getCookie, Options, getShortRoomID, getLongRoomID, JSONparse, Hash, Log, logs, ErrorLog, sendSCMSG, Sleep }
 export { response }

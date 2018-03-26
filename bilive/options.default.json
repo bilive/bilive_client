@@ -10,7 +10,8 @@
     "defaultRoomID": 3,
     "eventRooms": [
       3
-    ]
+    ],
+    "adminServerChan": ""
   },
   "user": {},
   "newUserData": {
@@ -47,6 +48,11 @@
       "description": "挂机活动房间以,分隔",
       "tip": "挂取活动道具的房间, 默认为23058(官方音乐台), 有时活动只有主播报名才可以参加",
       "type": "numberArray"
+    },
+    "adminServerChan": {
+      "description": "SCKEY",
+      "tip": "Server酱的SCKEY, 所有推送信息都会发送到此账号",
+      "type": "string"
     },
     "nickname": {
       "description": "昵称",

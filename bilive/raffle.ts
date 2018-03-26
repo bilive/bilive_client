@@ -128,7 +128,11 @@ class Raffle {
     else {
       const gift = raffleReward.body.data
       if (gift.gift_num === 0) tools.Log(this._user.nickname, `抽奖 ${this._raffleId}`, raffleReward.body.msg)
-      else tools.Log(this._user.nickname, `抽奖 ${this._raffleId}`, `获得 ${gift.gift_num} 个${gift.gift_name}`)
+      else {
+        const msg = `抽奖 ${this._raffleId} 获得 ${gift.gift_num} 个${gift.gift_name}`
+        tools.Log(this._user.nickname, msg)
+        if (gift.gift_name.includes('小电视')) tools.sendSCMSG(msg)
+      }
     }
   }
   /**

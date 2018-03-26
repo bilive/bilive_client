@@ -83,6 +83,7 @@ class Online extends AppClient {
     clearTimeout(this._heartTimer)
     this.userData.status = false
     tools.Options(_options)
+    tools.sendSCMSG(`${this.nickname} 已停止挂机`)
   }
   /**
    * 检查是否登录

@@ -738,6 +738,51 @@ interface ROOM_LOCK extends danmuJson {
   expire: string // 封禁时间 yyyy-MM-dd HH:mm:ss
 }
 /**
+ * 总督抽奖
+ * {"cmd":"LOTTERY_START","data":{"id":216101,"roomid":5712065,"message":"290974992 在【5712065】购买了总督，请前往抽奖","type":"guard","link":"https://live.bilibili.com/5712065","lottery":{"id":216101,"sender":{"uid":290974992,"uname":"","face":""},"keyword":"guard","time":86400,"status":1,"mobile_display_mode":2,"mobile_static_asset":"","mobile_animation_asset":""}},"_roomid":5712065}
+ * 
+ * @interface LOTTERY_START
+ * @extends {danmuJson}
+ */
+interface LOTTERY_START extends danmuJson {
+  data: LOTTERY_START_data
+}
+interface LOTTERY_START_data {
+  /* 编号 */
+  id: number
+  /* 房间号 */
+  roomid: number
+  /* 消息 */
+  message: string
+  /* 抽奖类型 */
+  type: string
+  /* 房间链接 */
+  link: string
+  /* 抽奖信息 */
+  lottery: LOTTERY_START_data_lottery
+}
+interface LOTTERY_START_data_lottery {
+  /* 编号 */
+  id: number
+  /* 抽奖发起人信息 */
+  sender: LOTTERY_START_data_lottery_sender
+  /* 关键字, 目前和type一致 */
+  keyword: string
+  time: number
+  status: number
+  mobile_display_mode: number
+  mobile_static_asset: string
+  mobile_animation_asset: string
+}
+interface LOTTERY_START_data_lottery_sender {
+  /* 发起人uid */
+  uid: number
+  /* 发起人昵称 */
+  uname: string
+  /* 头像地址 */
+  face: string
+}
+/**
  * 画板活动
  * 
  * @interface DRAW_UPDATE

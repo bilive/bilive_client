@@ -486,3 +486,13 @@ interface capsule {
 interface capsuleData {
   capsule: SEND_GIFT_data_capsule
 }
+/**
+ * Server酱
+ * 
+ * @interface serverChan
+ */
+interface serverChan {
+  errno: number
+  errmsg: string
+  dataset: string
+}
