@@ -54,7 +54,14 @@ class User extends Online {
    * 
    * @memberof User
    */
-  public nextDay() {
+  public async nextDay() {
+    // 每天刷新token和cookie
+    const refresh = await this.refresh()
+    if (refresh.status === AppClient.status.success) {
+      this.jar = tools.setCookie(this.cookieString)
+      tools.Options(_options)
+    }
+    else if (refresh.status === AppClient.status.error) return this._tokenError()
     this._sign = false
     this._treasureBox = false
     this._eventRoom = false
