@@ -100,6 +100,7 @@ class Raffle {
       json: true,
       headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(this._roomID)}` }
     }
+    await tools.Sleep(15000)
     const raffleJoin = await tools.XHR<raffleJoin>(join)
     if (raffleJoin !== undefined && raffleJoin.response.statusCode === 200 && raffleJoin.body.code === 0) {
       await tools.Sleep(this._time * 1000 + 15 * 1000)
@@ -150,6 +151,7 @@ class Raffle {
       json: true,
       headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(this._roomID)}` }
     }
+    await tools.Sleep(5000)
     const lightenReward = await tools.XHR<lightenReward>(getCoin)
     if (lightenReward !== undefined && lightenReward.response.statusCode === 200 && lightenReward.body.code === 0)
       tools.Log(this._user.nickname, `抽奖 ${this._raffleId}`, lightenReward.body.msg)
@@ -167,6 +169,7 @@ class Raffle {
       json: true,
       headers: this._user.headers
     }
+    await tools.Sleep(5000)
     const appLightenReward = await tools.XHR<appLightenReward>(reward, 'Android')
     if (appLightenReward !== undefined
       && appLightenReward.response.statusCode === 200 && appLightenReward.body.code === 0)
