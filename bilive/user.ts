@@ -27,7 +27,6 @@ class User extends Online {
   private _treasureBox = false
   private _eventRoom = false
   private _silver2coin = false
-  private _getCapsule = false
   /**
    * 当账号出现异常时, 会返回'captcha'或'stop'
    * 'captcha'为登录需要验证码, 若无法处理需Stop()
@@ -61,12 +60,14 @@ class User extends Online {
       this.jar = tools.setCookie(this.cookieString)
       tools.Options(_options)
     }
-    else if (refresh.status === AppClient.status.error) return this._tokenError()
+    else if (refresh.status === AppClient.status.error) {
+      const status = await this._tokenError()
+      if (status !== undefined) return this.Stop()
+    }
     this._sign = false
     this._treasureBox = false
     this._eventRoom = false
     this._silver2coin = false
-    this._getCapsule = false
   }
   /**
    * 日常
@@ -80,7 +81,6 @@ class User extends Online {
     this.silver2coin()
     this.sendGift()
     this.signGroup()
-    this.getCapsule()
   }
   /**
    * 每日签到
@@ -230,32 +230,6 @@ class User extends Online {
     checkExchange(silver2coinWeb)
   }
   /**
-   * 获取扭蛋币
-   * 
-   * @memberof User
-   */
-  public async getCapsule() {
-    if (this._getCapsule || !this.userData.getCapsule) return
-    const roomID = _options.config.defaultRoomID
-    const capsule: request.Options = {
-      uri: `${apiLiveOrigin}/redLeaf/kingMoneyGift`,
-      jar: this.jar,
-      json: true,
-      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
-    }
-    const getCapsule = await tools.XHR<capsule>(capsule)
-    if (getCapsule === undefined || getCapsule.response.statusCode !== 200) return
-    if (getCapsule.body.code === 0) {
-      this._getCapsule = true
-      tools.Log(this.nickname, '获取扭蛋币', getCapsule.body.msg)
-    }
-    else if (getCapsule.body.code === -400) {
-      this._getCapsule = true
-      tools.Log(this.nickname, '获取扭蛋币', getCapsule.body.msg)
-    }
-    else tools.Log(this.nickname, '获取扭蛋币', '兑换失败', getCapsule.body)
-  }
-  /**
    * 自动送礼
    * 
    * @memberof User
@@ -320,7 +294,7 @@ class User extends Online {
     if (!this.userData.signGroup) return
     // 获取已加入应援团列表
     const group: request.Options = {
-      uri: `${apiLiveOrigin}/link_group/v1/member/my_groups?${AppClient.signQueryBase(this.tokenQuery)}`,
+      uri: `http://api.vc.bilibili.com/link_group/v1/member/my_groups?${AppClient.signQueryBase(this.tokenQuery)}`,
       json: true,
       headers: this.headers
     }
@@ -330,7 +304,7 @@ class User extends Online {
       if (linkGroup.body.data.list.length > 0) {
         for (const groupInfo of linkGroup.body.data.list) {
           const sign: request.Options = {
-            uri: `${apiLiveOrigin}/link_setting/v1/link_setting/sign_in?${AppClient.signQueryBase(`group_id=${groupInfo.group_id}\
+            uri: `http://api.vc.bilibili.com/link_setting/v1/link_setting/sign_in?${AppClient.signQueryBase(`group_id=${groupInfo.group_id}\
 &owner_id=${groupInfo.owner_uid}&${this.tokenQuery}`)}`,
             json: true,
             headers: this.headers

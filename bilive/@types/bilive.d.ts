@@ -42,7 +42,6 @@ interface userData {
   treasureBox: boolean
   eventRoom: boolean
   silver2coin: boolean
-  getCapsule: boolean
   raffle: boolean
   sendGift: boolean
   sendGiftRoom: number
@@ -67,7 +66,6 @@ interface optionsInfo {
   treasureBox: configInfoData
   eventRoom: configInfoData
   silver2coin: configInfoData
-  getCapsule: configInfoData
   raffle: configInfoData
   sendGift: configInfoData
   sendGiftRoom: configInfoData

@@ -27,7 +27,6 @@
     "treasureBox": false,
     "eventRoom": false,
     "silver2coin": false,
-    "getCapsule": false,
     "raffle": false,
     "sendGift": false,
     "sendGiftRoom": 0,
@@ -102,11 +101,6 @@
     "silver2coin": {
       "description": "银瓜子兑换硬币",
       "tip": "自动将银瓜子兑换成硬币, 每天一个",
-      "type": "boolean"
-    },
-    "getCapsule": {
-      "description": "获取扭蛋币",
-      "tip": "通过红叶祭遗留API获取扭蛋币, 每天一个, 感谢@Dawnnnnnn",
       "type": "boolean"
     },
     "raffle": {

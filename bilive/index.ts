@@ -28,7 +28,7 @@ class BiLive {
       if (!_options.user[uid].status) continue
       const user = new User(uid, _options.user[uid])
       const status = await user.Start()
-      if (status === 'captcha') user.Stop()
+      if (status !== undefined) user.Stop()
     }
     _user.forEach(user => user.daily())
     this.loop = setInterval(() => this._loop(), 50 * 1000)
