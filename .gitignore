@@ -39,10 +39,9 @@ jspm_packages
 # Typings directories
 typings
 
-# Private configs
-configs/*.json
-!configs/*.default.json
-
 # Build flies
 build
 .vscode
+options
+package-lock.json
+/*.js

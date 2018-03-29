@@ -1,17 +1,58 @@
+[![Paypal.me donate](https://img.shields.io/badge/Paypal.me-donate-yellow.svg)](https://www.paypal.me/lzppzr)
+
+### 使用releases                                                                   
 1. 安装[Node.js](https://nodejs.org/)
-2. 下载[bilive_client.zip](https://github.com/lzghzr/bilive_client/releases/)
+2. 下载[bilive_client.zip](https://github.com/lzghzr/bilive_client/releases/latest)
 3. 解压并定位到目录
-4. 运行npm install
-5. 运行node app.js
+4. 命令行 npm install
+5. 命令行 npm start
 
+### 自行编译
+1. 安装[git](https://git-scm.com/downloads)
+2. 安装[Node.js](https://nodejs.org/)
+3. 命令行 git clone https://github.com/lzghzr/bilive_client.git
+4. 命令行 cd bilive_client
+5. 命令行 npm install
+6. 命令行 npm run build
+7. 命令行 npm start
 
-~~十一限时开放全功能 (只是体验, 因为亿圆连我自己都抢不到了)~~\
-服务器就一直开着了, 以及节奏风暴功能已经关闭
->远程服务器地址 wss://bilive.halaal.win/clientapi\
->apiKey eecef037def2c86a5d74798276d80f1a
+[点此进行设置](http://lzghzr.github.io/bilive_client_view/index.html)\
+[国内设置地址](http://lzoczr.gitee.io/bilive_client_view/index.html)
+```TypeScript
+const 支付宝红包码 = `
+█▀▀▀▀▀█ ▄▄█   ▄█  ▀▀▄ █▀▀▀▀▀█
+█ ███ █ ▀▄  ▄ █  ▀▄▀▀ █ ███ █
+█ ▀▀▀ █ █▀█ █▀ ██  ▄▀ █ ▀▀▀ █
+▀▀▀▀▀▀▀ █ █▄▀ ▀▄█▄▀ █ ▀▀▀▀▀▀▀
+██ ▀  ▀▀▄▄ ███▀ ▄ ▄▀▄▄█▀▀▄▀▀▄
+ ▀█ ▄▄▀▀▀▄▄███▄   ▀▀ █▀▀▀▀██ 
+█▀▄█▄█▀  ▄▀█ ▀▄▀ █████▀  ▀ ▀▀
+▄▀ ▄█ ▀▀ ▄ █ ▄   █▀ ▀  ▀▄█▀█▀
+▀▀▄▀██▀▀▀█▀ █ ▄ ▄██▀▀▀▄  ▄ ▀▄
+▀ █ ▄█▀▄▄▄▄▀█ █▄▄▄█▄█▄█▄   ██
+▀ ▀   ▀ ▄  ▄▀▀█▀▄▄███▀▀▀█ █▄▄
+█▀▀▀▀▀█ ▀█▀ ▄▄█▄▀ ▀▄█ ▀ █▄▄▀ 
+█ ███ █ ▄▄▀  ▀█ ▄▀█▄▀▀█▀█▄▄█ 
+█ ▀▀▀ █ ▄▄█▀▄▄▄▄▀██ █▄  ▀▀▀▄▀
+▀▀▀▀▀▀▀ ▀▀    ▀ ▀▀▀ ▀▀  ▀  ▀ `
+const 支付宝付款码 = `
+█▀▀▀▀▀█ ▀▀▀█▄ ▀  ▀ ▄  █▀▀▀▀▀█
+█ ███ █  ▀▄█ █▀▄▀▄▀▄█ █ ███ █
+█ ▀▀▀ █  ▄▀█▀█  ▀▀▄▀█ █ ▀▀▀ █
+▀▀▀▀▀▀▀ █▄▀ █▄█▄█ ▀▄▀ ▀▀▀▀▀▀▀
+██ ▀▀ ▀ ▄▀▄ ▀ ▀█ █ ▄  ▀▄▄ ▄▄▀
+ ▄  ▄▀▀▄▄▀  ▀▀█▀███▄▄ █▄█▄▀ ▄
+█ ▀▄▀▀▀▀█▀█ ▄▄▄██ ▀ ▀ ██▄▄▄▄█
+█  ▀ ▄▀ ██▄ ▄  █▄ ████▄▄  █ █
+█ ▄█▀▄▀█▀▀▄█▀▀ █ ▄▀▄█▄ █▄▀▄▄ 
+███ █ ▀ ▄▄█▄▀█▄▀▄▀▀▀▀▀▀▀▄█▄ ▀
+▀▀ ▀ ▀▀▀█▄ ▀█▄██ ▀▀ █▀▀▀██▀▀ 
+█▀▀▀▀▀█   ▄█▄▀▄█▄▄▄▀█ ▀ █▀ ▄▄
+█ ███ █ █▄ █▄ ▄▄█ ▀▀██▀█▀▀  ▄
+█ ▀▀▀ █ ▄▀▄▄▄ ██▄▀ █▀▀▄██▄█▀█
+▀▀▀▀▀▀▀ ▀  ▀▀▀ ▀▀ ▀▀▀  ▀▀▀   `
+```
 
-
-TODO:
-* 增强SDK
-* * 保存用户信息后立即尝试登录
-* * 显示验证码
+因为B站对弹幕服务器进行了限制, 一般方法已无法监听到节奏相关内容\
+所以之前提供的监听服务器已经关闭, 并且开源, 有兴趣的可以自己研究\
+[服务端](https://github.com/lzghzr/bilive_server)

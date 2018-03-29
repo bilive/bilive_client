@@ -1,91 +1,57 @@
-import * as fs from 'fs'
-import * as request from 'request'
-import * as tools from './lib/tools'
-import { Online } from './online'
-import { Options } from './options'
-import { Listener } from './listener'
-import { AppClient } from './lib/app_client'
-import { Raffle, raffleOptions } from './raffle'
-import { BeatStorm, beatStormOptions } from './beatstorm'
-import { beatStormInfo, smallTVInfo, raffleInfo, lightenInfo, debugInfo } from './lib/bilive_client'
+import tools from './lib/tools'
+import User from './user'
+import Raffle from './raffle'
+import Options from './options'
+import Listener from './listener'
 /**
  * 主程序
  * 
- * @export
  * @class BiLive
  */
-export class BiLive {
+class BiLive {
   constructor() {
   }
+  // 全局计时器
+  private _lastTime = ''
+  public loop!: NodeJS.Timer
   /**
    * 开始主程序
    * 
    * @memberof BiLive
    */
   public async Start() {
-    await this._SetOptionsFile()
-    let config = await tools.Options().catch(tools.Error)
-    if (config != null) {
-      options = config
-      let usersData = config.usersData
-      for (let uid in usersData) {
-        let userData = usersData[uid]
-        cookieJar[uid] = tools.SetCookie(userData.cookie, [liveOrigin, apiLiveOrigin])
-      }
-      this.Options()
-      this.Online()
-      this.Listener()
+    const option = await tools.Options()
+    Object.assign(_options, option)
+    tools.Log('正在测试可用ip')
+    await tools.testIP(_options.apiIPs)
+    for (const uid in _options.user) {
+      if (!_options.user[uid].status) continue
+      const user = new User(uid, _options.user[uid])
+      const status = await user.Start()
+      if (status !== undefined) user.Stop()
     }
+    _user.forEach(user => user.daily())
+    this.loop = setInterval(() => this._loop(), 50 * 1000)
+    new Options().Start()
+    this.Listener()
   }
   /**
-   * 初始化设置文件
+   * 计时器
    * 
    * @private
-   * @returns {Promise<{}>} 
    * @memberof BiLive
    */
-  private _SetOptionsFile(): Promise<{}> {
-    return new Promise((resolve, reject) => {
-      fs.exists(`${__dirname}/options.json`, exists => {
-        if (exists) resolve()
-        else {
-          fs.createReadStream(`${__dirname}/options.default.json`)
-            .pipe(fs.createWriteStream(`${__dirname}/options.json`))
-            .on('error', (error) => {
-              reject(error)
-            })
-            .on('close', () => {
-              resolve()
-            })
-        }
-      })
-    })
-  }
-  /**
-   * 用户设置
-   * 
-   * @memberof BiLive
-   */
-  public Options() {
-    const SOptions = new Options()
-    SOptions
-      .on('changeOptions', (config: config) => {
-        options = config
-        tools.Options(options)
-      })
-      .Start()
-  }
-  /**
-   * 在线挂机
-   * 
-   * @memberof BiLive
-   */
-  public Online() {
-    const SOnline = new Online()
-    SOnline
-      .on('cookieError', this._CookieError.bind(this))
-      .on('tokenError', this._TokenError.bind(this))
-      .Start()
+  private _loop() {
+    const csttime = Date.now() + 8 * 60 * 60 * 1000
+    const cst = new Date(csttime)
+    const cstString = cst.toUTCString().substr(17, 5) // 'HH:mm'
+    if (cstString === this._lastTime) return
+    this._lastTime = cstString
+    const cstHour = cst.getUTCHours()
+    const cstMin = cst.getUTCMinutes()
+    if (cstString === '00:10') _user.forEach(user => user.nextDay())
+    else if (cstString === '13:55') _user.forEach(user => user.sendGift())
+    if (cstMin === 30 && cstHour % 8 === 0) _user.forEach(user => user.daily())
   }
   /**
    * 监听
@@ -94,255 +60,50 @@ export class BiLive {
    */
   public Listener() {
     const SListener = new Listener()
-    SListener
-      .on('smallTV', this._SmallTV.bind(this))
-      .on('beatStorm', this._BeatStorm.bind(this))
-      .on('raffle', this._Raffle.bind(this))
-      .on('lighten', this._Lighten.bind(this))
-      .on('debug', this._Debug.bind(this))
-      .Start()
-  }
-  /**
-   * 参与小电视抽奖
-   * 
-   * @private
-   * @memberof BiLive
-   */
-  private _SmallTV(smallTVInfo: smallTVInfo) {
-    let usersData = options.usersData
-    for (let uid in usersData) {
-      let userData = usersData[uid], jar = cookieJar[uid]
-      if (userData.status && userData.smallTV) {
-        let raffleOptions: raffleOptions = {
-          raffleId: smallTVInfo.id,
-          roomID: smallTVInfo.roomID,
-          jar,
-          nickname: userData.nickname
-        }
-        let newRaffle = new Raffle(raffleOptions)
-        if (smallTVInfo.pathname != null) {
-          smallTVPathname = smallTVInfo.pathname
-          newRaffle.smallTVUrl = apiLiveOrigin + smallTVInfo.pathname
-        }
-        newRaffle.SmallTV()
-      }
-    }
+      .on('raffle', raffleMSG => this._Raffle(raffleMSG))
+    SListener.Start()
   }
   /**
    * 参与抽奖
    * 
    * @private
+   * @param {raffleMSG} raffleMSG 
    * @memberof BiLive
    */
-  private _Raffle(raffleInfo: raffleInfo) {
-    let usersData = options.usersData
-    for (let uid in usersData) {
-      let userData = usersData[uid], jar = cookieJar[uid]
-      if (userData.status && userData.raffle) {
-        let raffleOptions: raffleOptions = {
-          raffleId: raffleInfo.id,
-          roomID: raffleInfo.roomID,
-          jar,
-          nickname: userData.nickname
-        }
-        let newRaffle = new Raffle(raffleOptions)
-        if (raffleInfo.pathname != null) {
-          rafflePathname = raffleInfo.pathname
-          newRaffle.raffleUrl = apiLiveOrigin + raffleInfo.pathname
-        }
-        newRaffle.Raffle()
+  private _Raffle(raffleMSG: raffleMSG | appLightenMSG) {
+    _user.forEach(user => {
+      if (user.captchaJPEG !== '' || !user.userData.raffle) return
+      const raffleOptions: raffleOptions = {
+        raffleId: raffleMSG.id,
+        roomID: raffleMSG.roomID,
+        user
       }
-    }
-  }
-  /**
-   * 参与快速抽奖
-   * 
-   * @private
-   * @param {lightenInfo} lightenInfo
-   * @memberof BiLive
-   */
-  private _Lighten(lightenInfo: lightenInfo) {
-    let usersData = options.usersData
-    for (let uid in usersData) {
-      let userData = usersData[uid], jar = cookieJar[uid]
-      if (userData.status && userData.raffle) {
-        let raffleOptions: raffleOptions = {
-          raffleId: lightenInfo.id,
-          roomID: lightenInfo.roomID,
-          jar,
-          nickname: userData.nickname
-        }
-        let newRaffle = new Raffle(raffleOptions)
-        if (lightenInfo.pathname != null) {
-          lightenPathname = lightenInfo.pathname
-          newRaffle.lightenUrl = apiLiveOrigin + lightenInfo.pathname
-        }
-        newRaffle.Lighten()
+      switch (raffleMSG.cmd) {
+        case 'smallTV':
+          raffleOptions.time = raffleMSG.time
+          return new Raffle(raffleOptions).SmallTV()
+        case 'raffle':
+          raffleOptions.time = raffleMSG.time
+          return new Raffle(raffleOptions).Raffle()
+        case 'lighten':
+          raffleOptions.time = raffleMSG.time
+          return new Raffle(raffleOptions).Lighten()
+        case 'appLighten':
+          raffleOptions.type = raffleMSG.type
+          return new Raffle(raffleOptions).AppLighten()
+        default:
+          return
       }
-    }
-  }
-  /**
-   * 节奏风暴
-   * 
-   * @private
-   * @param {beatStormInfo} beatStormInfo
-   * @memberof BiLive
-   */
-  private _BeatStorm(beatStormInfo: beatStormInfo) {
-    if (options.beatStormBlackList.includes(beatStormInfo.roomID)) return
-    let usersData = options.usersData
-    for (let uid in usersData) {
-      let userData = usersData[uid]
-        , jar = cookieJar[uid]
-      if (userData.status && userData.beatStorm) {
-        let beatStormOptions: beatStormOptions = {
-          content: beatStormInfo.content,
-          roomID: beatStormInfo.roomID,
-          jar,
-          nickname: userData.nickname
-        }
-        new BeatStorm(beatStormOptions)
-      }
-    }
-  }
-  /**
-   * 远程调试
-   * 
-   * @private
-   * @param {debugInfo} debugInfo
-   * @memberof BiLive
-   */
-  private async _Debug(debugInfo: debugInfo) {
-    let usersData = options.usersData
-    for (let uid in usersData) {
-      let userData = usersData[uid], jar = cookieJar[uid]
-      if (userData.status && userData.debug) {
-        let debug = {
-          method: debugInfo.method,
-          uri: `${apiLiveOrigin}${debugInfo.url}`,
-          body: debugInfo.body,
-          jar
-        }
-        tools.XHR<string>(debug)
-          .then((resolve) => { tools.Log(userData.nickname, resolve.body) })
-          .catch((reject) => { tools.Error(userData.nickname, reject) })
-      }
-    }
-  }
-  /**
-   * 监听cookie失效事件
-   * 
-   * @private
-   * @param {string} uid
-   * @memberof BiLive
-   */
-  private async _CookieError(uid: string) {
-    let userData = options.usersData[uid]
-    tools.Log(userData.nickname, 'Cookie已失效')
-    let cookie = await AppClient.GetCookie(userData.accessToken)
-    if (cookie != null) {
-      cookieJar[uid] = cookie
-      options.usersData[uid].cookie = cookie.getCookieString(apiLiveOrigin)
-      tools.Options(options)
-      tools.Log(userData.nickname, 'Cookie已更新')
-    }
-    else this._TokenError(uid)
-  }
-  /**
-   * 监听token失效事件
-   * 
-   * @private
-   * @param {string} uid
-   * @memberof BiLive
-   */
-  private async _TokenError(uid: string) {
-    let userData = options.usersData[uid]
-    tools.Log(userData.nickname, 'Token已失效')
-    let token = await AppClient.GetToken({
-      userName: userData.userName,
-      passWord: userData.passWord
     })
-    if (typeof token === 'string') {
-      options.usersData[uid].accessToken = token
-      tools.Options(options)
-      tools.Log(userData.nickname, 'Token已更新')
-    }
-    else if (token != null) {
-      options.usersData[uid].status = false
-      tools.Options(options)
-      tools.Log(userData.nickname, 'Token更新失败', token.body)
-    }
-    else tools.Log(userData.nickname, 'Token更新失败')
   }
 }
-export let apiLiveOrigin = 'http://api.live.bilibili.com'
-  , liveOrigin = 'http://live.bilibili.com'
-  , smallTVPathname = '/SmallTV'
-  , rafflePathname = '/activity/v1/Raffle'
-  , lightenPathname = '/activity/v1/NeedYou'
-  , cookieJar: cookieJar = {}
-  , options: config
-/**
- * 应用设置
- * 
- * @export
- * @interface config
- */
-export interface config {
-  defaultUserID: number | null
-  defaultRoomID: number
-  apiOrigin: string
-  apiKey: string
-  eventRooms: number[]
-  beatStormBlackList: number[]
-  usersData: usersData
-  info: configInfo
-}
-export interface usersData {
-  [index: string]: userData
-}
-export interface userData {
-  nickname: string
-  userName: string
-  passWord: string
-  accessToken: string
-  cookie: string
-  status: boolean
-  doSign: boolean
-  treasureBox: boolean
-  eventRoom: boolean
-  smallTV: boolean
-  raffle: boolean
-  beatStorm: boolean
-  debug: boolean
-}
-export interface configInfo {
-  defaultUserID: configInfoData
-  defaultRoomID: configInfoData
-  apiOrigin: configInfoData
-  apiKey: configInfoData
-  eventRooms: configInfoData
-  beatStormBlackList: configInfoData
-  beatStormLiveTop: configInfoData
-  nickname: configInfoData
-  userName: configInfoData
-  passWord: configInfoData
-  accessToken: configInfoData
-  cookie: configInfoData
-  status: configInfoData
-  doSign: configInfoData
-  treasureBox: configInfoData
-  eventRoom: configInfoData
-  smallTV: configInfoData
-  raffle: configInfoData
-  beatStorm: configInfoData
-  debug: configInfoData
-}
-export interface configInfoData {
-  description: string
-  tip: string
-  type: string
-}
-export interface cookieJar {
-  [index: string]: request.CookieJar
-}
+// 自定义一些常量
+const liveOrigin = 'http://live.bilibili.com'
+const apiLiveOrigin = 'http://api.live.bilibili.com'
+const smallTVPathname = '/gift/v2/smalltv'
+const rafflePathname = '/activity/v1/Raffle'
+const lightenPathname = '/activity/v1/NeedYou'
+const _user: Map<string, User> = new Map()
+const _options: _options = <_options>{}
+export default BiLive
+export { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, lightenPathname, _user, _options }
