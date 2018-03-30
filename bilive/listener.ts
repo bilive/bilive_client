@@ -6,7 +6,7 @@ import DMclient from './dm_client_re'
 import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, _options } from './index'
 /**
  * 监听服务器消息
- * 
+ *
  * @class Listener
  * @extends {EventEmitter}
  */
@@ -16,7 +16,7 @@ class Listener extends EventEmitter {
   }
   /**
    * 用于接收弹幕消息
-   * 
+   *
    * @private
    * @type {DMclient}
    * @memberof Listener
@@ -24,7 +24,7 @@ class Listener extends EventEmitter {
   private _DMclient!: DMclient
   /**
    * 小电视ID
-   * 
+   *
    * @private
    * @type {number}
    * @memberof Listener
@@ -32,7 +32,7 @@ class Listener extends EventEmitter {
   private _smallTVID: number = 0
   /**
    * 抽奖ID
-   * 
+   *
    * @private
    * @type {number}
    * @memberof Listener
@@ -40,7 +40,7 @@ class Listener extends EventEmitter {
   private _raffleID: number = 0
   /**
    * 快速抽奖ID
-   * 
+   *
    * @private
    * @type {number}
    * @memberof Listener
@@ -48,7 +48,7 @@ class Listener extends EventEmitter {
   private _lightenID: number = 0
   /**
    * app快速抽奖ID
-   * 
+   *
    * @private
    * @type {number}
    * @memberof Listener
@@ -56,7 +56,7 @@ class Listener extends EventEmitter {
   private _appLightenID: number = 0
   /**
    * 开始监听
-   * 
+   *
    * @memberof Listener
    */
   public Start() {
@@ -71,7 +71,7 @@ class Listener extends EventEmitter {
   }
   /**
    * 监听弹幕系统消息
-   * 
+   *
    * @private
    * @param {SYS_MSG} dataJson
    * @memberof Listener
@@ -84,7 +84,7 @@ class Listener extends EventEmitter {
   }
   /**
    * 监听系统礼物消息
-   * 
+   *
    * @private
    * @param {SYS_GIFT} dataJson
    * @memberof Listener
@@ -98,11 +98,11 @@ class Listener extends EventEmitter {
   }
   /**
    * 检查房间抽奖信息
-   * 
+   *
    * @private
-   * @param {string} url 
-   * @param {number} roomID 
-   * @param {('smallTV' | 'raffle' | 'lighten')} raffle 
+   * @param {string} url
+   * @param {number} roomID
+   * @param {('smallTV' | 'raffle' | 'lighten')} raffle
    * @memberof Listener
    */
   private async _RaffleCheck(url: string, roomID: number, raffle: 'smallTV' | 'raffle' | 'lighten') {
@@ -127,9 +127,9 @@ class Listener extends EventEmitter {
   }
   /**
    * 检查客户端房间信息
-   * 
+   *
    * @private
-   * @param {number} roomID 
+   * @param {number} roomID
    * @memberof Listener
    */
   private async _AppLightenCheck(roomID: number) {
@@ -155,9 +155,9 @@ class Listener extends EventEmitter {
   }
   /**
    * 监听抽奖消息
-   * 
+   *
    * @private
-   * @param {(raffleMSG | appLightenMSG)} raffleMSG 
+   * @param {(raffleMSG | appLightenMSG)} raffleMSG
    * @memberof Listener
    */
   private _RaffleHandler(raffleMSG: raffleMSG | appLightenMSG) {

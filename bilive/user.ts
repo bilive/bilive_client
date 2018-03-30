@@ -5,15 +5,15 @@ import AppClient from './lib/app_client'
 import { apiLiveOrigin, _options, liveOrigin, _user } from './index'
 /**
  * Creates an instance of User.
- * 
+ *
  * @class User
  * @extends {Online}
  */
 class User extends Online {
   /**
    * Creates an instance of User.
-   * @param {string} uid 
-   * @param {userData} userData 
+   * @param {string} uid
+   * @param {userData} userData
    * @memberof User
    */
   constructor(uid: string, userData: userData) {
@@ -30,8 +30,8 @@ class User extends Online {
   /**
    * 当账号出现异常时, 会返回'captcha'或'stop'
    * 'captcha'为登录需要验证码, 若无法处理需Stop()
-   * 
-   * @returns {(Promise<'captcha' | 'stop' | void>)} 
+   *
+   * @returns {(Promise<'captcha' | 'stop' | void>)}
    * @memberof User
    */
   public Start(): Promise<'captcha' | 'stop' | void> {
@@ -40,7 +40,7 @@ class User extends Online {
   }
   /**
    * 停止挂机
-   * 
+   *
    * @memberof User
    */
   public Stop() {
@@ -50,7 +50,7 @@ class User extends Online {
   /**
    * 零点重置
    * 为了少几个定时器, 统一由外部调用
-   * 
+   *
    * @memberof User
    */
   public async nextDay() {
@@ -69,9 +69,10 @@ class User extends Online {
     this._eventRoom = false
     this._silver2coin = false
   }
+  protected _getuserInfo!: NodeJS.Timer
   /**
    * 日常
-   * 
+   *
    * @memberof User
    */
   public async daily() {
@@ -81,10 +82,12 @@ class User extends Online {
     this.silver2coin()
     this.sendGift()
     this.signGroup()
+    this.GetUserInfo()
+    this._getuserInfo = setInterval(() => this.GetUserInfo(), 36e+5)//每小时获取一次用户信息
   }
   /**
    * 每日签到
-   * 
+   *
    * @memberof User
    */
   public async sign() {
@@ -116,7 +119,7 @@ class User extends Online {
   }
   /**
    * 每日宝箱
-   * 
+   *
    * @memberof User
    */
   public async treasureBox() {
@@ -147,7 +150,7 @@ class User extends Online {
   }
   /**
    * 每日任务
-   * 
+   *
    * @memberof User
    */
   public async eventRoom() {
@@ -190,7 +193,7 @@ class User extends Online {
   }
   /**
    * 银瓜子兑换硬币
-   * 
+   *
    * @memberof User
    */
   public async silver2coin() {
@@ -231,7 +234,7 @@ class User extends Online {
   }
   /**
    * 自动送礼
-   * 
+   *
    * @memberof User
    */
   public async sendGift() {
@@ -287,7 +290,7 @@ class User extends Online {
   }
   /**
    * 应援团签到
-   * 
+   *
    * @memberof User
    */
   public async signGroup() {
@@ -320,6 +323,54 @@ class User extends Online {
       }
     }
     else tools.Log(this.nickname, '应援团签到', '获取应援团列表失败', linkGroup.body)
+  }
+  /**
+   * 获取个人信息
+   *
+   * @memberof User
+   */
+  public async GetUserInfo() {
+    const UserInfo = await tools.XHR<UserInfo>({
+      uri: `${apiLiveOrigin}/User/getUserInfo?ts=${AppClient.TS}`,
+      json: true,
+      jar: this.jar,
+      headers: this.headers
+    })
+    if (UserInfo === undefined) return
+    if (UserInfo.response.statusCode === 200 && UserInfo.body.code === 'REPONSE_OK') {
+        const InfoData = UserInfo.body.data
+        tools.Log(this.nickname,`ID:${InfoData.uname} LV${InfoData.user_level} EXP:${InfoData.user_intimacy}/${InfoData.user_next_intimacy} 排名:${InfoData.user_level_rank}`)
+        tools.Log(`金瓜子：${InfoData.gold} 银瓜子：${InfoData.silver} 硬币：${InfoData.billCoin}`);
+      }
+      else tools.Log(this.nickname,'获取个人信息失败')
+    var MedalNum = 0
+    const MedalInfo = await tools.XHR<MedalInfo>({
+      uri: `${apiLiveOrigin}/i/api/medal?page=1&pageSize=25`,
+      json: true,
+      jar: this.jar,
+      headers: this.headers
+    })
+    if (MedalInfo === undefined) return
+    else {
+      if (MedalInfo.response.statusCode === 200 && MedalInfo.body.code === 0) {
+        const MedalData = MedalInfo.body.data
+        if (MedalInfo.body.data.count === 0) {
+          tools.Log(this.nickname,`无勋章`)
+        }
+        else {
+          MedalInfo.body.data.fansMedalList.forEach(async (MedalData) => {
+  					if (MedalData.status === 1) {
+  						tools.Log(this.nickname,`佩戴勋章:${MedalData.medal_name} ${MedalData.level} 亲密度:${MedalData.intimacy}/${MedalData.next_intimacy} 排名:${MedalData.rank}`);
+  					}
+  					else
+  						MedalNum++
+  				});
+  				if (MedalNum === MedalData.count)
+  					tools.Log(this.nickname,`未佩戴勋章`)
+        }
+      }
+      else tools.Log(this.nickname,'获取勋章信息失败')
+    }
   }
 }
 export default User
