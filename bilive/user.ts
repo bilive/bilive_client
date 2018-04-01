@@ -339,7 +339,7 @@ class User extends Online {
     if (UserInfo === undefined) return
     if (UserInfo.response.statusCode === 200 && UserInfo.body.code === 'REPONSE_OK') {
         const InfoData = UserInfo.body.data
-        tools.Log(this.nickname,`ID:${InfoData.uname} LV${InfoData.user_level} EXP:${InfoData.user_intimacy}/${InfoData.user_next_intimacy} 排名:${InfoData.user_level_rank}`)
+        tools.Log(this.nickname,`ID:${InfoData.uname}  LV${InfoData.user_level} EXP:${InfoData.user_intimacy}/${InfoData.user_next_intimacy} 排名:${InfoData.user_level_rank}`)
         tools.Log(`金瓜子：${InfoData.gold} 银瓜子：${InfoData.silver} 硬币：${InfoData.billCoin}`);
       }
       else tools.Log(this.nickname,'获取个人信息失败')
@@ -360,7 +360,7 @@ class User extends Online {
         else {
           MedalInfo.body.data.fansMedalList.forEach(async (MedalData) => {
   					if (MedalData.status === 1) {
-  						tools.Log(this.nickname,`佩戴勋章:${MedalData.medal_name} ${MedalData.level} 亲密度:${MedalData.intimacy}/${MedalData.next_intimacy} 排名:${MedalData.rank}`);
+  						tools.Log(this.nickname,`佩戴勋章:${MedalData.medal_name}${MedalData.level} 亲密度:${MedalData.intimacy}/${MedalData.next_intimacy} 排名:${MedalData.rank}`);
   					}
   					else
   						MedalNum++

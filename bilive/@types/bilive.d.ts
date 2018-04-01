@@ -83,7 +83,7 @@ interface configInfoData {
  * @interface message
  */
 interface message {
-  cmd: 'smallTV' | 'raffle' | 'lighten' | 'appLighten'
+  cmd: 'smallTV' | 'raffle' | 'lighten' | 'appLighten' | 'lottery' | 'beatStorm'
   roomID: number
   id: number
 }
@@ -106,6 +106,24 @@ interface raffleMSG extends message {
 interface appLightenMSG extends message {
   cmd: 'appLighten'
   type: string
+}
+/**
+ * lottery信息
+ *
+ * @interface lotteryMSG
+ * @extends {message}
+ */
+interface lotteryMSG extends message {
+  cmd: 'lottery'
+}
+/**
+ * beatStorm信息
+ *
+ * @interface beatStormMSG
+ * @extends {message}
+ */
+interface beatStormMSG extends message {
+  cmd: 'beatStorm'
 }
 // listener
 /**
@@ -557,3 +575,51 @@ interface serverChan {
     medal_name: string
     rank: number
   }
+//RoomListener
+/**
+ * LOTTERY_START
+ *
+ * @interface LOTTERY_START
+ *
+ */
+interface LOTTERY_START {
+  cmd: 'LOTTERY_START'
+  id: number
+  roomid: number
+}
+/**
+ * SPECIAL_GIFT
+ *
+ * @interface SPECIAL_GIFT
+ *
+ */
+interface SPECIAL_GIFT {
+  cmd: 'SPECIAL_GIFT'
+  id: number
+  roomID: number
+}
+/**
+ * lottery检查
+ *
+ * @interface lotteryCheck
+ */
+interface lotteryCheck {
+  code: number
+  msg: string
+  message: string
+  data: lotteryCheckData[]
+}
+interface lotteryCheckData {
+  id: number
+}
+//RoomRaffle
+/**
+ * lotteryJoin
+ *
+ * @interface lotteryJoin
+ */
+interface lotteryJoin {
+  code: number
+  msg: string
+  message: string
+}

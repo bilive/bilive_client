@@ -1,11 +1,13 @@
 import tools from './lib/tools'
 import User from './user'
 import Raffle from './raffle'
+import RRaffle from './roomraffle'
 import Options from './options'
 import Listener from './listener'
+import RoomListener from './roomlistener'
 /**
  * 主程序
- * 
+ *
  * @class BiLive
  */
 class BiLive {
@@ -16,7 +18,7 @@ class BiLive {
   public loop!: NodeJS.Timer
   /**
    * 开始主程序
-   * 
+   *
    * @memberof BiLive
    */
   public async Start() {
@@ -34,10 +36,11 @@ class BiLive {
     this.loop = setInterval(() => this._loop(), 50 * 1000)
     new Options().Start()
     this.Listener()
+    this.RoomListener()
   }
   /**
    * 计时器
-   * 
+   *
    * @private
    * @memberof BiLive
    */
@@ -55,7 +58,7 @@ class BiLive {
   }
   /**
    * 监听
-   * 
+   *
    * @memberof BiLive
    */
   public Listener() {
@@ -65,9 +68,9 @@ class BiLive {
   }
   /**
    * 参与抽奖
-   * 
+   *
    * @private
-   * @param {raffleMSG} raffleMSG 
+   * @param {raffleMSG} raffleMSG
    * @memberof BiLive
    */
   private _Raffle(raffleMSG: raffleMSG | appLightenMSG) {
@@ -96,6 +99,41 @@ class BiLive {
       }
     })
   }
+  /**
+   * 监听房间信息
+   *
+   * @memberof BiLive
+   */
+  public RoomListener() {
+    const SRListener = new RoomListener()
+      .on('room', roomMSG => this._RRaffle(roomMSG))
+    SRListener.Start()
+  }
+  /**
+   * 参与抽奖
+   *
+   * @private
+   * @param {roomMSG} roomMSG
+   * @memberof BiLive
+   */
+  private _RRaffle(roomMSG: lotteryMSG | beatStormMSG) {
+    _user.forEach(user => {
+      if (user.captchaJPEG !== '' || !user.userData.raffle) return
+      const raffleOptions: raffleOptions = {
+        raffleId: roomMSG.id,
+        roomID: roomMSG.roomID,
+        user
+      }
+      switch (roomMSG.cmd) {
+        case 'lottery':
+          return new RRaffle(raffleOptions).Lottery()
+        case 'beatStorm':
+          return new RRaffle(raffleOptions).BeatStorm()
+        default:
+          return
+      }
+    })
+  }
 }
 // 自定义一些常量
 const liveOrigin = 'http://live.bilibili.com'
@@ -103,7 +141,9 @@ const apiLiveOrigin = 'http://api.live.bilibili.com'
 const smallTVPathname = '/gift/v2/smalltv'
 const rafflePathname = '/activity/v1/Raffle'
 const lightenPathname = '/activity/v1/NeedYou'
+const lotteryPathname = '/lottery/v1/lottery'
+const beatStormPathname = '/lottery/v1/Storm'
 const _user: Map<string, User> = new Map()
 const _options: _options = <_options>{}
 export default BiLive
-export { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, lightenPathname, _user, _options }
+export { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, lightenPathname, lotteryPathname, beatStormPathname, _user, _options }
