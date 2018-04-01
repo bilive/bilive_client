@@ -81,7 +81,9 @@ class User extends Online {
     this.eventRoom()
     this.silver2coin()
     this.sendGift()
+    this.autoSend()
     this.signGroup()
+    this.autoSend()
     this.GetUserInfo()
     this._getuserInfo = setInterval(() => this.GetUserInfo(), 36e+5)//每小时获取一次用户信息
   }
@@ -287,6 +289,127 @@ class User extends Online {
       else tools.Log(this.nickname, '自动送礼', '获取包裹信息失败', bagInfo.body)
     }
     else tools.Log(this.nickname, '自动送礼', '获取房间信息失败', roomInfo.body)
+  }
+  /**
+   * 自动送礼增强？
+   *
+   * @memberof User
+   */
+  public async autoSend() {
+    if (!this.userData.autoSend) return
+    // 获取佩戴勋章信息
+    var MedalNum = 0
+    const MedalInfo = await tools.XHR<MedalInfo>({
+      uri: `${apiLiveOrigin}/i/api/medal?page=1&pageSize=25`,
+      json: true,
+      jar: this.jar,
+      headers: this.headers
+    })
+    if (MedalInfo === undefined) return
+    else {
+      if (MedalInfo.response.statusCode === 200 && MedalInfo.body.code === 0) {
+        const MedalData = MedalInfo.body.data
+        if (MedalInfo.body.data.count === 0) {
+          tools.Log(this.nickname,`无勋章`)
+        }
+        else {
+          MedalInfo.body.data.fansMedalList.forEach(async (MedalData) => {
+  					if (MedalData.status === 1) {
+              const uid = MedalData.uid
+              const ruid = MedalData.target_id
+              const MInfo = await tools.XHR<MInfo>({
+                method: `POST`,
+                uri: `${apiLiveOrigin}/live_user/v1/UserInfo/get_weared_medal`,
+                body: `source=1&uid=${uid}&target_id=${ruid}&csrf_token=${this.userData.cookie.substr(9,32)}`,
+                json: true,
+                jar: this.jar,
+                headers: this.headers
+              })
+              if (MInfo === undefined || MInfo.response.statusCode !== 200) return
+              if (MInfo.body.code === 0) {
+                const room_id = MInfo.body.data.roominfo.room_id
+                const day_limit = MInfo.body.data.day_limit
+                const today_feed  = parseInt(MInfo.body.data.today_feed)
+                var intimacy_needed = day_limit - today_feed
+                // 获取包裹信息
+                var gift_value = 0
+                var bag_value = 0
+                var send_num = 0
+                const bagInfo = await tools.XHR<bagInfoW>({
+                  uri: `${apiLiveOrigin}/gift/v2/gift/bag_list`,
+                  json: true,
+                  jar: this.jar,
+                  headers: this.headers
+                })
+                if (bagInfo === undefined || bagInfo.response.statusCode !== 200) return
+                if (bagInfo.body.code === 0) {
+                  if (bagInfo.body.data.list.length > 0) {
+                    for (const giftData of bagInfo.body.data.list) {
+                      if (giftData.expire_at > 0) {
+                        switch (giftData.gift_id) {
+                          case 1:
+                            gift_value = 1
+                            bag_value = gift_value * giftData.gift_num//辣条
+                          break
+                          case 3:
+                            gift_value = 99
+                            bag_value = gift_value * giftData.gift_num//B坷垃
+                          break
+                          case 4:
+                            gift_value = 52
+                            bag_value = gift_value * giftData.gift_num//喵娘
+                          break
+                          case 6:
+                            gift_value = 10
+                            bag_value = gift_value * giftData.gift_num//亿圆
+                          break
+                          case 10:
+                            gift_value = 199
+                            bag_value = gift_value * giftData.gift_num//蓝白胖次
+                          break
+                          case 115:
+                            gift_value = 20
+                            bag_value = gift_value * giftData.gift_num//桃花（活动礼物）
+                          break
+                        }
+                        if (intimacy_needed >= bag_value) {
+                          send_num = giftData.gift_num
+                        }
+                        else {
+                          send_num = Math.floor(intimacy_needed / bag_value)
+                        }
+                        const sendBagW = await tools.XHR<sendBagW>({
+                          method: 'POST',
+                          uri: `${apiLiveOrigin}/gift/v2/live/bag_send`,
+                          body: `uid=${uid}&gift_id=${giftData.gift_id}&ruid=${ruid}&gift_num=${send_num}&bag_id=${giftData.bag_id}&platform=pc&biz_code=live&biz_id=${room_id}&rnd=${AppClient.RND}&storm_beat_id=0&metadata=&price=0&csrf_token=${this.userData.cookie.substr(9,32)}`,
+                          json: true,
+                          jar: this.jar,
+                          headers: this.headers
+                        })
+                        if (sendBagW === undefined || sendBagW.response.statusCode !== 200) continue
+                        if (sendBagW.body.code === 0) {
+                          const sendBagWData = sendBagW.body.data
+                          tools.Log(this.nickname, '自动送礼', `向房间 ${room_id} 赠送 ${sendBagWData.gift_num} 个${sendBagWData.gift_name}`)
+                          intimacy_needed = intimacy_needed - send_num
+                          if (send_num === 0) return
+                        }
+                        else tools.Log(this.nickname, '自动送礼', `向房间 ${room_id} 赠送 ${giftData.gift_num} 个${giftData.gift_name} 失败`, sendBagW.body)
+                        await tools.Sleep(6000)
+                      }
+                    }
+                  }
+                }
+              }
+  					}
+  					else
+  						MedalNum++
+  				});
+  				if (MedalNum === MedalData.count)
+  					tools.Log(this.nickname,`未佩戴勋章`)
+        }
+      }
+      else tools.Log(this.nickname,'获取勋章信息失败')
+    }
   }
   /**
    * 应援团签到

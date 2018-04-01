@@ -409,6 +409,29 @@ interface bagInfoData {
   super_num: number
 }
 /**
+ * 包裹信息WEB
+ *
+ * @interface bagInfoW
+ */
+interface bagInfoW {
+  code: number
+  msg: string
+  message: string
+  data: bagInfoWData[]
+}
+interface bagInfoWData {
+  list: bagWlist[]
+  time: number
+}
+interface bagWlist {
+  bag_id: number
+  expireat: number
+  gift_id: number
+  gift_name: string
+  gift_num: number
+  gift_type: number
+}
+/**
  * 赠送包裹礼物
  *
  * @interface sendBag
@@ -420,6 +443,55 @@ interface sendBag {
   data: sendBagData
 }
 interface sendBagData {
+  tid: string
+  uid: number
+  uname: string
+  ruid: number
+  rcost: number
+  gift_id: number
+  gift_type: number
+  gift_name: string
+  gift_num: number
+  gift_action: string
+  gift_price: number
+  coin_type: string
+  total_coin: number
+  metadata: string
+  rnd: string
+}
+/**
+ * 佩戴勋章信息
+ *
+ * @interface MInfo
+ */
+interface MInfo {
+  code: number
+  msg: string
+  message: string
+  data: MData
+}
+interface MData {
+  day_limit: number
+  roominfo: Mroominfo
+  today_feed: string
+  uid: number
+}
+interface Mroominfo {
+  room_id: number
+  uid: number
+}
+/**
+ * 赠送包裹礼物WEB
+ *
+ * @interface sendBagW
+ */
+interface sendBagW {
+  code: number
+  msg: string
+  message: string
+  data: sendBagWData
+}
+interface sendBagWData {
   tid: string
   uid: number
   uname: string
@@ -574,6 +646,8 @@ interface serverChan {
     next_intimacy: number
     medal_name: string
     rank: number
+    target_id: number
+    uid: number
   }
 //RoomListener
 /**

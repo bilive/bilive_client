@@ -54,6 +54,7 @@ class BiLive {
     const cstMin = cst.getUTCMinutes()
     if (cstString === '00:10') _user.forEach(user => user.nextDay())
     else if (cstString === '13:55') _user.forEach(user => user.sendGift())
+    else if (cstString === '12:00') _user.forEach(user => user.autoSend())
     if (cstMin === 30 && cstHour % 8 === 0) _user.forEach(user => user.daily())
   }
   /**

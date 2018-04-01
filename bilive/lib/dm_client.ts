@@ -443,7 +443,7 @@ class DMclient extends EventEmitter {
     dataJson._roomid = this.roomID
     this.emit('ALL_MSG', dataJson)
     this.emit(dataJson.cmd, dataJson)
-    tools.Log(dataJson)//测试用，监听房间和系统信息
+    //tools.Log(dataJson)//测试用，监听房间和系统信息
   }
   /**
    * 解压数据
