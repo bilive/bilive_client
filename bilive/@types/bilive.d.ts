@@ -1,7 +1,7 @@
 // index
 /**
  * 应用设置
- * 
+ *
  * @interface options
  */
 interface _options {
@@ -79,17 +79,17 @@ interface configInfoData {
 // bilive_client
 /**
  * 消息格式
- * 
+ *
  * @interface message
  */
 interface message {
-  cmd: 'smallTV' | 'raffle' | 'lighten' | 'appLighten'
+  cmd: 'smallTV' | 'raffle' | 'lighten' | 'appLighten' | 'lottery' | 'beatStorm'
   roomID: number
   id: number
 }
 /**
  * 抽奖信息
- * 
+ *
  * @interface raffleMSG
  * @extends {message}
  */
@@ -99,7 +99,7 @@ interface raffleMSG extends message {
 }
 /**
  * app快速抽奖信息
- * 
+ *
  * @interface appLightenMSG
  * @extends {message}
  */
@@ -107,10 +107,28 @@ interface appLightenMSG extends message {
   cmd: 'appLighten'
   type: string
 }
+/**
+ * lottery信息
+ *
+ * @interface lotteryMSG
+ * @extends {message}
+ */
+interface lotteryMSG extends message {
+  cmd: 'lottery'
+}
+/**
+ * beatStorm信息
+ *
+ * @interface beatStormMSG
+ * @extends {message}
+ */
+interface beatStormMSG extends message {
+  cmd: 'beatStorm'
+}
 // listener
 /**
  * 抽奖检查
- * 
+ *
  * @interface raffleCheck
  */
 interface raffleCheck {
@@ -132,7 +150,7 @@ interface raffleCheckData {
 }
 /**
  * 快速抽奖检查
- * 
+ *
  * @interface lightenCheck
  */
 interface lightenCheck {
@@ -150,7 +168,7 @@ interface lightenCheckData {
 // raffle
 /**
  * 抽奖设置
- * 
+ *
  * @interface raffleOptions
  */
 interface raffleOptions {
@@ -161,8 +179,28 @@ interface raffleOptions {
   user: any
 }
 /**
+ * 模拟进入房间，规避封禁
+ *
+ * @interface entryCheck0
+ */
+interface entryCheck0 {
+  code: number
+  msg: string
+  message: string
+}
+/**
+ * 模拟进入房间，规避封禁
+ *
+ * @interface entryCheck1
+ */
+interface entryCheck1 {
+  code: number
+  msg: string
+  message: string
+}
+/**
  * 参与抽奖信息
- * 
+ *
  * @interface raffleJoin
  */
 interface raffleJoin {
@@ -182,7 +220,7 @@ interface raffleJoinData {
 }
 /**
  * 抽奖结果信息
- * 
+ *
  * @interface raffleReward
  */
 interface raffleReward {
@@ -202,7 +240,7 @@ interface raffleRewardData {
 }
 /**
  * 快速抽奖结果信息
- * 
+ *
  * @interface lightenReward
  */
 interface lightenReward {
@@ -213,7 +251,7 @@ interface lightenReward {
 }
 /**
  * App快速抽奖结果信息
- * 
+ *
  * @interface appLightenReward
  */
 interface appLightenReward {
@@ -229,7 +267,7 @@ interface appLightenRewardData {
 // online
 /**
  * 签到信息
- * 
+ *
  * @interface signInfo
  */
 interface signInfo {
@@ -248,7 +286,7 @@ interface signInfoData {
 }
 /**
  * 在线心跳返回
- * 
+ *
  * @interface userOnlineHeart
  */
 interface userOnlineHeart {
@@ -257,7 +295,7 @@ interface userOnlineHeart {
 }
 /**
  * 在线领瓜子宝箱
- * 
+ *
  * @interface currentTask
  */
 interface currentTask {
@@ -273,7 +311,7 @@ interface currentTaskData {
 }
 /**
  * 领瓜子答案提交返回
- * 
+ *
  * @interface award
  */
 interface award {
@@ -288,7 +326,7 @@ interface awardData {
 }
 /**
  * 房间信息app
- * 
+ *
  * @interface roomInfo
  */
 interface roomInfo {
@@ -306,7 +344,7 @@ interface roomInfoDataEvent {
 }
 /**
  * 房间信息
- * 
+ *
  * @interface roomInit
  */
 interface roomInit {
@@ -329,7 +367,7 @@ interface roomInitData {
 }
 /**
  * 分享房间返回
- * 
+ *
  * @interface shareCallback
  */
 interface shareCallback {
@@ -339,7 +377,7 @@ interface shareCallback {
 }
 /**
  * 每日包裹
- * 
+ *
  * @interface getBagGift
  */
 interface getBagGift {
@@ -347,7 +385,7 @@ interface getBagGift {
 }
 /**
  * 包裹信息
- * 
+ *
  * @interface bagInfo
  */
 interface bagInfo {
@@ -371,8 +409,31 @@ interface bagInfoData {
   super_num: number
 }
 /**
+ * 包裹信息WEB
+ *
+ * @interface bagInfoW
+ */
+interface bagInfoW {
+  code: number
+  msg: string
+  message: string
+  data: bagInfoWData[]
+}
+interface bagInfoWData {
+  list: bagWlist[]
+  time: number
+}
+interface bagWlist {
+  bag_id: number
+  expireat: number
+  gift_id: number
+  gift_name: string
+  gift_num: number
+  gift_type: number
+}
+/**
  * 赠送包裹礼物
- * 
+ *
  * @interface sendBag
  */
 interface sendBag {
@@ -399,8 +460,57 @@ interface sendBagData {
   rnd: string
 }
 /**
+ * 佩戴勋章信息
+ *
+ * @interface MInfo
+ */
+interface MInfo {
+  code: number
+  msg: string
+  message: string
+  data: MData
+}
+interface MData {
+  day_limit: number
+  roominfo: Mroominfo
+  today_feed: string
+  uid: number
+}
+interface Mroominfo {
+  room_id: number
+  uid: number
+}
+/**
+ * 赠送包裹礼物WEB
+ *
+ * @interface sendBagW
+ */
+interface sendBagW {
+  code: number
+  msg: string
+  message: string
+  data: sendBagWData
+}
+interface sendBagWData {
+  tid: string
+  uid: number
+  uname: string
+  ruid: number
+  rcost: number
+  gift_id: number
+  gift_type: number
+  gift_name: string
+  gift_num: number
+  gift_action: string
+  gift_price: number
+  coin_type: string
+  total_coin: number
+  metadata: string
+  rnd: string
+}
+/**
  * 应援团
- * 
+ *
  * @interface linkGroup
  */
 interface linkGroup {
@@ -425,7 +535,7 @@ interface linkGroupInfo {
 }
 /**
  * 应援团签到返回
- * 
+ *
  * @interface signGroup
  */
 interface signGroup {
@@ -440,7 +550,7 @@ interface signGroupData {
 }
 /**
  * 银瓜子兑换硬币返回
- * 
+ *
  * @interface silver2coin
  */
 interface silver2coin {
@@ -457,7 +567,7 @@ interface silver2coinData {
 }
 /**
  * 每日任务
- * 
+ *
  * @interface taskInfo
  */
 interface taskInfo {
@@ -473,7 +583,7 @@ interface taskInfoDoublewatchinfo {
 }
 /**
  * 兑换扭蛋币
- * 
+ *
  * @interface capsule
  */
 interface capsule {
@@ -486,11 +596,104 @@ interface capsuleData {
 }
 /**
  * Server酱
- * 
+ *
  * @interface serverChan
  */
 interface serverChan {
   errno: number
   errmsg: string
   dataset: string
+}
+/**
+ * 个人信息
+ *
+ * @interface UserInfo
+ */
+ interface UserInfo {
+   code: string
+   msg: string
+   data: UserInfoData
+ }
+ interface UserInfoData {
+   uname: string
+   silver: number
+   gold: number
+   user_level: number
+   user_intimacy: number
+   user_next_intimacy: number
+   user_level_rank: number
+   billCoin: number
+ }
+ /**
+  * 勋章信息
+  *
+  * @interface MedalInfo
+  */
+  interface MedalInfo {
+    code: number
+    msg: string
+    data: MedalInfoData
+  }
+  interface MedalInfoData {
+    medalCount: number
+    count: number
+    fansMedalList: MedalInfoDataInfo[]
+  }
+  interface MedalInfoDataInfo {
+    status: number
+    level: number
+    intimacy: number
+    next_intimacy: number
+    medal_name: string
+    rank: number
+    target_id: number
+    uid: number
+  }
+//RoomListener
+/**
+ * LOTTERY_START
+ *
+ * @interface LOTTERY_START
+ *
+ */
+interface LOTTERY_START {
+  cmd: 'LOTTERY_START'
+  id: number
+  roomid: number
+}
+/**
+ * SPECIAL_GIFT
+ *
+ * @interface SPECIAL_GIFT
+ *
+ */
+interface SPECIAL_GIFT {
+  cmd: 'SPECIAL_GIFT'
+  id: number
+  roomID: number
+}
+/**
+ * lottery检查
+ *
+ * @interface lotteryCheck
+ */
+interface lotteryCheck {
+  code: number
+  msg: string
+  message: string
+  data: lotteryCheckData[]
+}
+interface lotteryCheckData {
+  id: number
+}
+//RoomRaffle
+/**
+ * lotteryJoin
+ *
+ * @interface lotteryJoin
+ */
+interface lotteryJoin {
+  code: number
+  msg: string
+  message: string
 }

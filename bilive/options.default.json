@@ -30,6 +30,7 @@
     "raffle": false,
     "sendGift": false,
     "sendGiftRoom": 0,
+    "autoSend": false,
     "signGroup": false
   },
   "info": {
@@ -117,6 +118,11 @@
       "description": "自动送礼房间",
       "tip": "要自动送出礼物的房间号",
       "type": "number"
+    },
+    "autoSend": {
+      "description": "自动凑亲密",
+      "tip": "自动向佩戴勋章所属主播凑满亲密度",
+      "type": "boolean"
     },
     "signGroup": {
       "description": "应援团签到",

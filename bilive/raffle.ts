@@ -5,7 +5,7 @@ import AppClient from './lib/app_client'
 import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, lightenPathname } from './index'
 /**
  * 自动参与抽奖
- * 
+ *
  * @class Raffle
  */
 class Raffle {
@@ -23,7 +23,7 @@ class Raffle {
   }
   /**
    * type
-   * 
+   *
    * @private
    * @type {string}
    * @memberof Raffle
@@ -31,7 +31,7 @@ class Raffle {
   private _type?: string
   /**
    * time
-   * 
+   *
    * @private
    * @type {number}
    * @memberof Raffle
@@ -39,7 +39,7 @@ class Raffle {
   private _time: number = 100
   /**
    * 参与ID
-   * 
+   *
    * @private
    * @type {number}
    * @memberof Raffle
@@ -47,7 +47,7 @@ class Raffle {
   private _raffleId: number
   /**
    * 房间号
-   * 
+   *
    * @private
    * @type {number}
    * @memberof Raffle
@@ -55,7 +55,7 @@ class Raffle {
   private _roomID: number
   /**
    * User
-   * 
+   *
    * @private
    * @type {User}
    * @memberof Raffle
@@ -63,7 +63,7 @@ class Raffle {
   private _user: User
   /**
    * 抽奖地址
-   * 
+   *
    * @private
    * @type {string}
    * @memberof Raffle
@@ -71,7 +71,7 @@ class Raffle {
   private _url!: string
   /**
    * 参与小电视抽奖
-   * 
+   *
    * @memberof Raffle
    */
   public SmallTV() {
@@ -80,7 +80,7 @@ class Raffle {
   }
   /**
    * 参与抽奖
-   * 
+   *
    * @memberof Raffle
    */
   public Raffle() {
@@ -89,27 +89,48 @@ class Raffle {
   }
   /**
    * 抽奖
-   * 
+   *
    * @private
    * @memberof Raffle
    */
   private async _Raffle() {
-    const join: request.Options = {
-      uri: `${this._url}/join?roomid=${this._roomID}&raffleId=${this._raffleId}`,
+    const entry0: request.Options = {
+      uri: `${apiLiveOrigin}/room/v1/Room/room_init?id=${tools.getShortRoomID(this._roomID)}`,
       jar: this._user.jar,
       json: true,
       headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(this._roomID)}` }
     }
-    await tools.Sleep(15000)
-    const raffleJoin = await tools.XHR<raffleJoin>(join)
-    if (raffleJoin !== undefined && raffleJoin.response.statusCode === 200 && raffleJoin.body.code === 0) {
-      await tools.Sleep(this._time * 1000 + 15 * 1000)
-      this._RaffleReward()
+    const entry1: request.Options = {
+      method: 'POST',
+      uri: `${apiLiveOrigin}/room/v1/Room/room_entry_action`,
+      jar: this._user.jar,
+      form: {
+        'csrf_token': this._user.userData.cookie.substr(9,32),
+        'room_id': this._roomID
+      },
+      json: true,
+      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(this._roomID)}` }
+    }
+    const entryCheck0 = await tools.XHR<entryCheck0>(entry0)
+    const entryCheck1 = await tools.XHR<entryCheck1>(entry1)
+    if (entryCheck0 !== undefined && entryCheck0.response.statusCode === 200 && entryCheck0.body.code === 0 && entryCheck1 !== undefined && entryCheck1.response.statusCode === 200 && entryCheck1.body.code === 0) {
+      await tools.Sleep(8000)
+      const join: request.Options = {
+        uri: `${this._url}/join?roomid=${this._roomID}&raffleId=${this._raffleId}`,
+        jar: this._user.jar,
+        json: true,
+        headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(this._roomID)}` }
+      }
+      const raffleJoin = await tools.XHR<raffleJoin>(join)
+      if (raffleJoin !== undefined && raffleJoin.response.statusCode === 200 && raffleJoin.body.code === 0) {
+        await tools.Sleep(this._time * 1000 + 15 * 1000)
+        this._RaffleReward()
+      }
     }
   }
   /**
    * 获取抽奖结果
-   * 
+   *
    * @private
    * @memberof Raffle
    */
@@ -138,7 +159,7 @@ class Raffle {
   }
   /**
    * 参与快速抽奖
-   * 
+   *
    * @memberof Raffle
    */
   public async Lighten() {
@@ -158,7 +179,7 @@ class Raffle {
   }
   /**
    * app快速抽奖
-   * 
+   *
    * @private
    * @memberof Raffle
    */
