@@ -22,7 +22,6 @@ class BiLive {
   public async Start() {
     const option = await tools.Options()
     Object.assign(_options, option)
-    tools.Log('正在测试可用ip')
     await tools.testIP(_options.apiIPs)
     for (const uid in _options.user) {
       if (!_options.user[uid].status) continue
@@ -99,6 +98,7 @@ class BiLive {
 }
 // 自定义一些常量
 const liveOrigin = 'http://live.bilibili.com'
+const apiVCOrigin = 'http://api.vc.bilibili.com'
 const apiLiveOrigin = 'http://api.live.bilibili.com'
 const smallTVPathname = '/gift/v2/smalltv'
 const rafflePathname = '/activity/v1/Raffle'
@@ -106,4 +106,4 @@ const lightenPathname = '/activity/v1/NeedYou'
 const _user: Map<string, User> = new Map()
 const _options: _options = <_options>{}
 export default BiLive
-export { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, lightenPathname, _user, _options }
+export { liveOrigin, apiVCOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, lightenPathname, _user, _options }

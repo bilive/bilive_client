@@ -2,7 +2,7 @@ import fs from 'fs'
 import util from 'util'
 import crypto from 'crypto'
 import request from 'request'
-import { apiLiveOrigin, liveOrigin, _options } from '../index'
+import { liveOrigin, apiVCOrigin, apiLiveOrigin, _options } from '../index'
 const FSmkdir = util.promisify(fs.mkdir)
 const FSexists = util.promisify(fs.exists)
 const FScopyFile = util.promisify(fs.copyFile)
@@ -75,7 +75,7 @@ async function testIP(apiIPs: string[]): Promise<number> {
   apiIPs.forEach(ip => {
     const headers = getHeaders('PC')
     const options = {
-      uri: apiLiveOrigin,
+      uri: `${apiLiveOrigin}/ip_service/v1/ip_service/get_ip_addr`,
       proxy: `http://${ip}/`,
       tunnel: false,
       method: 'GET',
@@ -89,6 +89,7 @@ async function testIP(apiIPs: string[]): Promise<number> {
       })
     }))
   })
+  Log('正在测试可用ip')
   await Promise.all(test)
   const num = api.IPs.size
   Log('可用ip数量为', num)
@@ -127,7 +128,7 @@ function XHR<T>(options: request.OptionsWithUri, platform: 'PC' | 'Android' | 'W
   return new Promise<response<T> | undefined>(resolve => {
     options.gzip = true
     // 添加用户代理
-    if (typeof options.uri === 'string' && options.uri.startsWith(apiLiveOrigin)) {
+    if (typeof options.uri === 'string' && (options.uri.startsWith(apiLiveOrigin) || options.uri.startsWith(apiVCOrigin))) {
       const ip = api.ip
       if (ip !== '') {
         options.proxy = `http://${ip}/`

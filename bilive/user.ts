@@ -2,7 +2,7 @@ import request from 'request'
 import tools, { response } from './lib/tools'
 import Online from './online'
 import AppClient from './lib/app_client'
-import { apiLiveOrigin, _options, liveOrigin, _user } from './index'
+import { liveOrigin, apiVCOrigin,apiLiveOrigin,  _options, _user, } from './index'
 /**
  * Creates an instance of User.
  * 
@@ -294,7 +294,7 @@ class User extends Online {
     if (!this.userData.signGroup) return
     // 获取已加入应援团列表
     const group: request.Options = {
-      uri: `http://api.vc.bilibili.com/link_group/v1/member/my_groups?${AppClient.signQueryBase(this.tokenQuery)}`,
+      uri: `${apiVCOrigin}/link_group/v1/member/my_groups?${AppClient.signQueryBase(this.tokenQuery)}`,
       json: true,
       headers: this.headers
     }
@@ -304,7 +304,7 @@ class User extends Online {
       if (linkGroup.body.data.list.length > 0) {
         for (const groupInfo of linkGroup.body.data.list) {
           const sign: request.Options = {
-            uri: `http://api.vc.bilibili.com/link_setting/v1/link_setting/sign_in?${AppClient.signQueryBase(`group_id=${groupInfo.group_id}\
+            uri: `${apiVCOrigin}/link_setting/v1/link_setting/sign_in?${AppClient.signQueryBase(`group_id=${groupInfo.group_id}\
 &owner_id=${groupInfo.owner_uid}&${this.tokenQuery}`)}`,
             json: true,
             headers: this.headers
