@@ -2,7 +2,7 @@ import request from 'request'
 import tools from './lib/tools'
 import User from './user'
 import AppClient from './lib/app_client'
-import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, lightenPathname } from './index'
+import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, lotteryPathname } from './index'
 /**
  * 自动参与抽奖
  * 
@@ -79,7 +79,7 @@ class Raffle {
     this._Raffle()
   }
   /**
-   * 参与抽奖
+   * 参与抽奖Raffle
    * 
    * @memberof Raffle
    */
@@ -88,7 +88,16 @@ class Raffle {
     this._Raffle()
   }
   /**
-   * 抽奖
+   * 参与抽奖Lottery
+   * 
+   * @memberof Raffle
+   */
+  public Lottery() {
+    this._url = apiLiveOrigin + lotteryPathname
+    this._Lottery()
+  }
+  /**
+   * 抽奖Raffle
    * 
    * @private
    * @memberof Raffle
@@ -100,7 +109,6 @@ class Raffle {
       json: true,
       headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(this._roomID)}` }
     }
-    await tools.Sleep(15000)
     const raffleJoin = await tools.XHR<raffleJoin>(join)
     if (raffleJoin !== undefined && raffleJoin.response.statusCode === 200 && raffleJoin.body.code === 0) {
       await tools.Sleep(this._time * 1000 + 15 * 1000)
@@ -137,29 +145,26 @@ class Raffle {
     }
   }
   /**
-   * 参与快速抽奖
+   * 抽奖Lottery
    * 
    * @memberof Raffle
    */
-  public async Lighten() {
-    this._url = apiLiveOrigin + lightenPathname
-    const getCoin: request.Options = {
+  public async _Lottery() {
+    const reward: request.Options = {
       method: 'POST',
-      uri: `${this._url}/getCoin`,
-      body: `roomid=${this._roomID}&lightenId=${this._raffleId}}`,
+      uri: `${this._url}/join`,
+      body: `roomid=${this._roomID}&id=${this._raffleId}&type=${this._type}&csrf_token=${tools.getCookie(this._user.jar, 'bili_jct')}`,
       jar: this._user.jar,
       json: true,
       headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(this._roomID)}` }
     }
-    await tools.Sleep(5000)
-    const lightenReward = await tools.XHR<lightenReward>(getCoin)
-    if (lightenReward !== undefined && lightenReward.response.statusCode === 200 && lightenReward.body.code === 0)
-      tools.Log(this._user.nickname, `抽奖 ${this._raffleId}`, lightenReward.body.msg)
+    const lotteryReward = await tools.XHR<lotteryReward>(reward)
+    if (lotteryReward !== undefined && lotteryReward.response.statusCode === 200 && lotteryReward.body.code === 0)
+      tools.Log(this._user.nickname, `抽奖 ${this._raffleId}`, lotteryReward.body.data.message)
   }
   /**
    * app快速抽奖
    * 
-   * @private
    * @memberof Raffle
    */
   public async AppLighten() {
@@ -169,7 +174,6 @@ class Raffle {
       json: true,
       headers: this._user.headers
     }
-    await tools.Sleep(5000)
     const appLightenReward = await tools.XHR<appLightenReward>(reward, 'Android')
     if (appLightenReward !== undefined
       && appLightenReward.response.statusCode === 200 && appLightenReward.body.code === 0)

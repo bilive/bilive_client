@@ -24,6 +24,7 @@ interface config {
   defaultUserID: number
   defaultRoomID: number
   eventRooms: number[]
+  adminServerChan: string
 }
 interface userCollection {
   [index: string]: userData
@@ -83,33 +84,33 @@ interface configInfoData {
  * @interface message
  */
 interface message {
-  cmd: 'smallTV' | 'raffle' | 'lighten' | 'appLighten'
+  cmd: 'smallTV' | 'raffle' | 'lottery' | 'appLighten'
   roomID: number
   id: number
 }
 /**
- * 抽奖信息
+ * 抽奖raffle信息
  * 
  * @interface raffleMSG
  * @extends {message}
  */
 interface raffleMSG extends message {
-  cmd: 'smallTV' | 'raffle' | 'lighten'
+  cmd: 'smallTV' | 'raffle'
   time: number
 }
 /**
- * app快速抽奖信息
+ * 抽奖lottery信息
  * 
- * @interface appLightenMSG
+ * @interface lotteryMSG
  * @extends {message}
  */
-interface appLightenMSG extends message {
-  cmd: 'appLighten'
+interface lotteryMSG extends message {
+  cmd: 'appLighten' | 'lottery'
   type: string
 }
 // listener
 /**
- * 抽奖检查
+ * 抽奖raffle检查
  * 
  * @interface raffleCheck
  */
@@ -131,21 +132,49 @@ interface raffleCheckData {
   status: number
 }
 /**
- * 快速抽奖检查
+ * 抽奖lottery检查
  * 
- * @interface lightenCheck
+ * @interface lotteryCheck
  */
-interface lightenCheck {
+interface lotteryCheck {
   code: number
   msg: string
   message: string
-  data: lightenCheckData[]
+  data: lotteryCheckData
 }
-interface lightenCheckData {
-  type: string
-  lightenId: number
+interface lotteryCheckData {
+  guard: lotteryCheckDataGuard[]
+  storm: lotteryCheckDataStorm[]
+}
+interface lotteryCheckDataGuard {
+  id: number
+  sender: lotteryCheckDataSender
+  keyword: string
   time: number
-  status: boolean
+  status: number
+  mobile_display_mode: number
+  mobile_static_asset: string
+  mobile_animation_asset: string
+}
+interface lotteryCheckDataStorm {
+  id: number
+  sender: lotteryCheckDataSender
+  keyword: string
+  time: number
+  status: number
+  mobile_display_mode: number
+  mobile_static_asset: string
+  mobile_animation_asset: string
+  extra: lotteryCheckDataStormExtra
+}
+interface lotteryCheckDataStormExtra {
+  num: number
+  content: string
+}
+interface lotteryCheckDataSender {
+  uid: number
+  uname: string
+  face: string
 }
 // raffle
 /**
@@ -201,17 +230,6 @@ interface raffleRewardData {
   status?: number
 }
 /**
- * 快速抽奖结果信息
- * 
- * @interface lightenReward
- */
-interface lightenReward {
-  code: number
-  msg: string
-  message: string
-  data: [number]
-}
-/**
  * App快速抽奖结果信息
  * 
  * @interface appLightenReward
@@ -225,6 +243,32 @@ interface appLightenReward {
 interface appLightenRewardData {
   gift_img: string
   gift_desc: string
+}
+/**
+ * 抽奖lottery
+ * 
+ * @interface lotteryReward
+ */
+interface lotteryReward {
+  code: number
+  msg: string
+  message: string
+  data: lotteryRewardData
+}
+interface lotteryRewardData {
+  id: number
+  type: string
+  award_type: number
+  time: number
+  message: string
+  from: string
+  award_list: lotteryRewardDataAwardlist[]
+}
+interface lotteryRewardDataAwardlist {
+  name: string
+  img: string
+  type: number
+  content: string
 }
 // online
 /**

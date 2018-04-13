@@ -68,7 +68,7 @@ interface DANMU_MSG_info_user extends Array<number | string> {
   /** 直播间排行 */
   5: number
   6: number
-  /** #32进制颜色代码 */
+  /** 用户名颜色, #32进制颜色代码 */
   7: string
 }
 interface DANMU_MSG_info_medal extends Array<number | string> {
@@ -371,6 +371,7 @@ interface GUARD_BUY_data {
 /**
  * 舰队消息
  * {"cmd":"GUARD_MSG","msg":"欢迎 :?总督 Tikiあいしてる:? 登船","roomid":237328,"_roomid":237328}
+ * {"cmd":"GUARD_MSG","msg":"用户 :?EricOuO:? 在主播 七七见奈波丶 的直播间开通了总督","buy_type":1,"_roomid":23058}
  * 
  * @interface GUARD_MSG
  * @extends {danmuJson}
@@ -378,6 +379,7 @@ interface GUARD_BUY_data {
 interface GUARD_MSG extends danmuJson {
   /** 消息内容 */
   msg: string
+  buy_type?: number
 }
 /**
  * 抽奖开始
@@ -487,6 +489,52 @@ interface EVENT_CMD_data {
   event_type: string
   /** 图地址片 */
   event_img: string
+}
+
+/**
+ * 抽奖LOTTERY
+ * {"cmd":"LOTTERY_START","data":{"id":216101,"roomid":5712065,"message":"290974992 在【5712065】购买了总督，请前往抽奖","type":"guard","link":"https://live.bilibili.com/5712065","lottery":{"id":216101,"sender":{"uid":290974992,"uname":"","face":""},"keyword":"guard","time":86400,"status":1,"mobile_display_mode":2,"mobile_static_asset":"","mobile_animation_asset":""}},"_roomid":5712065}
+ * 
+ * @interface LOTTERY_START
+ * @extends {danmuJson}
+ */
+interface LOTTERY_START extends danmuJson {
+  data: LOTTERY_START_data
+}
+interface LOTTERY_START_data {
+  /* 编号 */
+  id: number
+  /* 房间号 */
+  roomid: number
+  /* 消息 */
+  message: string
+  /* 抽奖类型 */
+  type: string
+  /* 房间链接 */
+  link: string
+  /* 抽奖信息 */
+  lottery: LOTTERY_START_data_lottery
+}
+interface LOTTERY_START_data_lottery {
+  /* 编号 */
+  id: number
+  /* 抽奖发起人信息 */
+  sender: LOTTERY_START_data_lottery_sender
+  /* 关键字, 目前和type一致 */
+  keyword: string
+  time: number
+  status: number
+  mobile_display_mode: number
+  mobile_static_asset: string
+  mobile_animation_asset: string
+}
+interface LOTTERY_START_data_lottery_sender {
+  /* 发起人uid */
+  uid: number
+  /* 发起人昵称 */
+  uname: string
+  /* 头像地址 */
+  face: string
 }
 /**
  * 快速抽奖
@@ -718,6 +766,16 @@ interface ACTIVITY_EVENT_data {
   progress: number
 }
 /**
+ * 实物抽奖结束
+ * 
+ * @interface WIN_ACTIVITY
+ * @extends {danmuJson}
+ */
+interface WIN_ACTIVITY extends danmuJson {
+  /** 第n轮抽奖 */
+  number: number
+}
+/**
  * 直播强制切断
  * {"cmd":"CUT_OFF","msg":"违反直播规范","roomid":945626,"_roomid":945626}
  * 
@@ -736,51 +794,6 @@ interface CUT_OFF extends danmuJson {
  */
 interface ROOM_LOCK extends danmuJson {
   expire: string // 封禁时间 yyyy-MM-dd HH:mm:ss
-}
-/**
- * 总督抽奖
- * {"cmd":"LOTTERY_START","data":{"id":216101,"roomid":5712065,"message":"290974992 在【5712065】购买了总督，请前往抽奖","type":"guard","link":"https://live.bilibili.com/5712065","lottery":{"id":216101,"sender":{"uid":290974992,"uname":"","face":""},"keyword":"guard","time":86400,"status":1,"mobile_display_mode":2,"mobile_static_asset":"","mobile_animation_asset":""}},"_roomid":5712065}
- * 
- * @interface LOTTERY_START
- * @extends {danmuJson}
- */
-interface LOTTERY_START extends danmuJson {
-  data: LOTTERY_START_data
-}
-interface LOTTERY_START_data {
-  /* 编号 */
-  id: number
-  /* 房间号 */
-  roomid: number
-  /* 消息 */
-  message: string
-  /* 抽奖类型 */
-  type: string
-  /* 房间链接 */
-  link: string
-  /* 抽奖信息 */
-  lottery: LOTTERY_START_data_lottery
-}
-interface LOTTERY_START_data_lottery {
-  /* 编号 */
-  id: number
-  /* 抽奖发起人信息 */
-  sender: LOTTERY_START_data_lottery_sender
-  /* 关键字, 目前和type一致 */
-  keyword: string
-  time: number
-  status: number
-  mobile_display_mode: number
-  mobile_static_asset: string
-  mobile_animation_asset: string
-}
-interface LOTTERY_START_data_lottery_sender {
-  /* 发起人uid */
-  uid: number
-  /* 发起人昵称 */
-  uname: string
-  /* 头像地址 */
-  face: string
 }
 /**
  * 画板活动

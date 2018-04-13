@@ -2,7 +2,7 @@ import request from 'request'
 import tools, { response } from './lib/tools'
 import Online from './online'
 import AppClient from './lib/app_client'
-import { liveOrigin, apiVCOrigin,apiLiveOrigin,  _options, _user, } from './index'
+import { liveOrigin, apiVCOrigin, apiLiveOrigin, _options, _user } from './index'
 /**
  * Creates an instance of User.
  * 
@@ -98,7 +98,7 @@ class User extends Online {
     }
     const signInfo = await tools.XHR<signInfo>(sign, 'Android')
     if (signInfo !== undefined && signInfo.response.statusCode === 200 && signInfo.body.code === 0) {
-      ok += 1
+      ok++
       tools.Log(this.nickname, '每日签到', '已签到')
     }
     // 道具包裹
@@ -109,7 +109,7 @@ class User extends Online {
     }
     const getBagGift = await tools.XHR<getBagGift>(getBag, 'Android')
     if (getBagGift !== undefined && getBagGift.response.statusCode === 200 && getBagGift.body.code === 0) {
-      ok += 1
+      ok++
       tools.Log(this.nickname, '每日签到', '已获取每日包裹')
     }
     if (ok === 2) this._sign = true
@@ -178,7 +178,7 @@ class User extends Online {
         }
         const taskres = await tools.XHR(task)
         if (taskres !== undefined && taskres.response.statusCode === 200
-          && (taskres.response.body.code === 0 || taskres.response.body.code === -400)) ok += 1
+          && (taskres.response.body.code === 0 || taskres.response.body.code === -400)) ok++
         if (ok === tasks.length) {
           this._eventRoom = true
           tools.Log(this.nickname, '每日任务', '每日任务已完成')
@@ -235,7 +235,7 @@ class User extends Online {
    * @memberof User
    */
   public async sendGift() {
-    if (!this.userData.sendGift) return
+    if (!this.userData.sendGift || this.userData.sendGiftRoom === 0) return
     const roomID = this.userData.sendGiftRoom
     // 获取房间信息
     const room: request.Options = {
