@@ -215,10 +215,7 @@ class Listener extends EventEmitter {
         return
     }
     this.emit('raffle', raffleMSG)
-    this._RoomListener.AddRoom(roomID)
     tools.Log(`房间 ${tools.getShortRoomID(roomID)} 开启了第 ${id} 轮${msg}抽奖`)
-    if (raffleMSG.cmd === 'smallTV') this._RoomListener.UpdateDB(roomID, 'smallTV')
-    else this._RoomListener.UpdateDB(roomID, 'raffle')
   }
 }
 export default Listener
