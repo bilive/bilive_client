@@ -1,11 +1,16 @@
 [![Paypal.me donate](https://img.shields.io/badge/Paypal.me-donate-yellow.svg)](https://www.paypal.me/lzppzr)
 
-### 使用releases                                                                   
-1. 安装[Node.js](https://nodejs.org/)
-2. 下载[bilive_client.zip](https://github.com/lzghzr/bilive_client/releases/latest)
-3. 解压并定位到目录
-4. 命令行 npm install
-5. 命令行 npm start
+### 使用releases
+* 通用
+    1. 安装[Node.js](https://nodejs.org/)
+    2. 下载[bilive_client.zip](https://github.com/lzghzr/bilive_client/releases/latest)
+    3. 解压并定位到目录
+    4. 命令行 npm install
+    5. 命令行 npm start
+* Windows 64位系统
+    1. 下载[bilive_client_win64.zip](https://github.com/lzghzr/bilive_client/releases/latest)
+    2. 解压并打开文件夹
+    3. 双击cmd文件
 
 ### 自行编译
 1. 安装[git](https://git-scm.com/downloads)
