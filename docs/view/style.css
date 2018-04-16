@@ -1,0 +1,103 @@
+body {
+  background-color: #343a40;
+}
+#login, #option, #log {
+  background-color: #f8f9fa;
+  height: 100vh;
+  overflow-x: hidden;
+}
+#logreturn {
+  left: calc(100vw - 8rem);
+  top: calc(100vh - 5rem);
+}
+._description + ._tip {
+  z-index: 11;
+}
+._description:hover + ._tip {
+  display: inline !important;
+}
+/* bootstrap */
+.modal-content {
+  animation: modal-content .3s;
+}
+@keyframes modal-content {
+  from {
+    transform: translate(0, -25%);
+  }
+  to {
+    transform: translate(0, 0);
+  }
+}
+/* 3D效果 */
+#ddd {
+  transform-style: preserve-3d;
+  transform-origin: 50vw 50vh;
+}
+.d_top1 {
+  transform: translateZ(50vh);
+}
+.d_top2 {
+  transform: translateY(-50vh) rotateX(90deg);
+}
+.ddd_top {
+  animation: ddd_top 1s;
+}
+@keyframes ddd_top {
+  from {
+    transform: translateZ(-50vh) rotateX(0deg);
+  }
+  to {
+    transform: translateZ(-50vh) rotateX(-90deg);
+  }
+}
+.d_bottom1 {
+  transform: translateZ(50vh);
+}
+.d_bottom2 {
+  transform: translateY(50vh) rotateX(-90deg);
+}
+.ddd_bottom {
+  animation: ddd_bottom 1s;
+}
+@keyframes ddd_bottom {
+  from {
+    transform: translateZ(-50vh) rotateX(0deg);
+  }
+  to {
+    transform: translateZ(-50vh) rotateX(90deg);
+  }
+}
+.d_left1 {
+  transform: translateZ(50vw);
+}
+.d_left2 {
+  transform: translateX(50vw) rotateY(90deg);
+}
+.ddd_left {
+  animation: ddd_left 1s;
+}
+@keyframes ddd_left {
+  from {
+    transform: translateZ(-50vw) rotateY(0deg);
+  }
+  to {
+    transform: translateZ(-50vw) rotateY(-90deg);
+  }
+}
+.d_right1 {
+  transform: translateZ(50vw);
+}
+.d_right2 {
+  transform: translateX(-50vw) rotateY(-90deg);
+}
+.ddd_right {
+  animation: ddd_right 1s;
+}
+@keyframes ddd_right {
+  from {
+    transform: translateZ(-50vw) rotateY(0deg);
+  }
+  to {
+    transform: translateZ(-50vw) rotateY(90deg);
+  }
+}
