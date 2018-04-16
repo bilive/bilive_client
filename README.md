@@ -21,8 +21,8 @@
 6. 命令行 npm run build
 7. 命令行 npm start
 
-[点此进行设置](http://lzghzr.github.io/bilive_client_view/index.html)\
-[国内设置地址](http://lzoczr.gitee.io/bilive_client_view/index.html)
+[点此进行设置](http://github.halaal.win/bilive_client/)\
+[国内设置地址](http://lzoczr.gitee.io/bilive_client_view/)
 ```TypeScript
 const 支付宝红包码 = `
 █▀▀▀▀▀█ ▄▄█   ▄█  ▀▀▄ █▀▀▀▀▀█
