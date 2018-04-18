@@ -161,7 +161,7 @@ function XHR<T>(options: request.OptionsWithUri, platform: 'PC' | 'Android' | 'W
 function Options(options?: _options): Promise<_options> {
   return new Promise(async resolve => {
     // 根据npm start参数不同设置不同路径
-    const dirname = __dirname + (process.env.npm_package_scripts_start === 'node build/app.js' ? '/../../..' : '/../..')
+    const dirname = __dirname + (process.env.npm_package_scripts_start === 'node ./build/app.js' ? '/../../..' : '/../..')
     // 检查是否有options目录
     const hasDir = await FSexists(dirname + '/options/')
     if (!hasDir) await FSmkdir(dirname + '/options/')

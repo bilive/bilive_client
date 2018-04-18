@@ -53,5 +53,8 @@
     /* 实验性选项 */
     // "experimentalDecorators": true,        /* 对 ES7 修饰器启用实验支持。 */
     // "emitDecoratorMetadata": true,         /* 对发出修饰器的类型元数据启用实验支持。 */
-  }
+  },
+  "exclude": [
+    "./docs"
+  ]
 }

@@ -32,7 +32,7 @@ class Options {
    * @memberof Options
    */
   protected get _ts(): string {
-    const bufArray = window.crypto.getRandomValues(new Uint32Array(5))
+    const bufArray = <Uint32Array>window.crypto.getRandomValues(new Uint32Array(5))
     let random = ''
     bufArray.forEach(value => { random += value.toString(16) })
     return random.slice(0, 32)

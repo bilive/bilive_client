@@ -133,6 +133,7 @@ class Listener extends EventEmitter {
    * @param {number} roomID 
    * @memberof Listener
    */
+  // @ts-ignore 暂时无用
   private async _LotteryCheck(url: string, roomID: number) {
     const check: request.Options = {
       uri: `${url}/check?roomid=${roomID}`,

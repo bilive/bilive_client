@@ -14,7 +14,7 @@
     // "declaration": true,                   /* 生成相应的 ".d.ts" 文件。 */
     // "sourceMap": true,                     /* 生成相应的 ".map" 文件。 */
     // "outFile": "./",                       /* 连接输出并将其发出到单个文件。 */
-    "outDir": "view",                         /* 将输出结构重定向到目录。 */
+    "outDir": "./view",                       /* 将输出结构重定向到目录。 */
     // "rootDir": "./",                       /* 指定输入文件的根目录。与 --outDir 一起用于控制输出目录结构。 */
     // "removeComments": true,                /* 请勿将注释发出到输出。 */
     // "noEmit": true,                        /* 请勿发出输出。 */
