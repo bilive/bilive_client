@@ -25,6 +25,8 @@ interface config {
   defaultRoomID: number
   eventRooms: number[]
   adminServerChan: string
+  raffleDelay: number
+  rafflePause: number[]
 }
 interface userCollection {
   [index: string]: userData
@@ -52,9 +54,10 @@ interface optionsInfo {
   [index: string]: configInfoData
   defaultUserID: configInfoData
   defaultRoomID: configInfoData
-  apiOrigin: configInfoData
-  apiKey: configInfoData
   eventRooms: configInfoData
+  adminServerChan: configInfoData
+  raffleDelay: configInfoData
+  rafflePause: configInfoData
   nickname: configInfoData
   userName: configInfoData
   passWord: configInfoData

@@ -11,7 +11,12 @@
     "eventRooms": [
       3
     ],
-    "adminServerChan": ""
+    "adminServerChan": "",
+    "raffleDelay": 0,
+    "rafflePause": [
+      3,
+      9
+    ]
   },
   "user": {},
   "newUserData": {
@@ -40,18 +45,28 @@
     },
     "defaultRoomID": {
       "description": "默认监听RoomID",
-      "tip": "用来监听系统消息的房间, 默认为23058(官方音乐台)",
+      "tip": "用来监听系统消息的房间, 默认为3(官方音乐台)",
       "type": "number"
     },
     "eventRooms": {
-      "description": "挂机活动房间以,分隔",
-      "tip": "挂取活动道具的房间, 默认为23058(官方音乐台), 有时活动只有主播报名才可以参加",
+      "description": "挂机活动房间以\",\"分隔",
+      "tip": "挂取活动道具的房间, 默认为3(官方音乐台), 有时活动只有主播报名才可以参加",
       "type": "numberArray"
     },
     "adminServerChan": {
       "description": "SCKEY",
       "tip": "Server酱的SCKEY, 所有推送信息都会发送到此账号",
       "type": "string"
+    },
+    "raffleDelay": {
+      "description": "抽奖延时",
+      "tip": "活动抽奖, 小电视抽奖的延时, ms",
+      "type": "number"
+    },
+    "rafflePause": {
+      "description": "抽奖暂停",
+      "tip": "在此时间段内不参与抽奖, 24时制, 以\",\"分隔, 只有一个时间时不启用",
+      "type": "numberArray"
     },
     "nickname": {
       "description": "昵称",
@@ -100,7 +115,7 @@
     },
     "silver2coin": {
       "description": "银瓜子兑换硬币",
-      "tip": "自动将银瓜子兑换成硬币, 每天一个",
+      "tip": "自动将银瓜子兑换成硬币, 每天两个",
       "type": "boolean"
     },
     "raffle": {

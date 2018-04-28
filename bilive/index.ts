@@ -56,8 +56,14 @@ class BiLive {
     else if (cstString === '13:55') _user.forEach(user => user.sendGift())
     // 每天00:30, 08:30, 16:30做日常
     if (cstMin === 30 && cstHour % 8 === 0) _user.forEach(user => user.daily())
-    // 每天03:00到09:00关闭抽奖
-    if (cstHour > 2 && cstHour < 9) this._raffle = false
+    // 抽奖暂停
+    const rafflePause = _options.config.rafflePause
+    if (rafflePause.length > 1) {
+      const start = rafflePause[0]
+      const end = rafflePause[1]
+      if (start > end && (cstHour >= start || cstHour < end) || (cstHour >= start && cstHour < end)) this._raffle = false
+      else this._raffle = true
+    }
     else this._raffle = true
   }
   /**
@@ -79,7 +85,8 @@ class BiLive {
    */
   private async _Raffle(raffleMSG: raffleMSG | lotteryMSG) {
     if (!this._raffle) return
-    await tools.Sleep(10 * 1000)
+    const raffleDelay = _options.config.raffleDelay
+    if (raffleDelay !== 0) await tools.Sleep(raffleDelay)
     _user.forEach(user => {
       if (user.captchaJPEG !== '' || !user.userData.raffle) return
       const raffleOptions: raffleOptions = {
