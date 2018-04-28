@@ -46,6 +46,13 @@ function showLogin() {
   const keepInput = <HTMLInputElement>loginDiv.querySelector('#protocol input[type="checkbox"]')
   const connectButton = <HTMLElement>loginDiv.querySelector('#connect button')
   const connectSpan = <HTMLSpanElement>loginDiv.querySelector('#connect span')
+  if (location.hash !== '') {
+    const loginInfo = location.hash.match(/path=(.*)&protocol=(.*)/)
+    if (loginInfo !== null) {
+      pathInput.value = loginInfo[1]
+      protocolInput.value = loginInfo[2]
+    }
+  }
   connectButton.onclick = async () => {
     const protocols = [protocolInput.value]
     if (keepInput.checked) protocols.push('keep')

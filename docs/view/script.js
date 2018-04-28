@@ -85,6 +85,13 @@ function showLogin() {
     var keepInput = loginDiv.querySelector('#protocol input[type="checkbox"]');
     var connectButton = loginDiv.querySelector('#connect button');
     var connectSpan = loginDiv.querySelector('#connect span');
+    if (location.hash !== '') {
+        var loginInfo = location.hash.match(/path=(.*)&protocol=(.*)/);
+        if (loginInfo !== null) {
+            pathInput.value = loginInfo[1];
+            protocolInput.value = loginInfo[2];
+        }
+    }
     connectButton.onclick = function () { return __awaiter(_this, void 0, void 0, function () {
         var protocols, connected;
         return __generator(this, function (_a) {
