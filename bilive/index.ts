@@ -89,6 +89,10 @@ class BiLive {
     if (raffleDelay !== 0) await tools.Sleep(raffleDelay)
     _user.forEach(user => {
       if (user.captchaJPEG !== '' || !user.userData.raffle) return
+      if (Math.random() < _options.config.droprate / 100) {
+        tools.Log(user.nickname, "随机丢弃", raffleMSG.cmd, raffleMSG.id)
+        return
+      }
       const raffleOptions: raffleOptions = {
         raffleId: raffleMSG.id,
         roomID: raffleMSG.roomID,

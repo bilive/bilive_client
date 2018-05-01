@@ -27,6 +27,7 @@ interface config {
   adminServerChan: string
   raffleDelay: number
   rafflePause: number[]
+  droprate: number
 }
 interface userCollection {
   [index: string]: userData
