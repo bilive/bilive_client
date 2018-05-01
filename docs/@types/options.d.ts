@@ -28,10 +28,14 @@ interface userDataMSG extends message {
 }
 // 应用设置
 interface config {
-  [index: string]: number | number[]
+  [index: string]: number | string | number[]
   defaultUserID: number
   defaultRoomID: number
   eventRooms: number[]
+  adminServerChan: string
+  raffleDelay: number
+  rafflePause: number[]
+  droprate: number
 }
 interface userData {
   [index: string]: string | boolean | number
@@ -39,13 +43,12 @@ interface userData {
   userName: string
   passWord: string
   biliUID: number
-  accessToken: string
   cookie: string
   status: boolean
   doSign: boolean
   treasureBox: boolean
   eventRoom: boolean
-  smallTV: boolean
+  silver2coin: boolean
   raffle: boolean
   sendGift: boolean
   sendGiftRoom: number
@@ -55,23 +58,24 @@ interface optionsInfo {
   [index: string]: configInfoData
   defaultUserID: configInfoData
   defaultRoomID: configInfoData
-  apiOrigin: configInfoData
-  apiKey: configInfoData
   eventRooms: configInfoData
+  adminServerChan: configInfoData
+  raffleDelay: configInfoData
+  rafflePause: configInfoData
+  droprate: configInfoData
   nickname: configInfoData
   userName: configInfoData
   passWord: configInfoData
   biliUID: configInfoData
-  accessToken: configInfoData
   cookie: configInfoData
   status: configInfoData
   doSign: configInfoData
   treasureBox: configInfoData
   eventRoom: configInfoData
-  smallTV: configInfoData
+  silver2coin: configInfoData
   raffle: configInfoData
-  sendGift: configInfoData,
-  sendGiftRoom: configInfoData,
+  sendGift: configInfoData
+  sendGiftRoom: configInfoData
   signGroup: configInfoData
 }
 interface configInfoData {

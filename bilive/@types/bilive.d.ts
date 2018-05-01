@@ -59,6 +59,7 @@ interface optionsInfo {
   adminServerChan: configInfoData
   raffleDelay: configInfoData
   rafflePause: configInfoData
+  droprate: configInfoData
   nickname: configInfoData
   userName: configInfoData
   passWord: configInfoData
