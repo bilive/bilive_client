@@ -12,6 +12,7 @@ interface _options {
   info: optionsInfo
   apiIPs: string[]
   roomList: [number, number][]
+  calcgifttime: string;
 }
 interface server {
   path: string

@@ -74,6 +74,11 @@
       "tip": "就是每个用户多少概率漏掉1个奖啦，范围0~100",
       "type": "number"
     },
+    "calcgifttime": {
+      "description": "汇报礼物时间",
+      "tips": "在这个时间点会统计服务器上所有用户的礼物数量情况",
+      "type": "string"
+    },
     "nickname": {
       "description": "昵称",
       "tip": "用户昵称, 与B站无关",
