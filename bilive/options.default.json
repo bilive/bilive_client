@@ -76,7 +76,7 @@
     },
     "calcgifttime": {
       "description": "汇报礼物时间",
-      "tips": "在这个时间点会统计服务器上所有用户的礼物数量情况",
+      "tip": "在这个时间点会统计服务器上所有用户的礼物数量情况，滚键盘则关闭，格式： HH:MM",
       "type": "string"
     },
     "nickname": {
