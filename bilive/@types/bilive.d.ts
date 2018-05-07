@@ -12,7 +12,6 @@ interface _options {
   info: optionsInfo
   apiIPs: string[]
   roomList: [number, number][]
-  calcgifttime: string;
 }
 interface server {
   path: string
@@ -29,6 +28,7 @@ interface config {
   raffleDelay: number
   rafflePause: number[]
   droprate: number
+  calcgifttime: string
 }
 interface userCollection {
   [index: string]: userData
@@ -76,6 +76,7 @@ interface optionsInfo {
   sendGift: configInfoData
   sendGiftRoom: configInfoData
   signGroup: configInfoData
+  calcgifttime: configInfoData
 }
 interface configInfoData {
   description: string

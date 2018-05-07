@@ -65,7 +65,7 @@ class BiLive {
       else this._raffle = true
     }
     else this._raffle = true
-    if (cstString === _options.calcgifttime) this.calcgift()
+    if (cstString === _options.config.calcgifttime) this.calcgift()
   }
   /**
    * 监听
