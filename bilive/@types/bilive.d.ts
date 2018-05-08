@@ -124,7 +124,9 @@ interface raffleCheck {
   code: number
   msg: string
   message: string
-  data: raffleCheckData[]
+  data: {
+    list: raffleCheckData[]
+  }
 }
 interface raffleCheckData {
   raffleId: number

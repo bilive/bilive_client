@@ -178,7 +178,7 @@ class BiLive {
 const liveOrigin = 'http://live.bilibili.com'
 const apiVCOrigin = 'http://api.vc.bilibili.com'
 const apiLiveOrigin = 'http://api.live.bilibili.com'
-const smallTVPathname = '/gift/v2/smalltv'
+const smallTVPathname = '/gift/v3/smalltv'
 const rafflePathname = '/activity/v1/Raffle'
 const lotteryPathname = '/lottery/v1/lottery'
 const _user: Map<string, User> = new Map()
