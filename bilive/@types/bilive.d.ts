@@ -27,6 +27,8 @@ interface config {
   adminServerChan: string
   raffleDelay: number
   rafflePause: number[]
+  droprate: number
+  calcgifttime: string
 }
 interface userCollection {
   [index: string]: userData
@@ -58,6 +60,7 @@ interface optionsInfo {
   adminServerChan: configInfoData
   raffleDelay: configInfoData
   rafflePause: configInfoData
+  droprate: configInfoData
   nickname: configInfoData
   userName: configInfoData
   passWord: configInfoData
@@ -74,6 +77,7 @@ interface optionsInfo {
   sendGift: configInfoData
   sendGiftRoom: configInfoData
   signGroup: configInfoData
+  calcgifttime: configInfoData
 }
 interface configInfoData {
   description: string
@@ -121,7 +125,9 @@ interface raffleCheck {
   code: number
   msg: string
   message: string
-  data: raffleCheckData[]
+  data: {
+    list: raffleCheckData[]
+  }
 }
 interface raffleCheckData {
   raffleId: number

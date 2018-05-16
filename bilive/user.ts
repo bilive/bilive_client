@@ -286,6 +286,19 @@ class User extends Online {
     else tools.Log(this.nickname, '自动送礼', '获取房间信息失败', roomInfo.body)
   }
   /**
+   * 查询礼物
+   * 
+   * @memberof User
+   */
+  public async checkgift() {
+    const bag: request.Options = {
+      uri: `${apiLiveOrigin}/gift/v2/gift/m_bag_list?${AppClient.signQueryBase(this.tokenQuery)}`,
+      json: true,
+      headers: this.headers
+    }
+    return tools.XHR<bagInfo>(bag, 'Android')
+  }
+  /**
    * 应援团签到
    * 
    * @memberof User

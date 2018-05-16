@@ -65,6 +65,7 @@ class BiLive {
       else this._raffle = true
     }
     else this._raffle = true
+    if (cstString === _options.config.calcgifttime) this.calcgift()
   }
   /**
    * 监听
@@ -89,6 +90,9 @@ class BiLive {
     if (raffleDelay !== 0) await tools.Sleep(raffleDelay)
     _user.forEach(user => {
       if (user.captchaJPEG !== '' || !user.userData.raffle) return
+      const droprate = _options.config.droprate
+      if (droprate !== 0 && Math.random() < droprate / 100)
+        return tools.Log(user.nickname, '丢弃抽奖', raffleMSG.id)
       const raffleOptions: raffleOptions = {
         raffleId: raffleMSG.id,
         roomID: raffleMSG.roomID,
@@ -112,12 +116,68 @@ class BiLive {
       }
     })
   }
+  /**
+ * calcgift
+ */
+  private async calcgift() {
+    var giftBundles: { "id": number; "name": string; "total": number; "oneDay": number; "twoDay": number; }[] = []
+    var faillist: { "user": string; "reason": string; }[] = []
+    var checking: Promise<any>[] = [];
+    _user.forEach((user) => {
+      checking.push(user.checkgift().then(value => {
+        var baginfo = value
+        if (baginfo === undefined || baginfo.response.statusCode !== 200) {
+          faillist.push({ "user": user.nickname, "reason": "未知" });
+          return;
+        }
+        if (baginfo.body.code === 0) {
+          for (const giftData of baginfo.body.data) {
+            var target = -1;
+            for (let index = 0; index < giftBundles.length; index++) {
+              if (giftBundles[index].id == giftData.gift_id) {
+                target = index;
+                break;
+              }
+            }
+            if (target == -1) {
+              giftBundles.push({ "id": giftData.gift_id, "name": giftData.gift_name, "total": giftData.gift_num, "oneDay": (giftData.expireat > 0 && giftData.expireat < 24 * 60 * 60) ? giftData.gift_num : 0, "twoDay": (giftData.expireat > 0 && giftData.expireat < 48 * 60 * 60) ? giftData.gift_num : 0 })
+            } else {
+              giftBundles[target].total += giftData.gift_num;
+              giftBundles[target].oneDay += (giftData.expireat > 0 && giftData.expireat < 24 * 60 * 60) ? giftData.gift_num : 0
+              giftBundles[target].twoDay += (giftData.expireat > 0 && giftData.expireat < 48 * 60 * 60) ? giftData.gift_num : 0
+            }
+          }
+        } else {
+          faillist.push({ "user": user.nickname, "reason": JSON.stringify(baginfo.body) });
+        }
+      }))
+    });
+    await Promise.all(checking);
+    var checkresulttext = "###礼物检查结果\n";
+    checkresulttext = checkresulttext + "| ==礼物名称== | ==总共== | ==48小时之内== | ==24小时之内== |\n| :-: | :-: | :-: | :-: |\n"
+    giftBundles.forEach(giftBundle => {
+      checkresulttext = checkresulttext + "| " + giftBundle.name + " | " + giftBundle.total + " | " + giftBundle.twoDay + " |" + giftBundle.oneDay + " |\n";
+    });
+    var faillisttext = "###检查失败用户\n"
+    faillisttext = faillisttext + "| =========昵称========= | =========原因========= |\n| :-: | :-: |\n"
+    faillist.forEach(failuser => {
+      faillisttext = faillisttext + "| " + failuser.user + " | " + failuser.reason + " |\n";
+    });
+    var texttosend = "";
+    if (faillist.length > 0) {
+      texttosend = checkresulttext + "\n" + faillisttext;
+    } else {
+      texttosend = checkresulttext;
+    }
+    tools.sendSCMSG(texttosend);
+
+  }
 }
 // 自定义一些常量
 const liveOrigin = 'http://live.bilibili.com'
 const apiVCOrigin = 'http://api.vc.bilibili.com'
 const apiLiveOrigin = 'http://api.live.bilibili.com'
-const smallTVPathname = '/gift/v2/smalltv'
+const smallTVPathname = '/gift/v3/smalltv'
 const rafflePathname = '/activity/v1/Raffle'
 const lotteryPathname = '/lottery/v1/lottery'
 const _user: Map<string, User> = new Map()

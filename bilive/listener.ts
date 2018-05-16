@@ -113,8 +113,8 @@ class Listener extends EventEmitter {
     }
     const raffleCheck = await tools.XHR<raffleCheck>(check)
     if (raffleCheck !== undefined && raffleCheck.response.statusCode === 200
-      && raffleCheck.body.code === 0 && raffleCheck.body.data.length > 0) {
-      raffleCheck.body.data.forEach(data => {
+      && raffleCheck.body.code === 0 && raffleCheck.body.data.list.length > 0) {
+      raffleCheck.body.data.list.forEach(data => {
         const message: raffleMSG = {
           cmd: raffle,
           roomID,
