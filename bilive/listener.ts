@@ -1,4 +1,5 @@
 import request from 'request'
+import cheerio from 'cheerio'
 import { EventEmitter } from 'events'
 import tools from './lib/tools'
 import AppClient from './lib/app_client'
@@ -6,7 +7,7 @@ import DMclient from './dm_client_re'
 import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, _options } from './index'
 /**
  * 监听服务器消息
- * 
+ *
  * @class Listener
  * @extends {EventEmitter}
  */
@@ -16,7 +17,7 @@ class Listener extends EventEmitter {
   }
   /**
    * 用于接收弹幕消息
-   * 
+   *
    * @private
    * @type {DMclient}
    * @memberof Listener
@@ -24,7 +25,7 @@ class Listener extends EventEmitter {
   private _DMclient!: DMclient
   /**
    * 小电视ID
-   * 
+   *
    * @private
    * @type {number}
    * @memberof Listener
@@ -32,7 +33,7 @@ class Listener extends EventEmitter {
   private _smallTVID: number = 0
   /**
    * 抽奖ID
-   * 
+   *
    * @private
    * @type {number}
    * @memberof Listener
@@ -40,7 +41,7 @@ class Listener extends EventEmitter {
   private _raffleID: number = 0
   /**
    * 快速抽奖ID
-   * 
+   *
    * @private
    * @type {number}
    * @memberof Listener
@@ -48,7 +49,7 @@ class Listener extends EventEmitter {
   private _lotteryID: number = 0
   /**
    * app快速抽奖ID
-   * 
+   *
    * @private
    * @type {number}
    * @memberof Listener
@@ -56,13 +57,15 @@ class Listener extends EventEmitter {
   private _appLightenID: number = 0
   /**
    * 开始监听
-   * 
+   *
    * @memberof Listener
    */
   public Start() {
     const config = _options.config
     const roomID = tools.getLongRoomID(config.defaultRoomID)
     const userID = config.defaultUserID
+    this._PCGamingArea()
+    this._PhoneGamingArea()
     this._DMclient = new DMclient({ roomID, userID })
     this._DMclient
       .on('SYS_MSG', dataJson => this._SYSMSGHandler(dataJson))
@@ -70,8 +73,70 @@ class Listener extends EventEmitter {
       .Connect()
   }
   /**
+   * 获取游戏分区开播房间
+   *
+   * @private
+   *
+   * @memberof Listener
+   */
+  private async _PCGamingArea() {
+    var roomID = 0
+    const Area = await tools.XHR({
+      uri: `http://live.bilibili.com/p/eden/area-tags?parentAreaId=2&areaId=0`,
+      json: true,
+      headers: {'Host': 'live.bilibili.com'}
+    })
+    if (Area !== undefined) {
+      var $ = cheerio.load(Area.body.toString())
+      var roomSID = parseInt($('html').find('ul').children('li')[0].children[0].children[1].children[0].attribs.href.substr(1))
+      roomID = tools.getLongRoomID(roomSID)
+    }
+    const userID = _options.config.defaultUserID
+    this._DMclient = new DMclient({ roomID, userID })
+    tools.Log(`已监听游戏分区房间 `,roomID)
+    this._DMclient
+      .on('SYS_MSG', dataJson => this._SYSMSGHandler2(dataJson))
+      .on('PREPARING', dataJson => {
+        tools.Log(`游戏分区房间 `,dataJson.roomid,` 已下播，切换房间`)
+        this._DMclient.Close()
+        this._PCGamingArea()
+      })
+      .Connect()
+  }
+  /**
+   * 获取手游分区开播房间
+   *
+   * @private
+   *
+   * @memberof Listener
+   */
+  private async _PhoneGamingArea() {
+    var roomID = 0
+    const Area = await tools.XHR({
+      uri: `http://live.bilibili.com/p/eden/area-tags?parentAreaId=3&areaId=0`,
+      json: true,
+      headers: {'Host': 'live.bilibili.com'}
+    })
+    if (Area !== undefined) {
+      var $ = cheerio.load(Area.body.toString())
+      var roomSID = parseInt($('html').find('ul').children('li')[0].children[0].children[1].children[0].attribs.href.substr(1))
+      roomID = tools.getLongRoomID(roomSID)
+    }
+    const userID = _options.config.defaultUserID
+    this._DMclient = new DMclient({ roomID, userID })
+    tools.Log(`已监听手游分区房间 `,roomID)
+    this._DMclient
+      .on('SYS_MSG', dataJson => this._SYSMSGHandler2(dataJson))
+      .on('PREPARING', dataJson => {
+        tools.Log(`手游分区房间 `,dataJson.roomid,` 已下播，切换房间`)
+        this._DMclient.Close()
+        this._PhoneGamingArea()
+      })
+      .Connect()
+  }
+  /**
    * 监听弹幕系统消息
-   * 
+   *
    * @private
    * @param {SYS_MSG} dataJson
    * @memberof Listener
@@ -83,8 +148,21 @@ class Listener extends EventEmitter {
     this._RaffleCheck(url, roomID, 'smallTV')
   }
   /**
+   * 监听非娱乐分区摩天大楼消息
+   *
+   * @private
+   * @param {SYS_MSG} dataJson
+   * @memberof Listener
+   */
+  private _SYSMSGHandler2(dataJson: SYS_MSG) {
+    if (dataJson.real_roomid === undefined || dataJson.tv_id === undefined || dataJson.msg_text.search('摩天大楼') === -1) return
+    const url = apiLiveOrigin + smallTVPathname
+    const roomID = dataJson.real_roomid
+    this._RaffleCheck(url, roomID, 'smallTV')
+  }
+  /**
    * 监听系统礼物消息
-   * 
+   *
    * @private
    * @param {SYS_GIFT} dataJson
    * @memberof Listener
@@ -98,11 +176,11 @@ class Listener extends EventEmitter {
   }
   /**
    * 检查房间抽奖raffle信息
-   * 
+   *
    * @private
-   * @param {string} url 
-   * @param {number} roomID 
-   * @param {('smallTV' | 'raffle')} raffle 
+   * @param {string} url
+   * @param {number} roomID
+   * @param {('smallTV' | 'raffle')} raffle
    * @memberof Listener
    */
   private async _RaffleCheck(url: string, roomID: number, raffle: 'smallTV' | 'raffle') {
@@ -127,10 +205,10 @@ class Listener extends EventEmitter {
   }
   /**
    * 检查房间抽奖lottery信息
-   * 
+   *
    * @private
-   * @param {string} url 
-   * @param {number} roomID 
+   * @param {string} url
+   * @param {number} roomID
    * @memberof Listener
    */
   // @ts-ignore 暂时无用
@@ -156,9 +234,9 @@ class Listener extends EventEmitter {
   }
   /**
    * 检查客户端房间信息
-   * 
+   *
    * @private
-   * @param {number} roomID 
+   * @param {number} roomID
    * @memberof Listener
    */
   private async _AppLightenCheck(roomID: number) {
@@ -184,9 +262,9 @@ class Listener extends EventEmitter {
   }
   /**
    * 监听抽奖消息
-   * 
+   *
    * @private
-   * @param {(raffleMSG | lotteryMSG)} raffleMSG 
+   * @param {(raffleMSG | lotteryMSG)} raffleMSG
    * @memberof Listener
    */
   private _RaffleHandler(raffleMSG: raffleMSG | lotteryMSG) {

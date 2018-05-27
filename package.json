@@ -27,6 +27,8 @@
     "typescript": "^2.8.3"
   },
   "dependencies": {
+    "@types/cheerio": "^0.22.7",
+    "cheerio": "^1.0.0-rc.2",
     "request": "^2.85.0",
     "ws": "^5.1.1"
   }
