@@ -159,7 +159,7 @@ class Online extends AppClient {
     if (refresh.status === AppClient.status.success) {
       this.jar = tools.setCookie(this.cookieString)
       await this.getOnlineInfo()
-      await tools.Options(_options)
+      tools.Options(_options)
       this._heartLoop()
       tools.Log(this.nickname, 'Cookie已更新')
     }
@@ -180,7 +180,7 @@ class Online extends AppClient {
       this.captchaJPEG = ''
       this.jar = tools.setCookie(this.cookieString)
       await this.getOnlineInfo()
-      await tools.Options(_options)
+      tools.Options(_options)
       this._heartLoop()
       tools.Log(this.nickname, 'Token已更新')
     }

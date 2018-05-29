@@ -2,7 +2,7 @@
   "server": {
     "path": "",
     "hostname": "",
-    "port": 10080,
+    "port": 23333,
     "protocol": "admin"
   },
   "config": {
@@ -11,7 +11,8 @@
     "eventRooms": [
       3
     ],
-    "adminServerChan": ""
+    "adminServerChan": "",
+    "raffleDelay": 5000
   },
   "user": {},
   "newUserData": {
@@ -23,13 +24,16 @@
     "refreshToken": "",
     "cookie": "",
     "status": false,
+    "getUserInfo": true,
     "doSign": false,
     "treasureBox": false,
+    "raffle": false,
     "eventRoom": false,
     "silver2coin": false,
-    "raffle": false,
+    "coin2silver": false,
     "sendGift": false,
     "sendGiftRoom": 0,
+    "autoSend": false,
     "signGroup": false
   },
   "info": {
@@ -40,18 +44,23 @@
     },
     "defaultRoomID": {
       "description": "默认监听RoomID",
-      "tip": "用来监听系统消息的房间, 默认为23058(官方音乐台)",
+      "tip": "用来监听系统消息的房间, 默认为3(官方音乐台)",
       "type": "number"
     },
     "eventRooms": {
       "description": "挂机活动房间以,分隔",
-      "tip": "挂取活动道具的房间, 默认为23058(官方音乐台), 有时活动只有主播报名才可以参加",
+      "tip": "挂取活动道具的房间, 默认为3(官方音乐台), 有时活动只有主播报名才可以参加",
       "type": "numberArray"
     },
     "adminServerChan": {
       "description": "SCKEY",
       "tip": "Server酱的SCKEY, 所有推送信息都会发送到此账号",
       "type": "string"
+    },
+    "raffleDelay": {
+      "description": "抽奖延时",
+      "tip": "活动抽奖, 小电视抽奖的延时, 单位ms",
+      "type": "number"
     },
     "nickname": {
       "description": "昵称",
@@ -83,6 +92,11 @@
       "tip": "用户设置的总开关, 关闭时以下设置全部失效",
       "type": "boolean"
     },
+    "getUserInfo": {
+      "description": "用户信息",
+      "tip": "整点查询用户信息，默认开启",
+      "type": "boolean"
+    },
     "doSign": {
       "description": "签到",
       "tip": "每日签到",
@@ -93,6 +107,11 @@
       "tip": "宝箱领瓜子",
       "type": "boolean"
     },
+    "raffle": {
+      "description": "抽奖",
+      "tip": "参与抽奖",
+      "type": "boolean"
+    },
     "eventRoom": {
       "description": "每日任务",
       "tip": "每日任务",
@@ -100,23 +119,28 @@
     },
     "silver2coin": {
       "description": "银瓜子兑换硬币",
-      "tip": "自动将银瓜子兑换成硬币, 每天一个",
+      "tip": "自动将银瓜子兑换成硬币, 每天两个",
       "type": "boolean"
     },
-    "raffle": {
-      "description": "抽奖",
-      "tip": "参与抽奖",
+    "coin2silver": {
+      "description": "硬币兑换银瓜子",
+      "tip": "自动将硬币兑换成银瓜子（上限）",
       "type": "boolean"
     },
     "sendGift": {
       "description": "自动送礼",
-      "tip": "自动送出剩余时间不足24小时的礼物",
+      "tip": "自动送出剩余时间不足12小时的礼物",
       "type": "boolean"
     },
     "sendGiftRoom": {
       "description": "自动送礼房间",
       "tip": "要自动送出礼物的房间号",
       "type": "number"
+    },
+    "autoSend": {
+      "description": "自动送礼V2",
+      "tip": "自动凑正在佩戴勋章的亲密度",
+      "type": "boolean"
     },
     "signGroup": {
       "description": "应援团签到",
