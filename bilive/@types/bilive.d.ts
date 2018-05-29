@@ -1,7 +1,7 @@
 // index
 /**
  * 应用设置
- * 
+ *
  * @interface options
  */
 interface _options {
@@ -87,7 +87,7 @@ interface configInfoData {
 // bilive_client
 /**
  * 消息格式
- * 
+ *
  * @interface message
  */
 interface message {
@@ -97,7 +97,7 @@ interface message {
 }
 /**
  * 抽奖raffle信息
- * 
+ *
  * @interface raffleMSG
  * @extends {message}
  */
@@ -107,7 +107,7 @@ interface raffleMSG extends message {
 }
 /**
  * 抽奖lottery信息
- * 
+ *
  * @interface lotteryMSG
  * @extends {message}
  */
@@ -117,8 +117,27 @@ interface lotteryMSG extends message {
 }
 // listener
 /**
+ * AppList
+ *
+ * @interface AppList
+ */
+interface AppList {
+  code: number
+  msg: string
+  data: AppListres
+}
+interface AppListres {
+  module_list: Appmodules[]
+}
+interface Appmodules {
+  list: AppRecommend[]
+}
+interface AppRecommend {
+  roomid: number
+}
+/**
  * 抽奖raffle检查
- * 
+ *
  * @interface raffleCheck
  */
 interface raffleCheck {
@@ -142,7 +161,7 @@ interface raffleCheckData {
 }
 /**
  * 抽奖lottery检查
- * 
+ *
  * @interface lotteryCheck
  */
 interface lotteryCheck {
@@ -188,7 +207,7 @@ interface lotteryCheckDataSender {
 // raffle
 /**
  * 抽奖设置
- * 
+ *
  * @interface raffleOptions
  */
 interface raffleOptions {
@@ -200,7 +219,7 @@ interface raffleOptions {
 }
 /**
  * 参与抽奖信息
- * 
+ *
  * @interface raffleJoin
  */
 interface raffleJoin {
@@ -220,7 +239,7 @@ interface raffleJoinData {
 }
 /**
  * 抽奖结果信息
- * 
+ *
  * @interface raffleReward
  */
 interface raffleReward {
@@ -240,7 +259,7 @@ interface raffleRewardData {
 }
 /**
  * App快速抽奖结果信息
- * 
+ *
  * @interface appLightenReward
  */
 interface appLightenReward {
@@ -255,7 +274,7 @@ interface appLightenRewardData {
 }
 /**
  * 抽奖lottery
- * 
+ *
  * @interface lotteryReward
  */
 interface lotteryReward {
@@ -282,7 +301,7 @@ interface lotteryRewardDataAwardlist {
 // online
 /**
  * 签到信息
- * 
+ *
  * @interface signInfo
  */
 interface signInfo {
@@ -301,7 +320,7 @@ interface signInfoData {
 }
 /**
  * 在线心跳返回
- * 
+ *
  * @interface userOnlineHeart
  */
 interface userOnlineHeart {
@@ -310,7 +329,7 @@ interface userOnlineHeart {
 }
 /**
  * 在线领瓜子宝箱
- * 
+ *
  * @interface currentTask
  */
 interface currentTask {
@@ -326,7 +345,7 @@ interface currentTaskData {
 }
 /**
  * 领瓜子答案提交返回
- * 
+ *
  * @interface award
  */
 interface award {
@@ -341,7 +360,7 @@ interface awardData {
 }
 /**
  * 房间信息app
- * 
+ *
  * @interface roomInfo
  */
 interface roomInfo {
@@ -359,7 +378,7 @@ interface roomInfoDataEvent {
 }
 /**
  * 房间信息
- * 
+ *
  * @interface roomInit
  */
 interface roomInit {
@@ -382,7 +401,7 @@ interface roomInitData {
 }
 /**
  * 分享房间返回
- * 
+ *
  * @interface shareCallback
  */
 interface shareCallback {
@@ -392,7 +411,7 @@ interface shareCallback {
 }
 /**
  * 每日包裹
- * 
+ *
  * @interface getBagGift
  */
 interface getBagGift {
@@ -400,7 +419,7 @@ interface getBagGift {
 }
 /**
  * 包裹信息
- * 
+ *
  * @interface bagInfo
  */
 interface bagInfo {
@@ -425,7 +444,7 @@ interface bagInfoData {
 }
 /**
  * 赠送包裹礼物
- * 
+ *
  * @interface sendBag
  */
 interface sendBag {
@@ -453,7 +472,7 @@ interface sendBagData {
 }
 /**
  * 应援团
- * 
+ *
  * @interface linkGroup
  */
 interface linkGroup {
@@ -478,7 +497,7 @@ interface linkGroupInfo {
 }
 /**
  * 应援团签到返回
- * 
+ *
  * @interface signGroup
  */
 interface signGroup {
@@ -493,7 +512,7 @@ interface signGroupData {
 }
 /**
  * 银瓜子兑换硬币返回
- * 
+ *
  * @interface silver2coin
  */
 interface silver2coin {
@@ -510,7 +529,7 @@ interface silver2coinData {
 }
 /**
  * 每日任务
- * 
+ *
  * @interface taskInfo
  */
 interface taskInfo {
@@ -526,7 +545,7 @@ interface taskInfoDoublewatchinfo {
 }
 /**
  * 兑换扭蛋币
- * 
+ *
  * @interface capsule
  */
 interface capsule {
@@ -539,7 +558,7 @@ interface capsuleData {
 }
 /**
  * Server酱
- * 
+ *
  * @interface serverChan
  */
 interface serverChan {
