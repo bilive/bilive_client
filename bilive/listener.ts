@@ -1,5 +1,4 @@
 import request from 'request'
-import cheerio from 'cheerio'
 import { EventEmitter } from 'events'
 import tools from './lib/tools'
 import AppClient from './lib/app_client'
@@ -64,8 +63,9 @@ class Listener extends EventEmitter {
     const config = _options.config
     const roomID = tools.getLongRoomID(config.defaultRoomID)
     const userID = config.defaultUserID
-    this._PCGamingArea()
-    this._PhoneGamingArea()
+    this._Area(4,'游戏')
+    this._Area(5,'手游')
+    this._Area(7,'绘画')
     this._DMclient = new DMclient({ roomID, userID })
     this._DMclient
       .on('SYS_MSG', dataJson => this._SYSMSGHandler(dataJson))
@@ -73,67 +73,34 @@ class Listener extends EventEmitter {
       .Connect()
   }
   /**
-   * 获取游戏分区开播房间
-   *
-   * @private
-   *
-   * @memberof Listener
-   */
-  private async _PCGamingArea() {
-    var roomID = 0
-    const Area = await tools.XHR({
-      uri: `http://live.bilibili.com/p/eden/area-tags?parentAreaId=2&areaId=0`,
-      json: true,
-      headers: {'Host': 'live.bilibili.com'}
-    })
-    if (Area !== undefined) {
-      var $ = cheerio.load(Area.body.toString())
-      var roomSID = parseInt($('html').find('ul').children('li')[0].children[0].children[1].children[0].attribs.href.substr(1))
-      roomID = tools.getLongRoomID(roomSID)
-    }
-    const userID = _options.config.defaultUserID
-    this._DMclient = new DMclient({ roomID, userID })
-    tools.Log(`已监听游戏分区房间 `,roomID)
-    this._DMclient
-      .on('SYS_MSG', dataJson => this._SYSMSGHandler2(dataJson))
-      .on('PREPARING', dataJson => {
-        tools.Log(`游戏分区房间 `,dataJson.roomid,` 已下播，切换房间`)
-        this._DMclient.Close()
-        this._PCGamingArea()
-      })
-      .Connect()
-  }
-  /**
-   * 获取手游分区开播房间
-   *
-   * @private
-   *
-   * @memberof Listener
-   */
-  private async _PhoneGamingArea() {
-    var roomID = 0
-    const Area = await tools.XHR({
-      uri: `http://live.bilibili.com/p/eden/area-tags?parentAreaId=3&areaId=0`,
-      json: true,
-      headers: {'Host': 'live.bilibili.com'}
-    })
-    if (Area !== undefined) {
-      var $ = cheerio.load(Area.body.toString())
-      var roomSID = parseInt($('html').find('ul').children('li')[0].children[0].children[1].children[0].attribs.href.substr(1))
-      roomID = tools.getLongRoomID(roomSID)
-    }
-    const userID = _options.config.defaultUserID
-    this._DMclient = new DMclient({ roomID, userID })
-    tools.Log(`已监听手游分区房间 `,roomID)
-    this._DMclient
-      .on('SYS_MSG', dataJson => this._SYSMSGHandler2(dataJson))
-      .on('PREPARING', dataJson => {
-        tools.Log(`手游分区房间 `,dataJson.roomid,` 已下播，切换房间`)
-        this._DMclient.Close()
-        this._PhoneGamingArea()
-      })
-      .Connect()
-  }
+    * 获取各分区开播房间
+    *
+    * @private
+    *
+    * @memberof Listener
+    */
+   private async _Area(id: number,type:string) {
+     const List = await tools.XHR<AppList>({
+       uri: `https://api.live.bilibili.com/room/v2/AppIndex/getAllList`,
+       json: true
+     }),
+     userID = _options.config.defaultUserID
+     if (List === undefined || List.body.code === 1024) this._Area(id,type)
+     if (List !== undefined && List.body.code === 0) {
+       const roomID = List.body.data.module_list[id].list[0].roomid
+       this._DMclient = new DMclient({ roomID, userID })
+       tools.Log(`已监听${type}分区房间`,roomID)
+       this._DMclient
+         .on('SYS_MSG', dataJson => this._SYSMSGHandler2(dataJson))
+         .on('PREPARING', async (dataJson) => {
+           tools.Log(`${type}分区房间`,dataJson.roomid,`已下播，切换房间`)
+           this._DMclient.Close()
+           await tools.Sleep(60 * 1000)
+           this._Area(id,type)
+         })
+         .Connect()
+     }
+   }
   /**
    * 监听弹幕系统消息
    *
