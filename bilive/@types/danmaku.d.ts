@@ -215,9 +215,30 @@ interface SEND_GIFT_data_capsule_data_progress {
   max: number
 }
 /**
+ * 礼物连击结束
+ * {"cmd":"COMBO_END","data":{"uname":"虫章虫良阝恶霸","r_uname":"坂本叔","combo_num":99,"price":100,"gift_name":"凉了","gift_id":20010,"start_time":1527510537,"end_time":1527510610},"_roomid":5067}
+ * 
+ * @interface COMBO_END
+ * @extends {danmuJson}
+ */
+interface COMBO_END extends danmuJson {
+  data: COMBO_ENDData
+}
+interface COMBO_ENDData {
+  uname: string
+  r_uname: string
+  combo_num: number
+  price: number
+  gift_name: string
+  gift_id: number
+  start_time: number
+  end_time: number
+}
+/**
  * 系统消息, 广播
  * {"cmd":"SYS_MSG","msg":"亚军主播【赤瞳不是翅桶是赤瞳】开播啦，一起去围观！","msg_text":"亚军主播【赤瞳不是翅桶是赤瞳】开播啦，一起去围观！","url":"http://live.bilibili.com/5198","_roomid":23058}
  * {"cmd":"SYS_MSG","msg":"【国民六妹】:?在直播间:?【896056】:?赠送 小电视一个，请前往抽奖","msg_text":"【国民六妹】:?在直播间:?【896056】:?赠送 小电视一个，请前往抽奖","rep":1,"styleType":2,"url":"http://live.bilibili.com/896056","roomid":896056,"real_roomid":896056,"rnd":1517304134,"tv_id":"36676","_roomid":1199214}
+ * {"cmd":"SYS_MSG","msg":"忧伤小草:?送给:?龙崎77-:?一个摩天大楼，点击前往TA的房间去抽奖吧","msg_text":"忧伤小草:?送给:?龙崎77-:?一个摩天大楼，点击前往TA的房间去抽奖吧","rep":1,"styleType":2,"url":"http://live.bilibili.com/307","roomid":307,"real_roomid":371020,"rnd":1382374449,"tv_id":0,"_roomid":23058}
  * 
  * @interface SYS_MSG
  * @extends {danmuJson}
@@ -244,7 +265,7 @@ interface SYS_MSG extends danmuJson {
   real_roomid: number
   rnd: number
   /** 小电视编号 */
-  tv_id: string
+  tv_id?: string | 0
 }
 /**
  * 系统礼物消息, 广播
@@ -384,6 +405,7 @@ interface GUARD_MSG extends danmuJson {
 /**
  * 抽奖开始
  * {"cmd":"RAFFLE_START","roomid":11365,"data":{"raffleId":5082,"type":"newspring","from":"LexBurner","time":60},"_roomid":11365}
+ * {"cmd":"RAFFLE_START","data":{"id":"54588","dtime":180,"msg":{"cmd":"SYS_MSG","msg":"一圆滚滚:?送给:?-牛奶喵:?一个摩天大楼，点击前往TA的房间去抽奖吧","msg_text":"一圆滚滚:?送给:?-牛奶喵:?一个摩天大楼，点击前往TA的房间去抽奖吧","rep":1,"styleType":2,"url":"http://live.bilibili.com/344839","roomid":344839,"real_roomid":344839,"rnd":1003073948,"tv_id":0},"raffleId":54588,"title":"摩天大楼抽奖","type":"GIFT_20003","from":"一圆滚滚","from_user":{"uname":"一圆滚滚","face":"http://static.hdslb.com/images/member/noface.gif"},"time":180,"max_time":180,"time_wait":120,"asset_animation_pic":"http://i0.hdslb.com/bfs/live/7e47e9cfb744acd0319a4480e681258ce3a611fe.gif","asset_tips_pic":"http://s1.hdslb.com/bfs/live/380bcd708da496d75737c68930965dd67b82879d.png"},"_roomid":344839}
  * 
  * @interface RAFFLE_START
  * @extends {danmuJson}
@@ -794,6 +816,23 @@ interface CUT_OFF extends danmuJson {
  */
 interface ROOM_LOCK extends danmuJson {
   expire: string // 封禁时间 yyyy-MM-dd HH:mm:ss
+}
+/**
+ * 房间排行榜
+ * {"cmd":"ROOM_RANK","data":{"roomid":1327236,"rank_desc":"元气榜 4","color":"#B15BFF","h5_url":"https://live.bilibili.com/p/eden/rank-h5?nav=hour&uid=33594828","timestamp":1525871406},"_roomid":1327236}
+ * {"cmd":"ROOM_RANK","data":{"roomid":6154037,"rank_desc":"今日榜 49","color":"#00BB00","h5_url":"https://live.bilibili.com/pages/lpl2018/lol2018msi.html&uid=194484313","timestamp":1525871406},"_roomid":6154037}
+ * 
+ * @interface ROOM_RANK
+ */
+interface ROOM_RANK {
+  data: ROOM_RANK_Data
+}
+interface ROOM_RANK_Data {
+  roomid: number
+  rank_desc: string
+  color: string
+  h5_url: string
+  timestamp: number
 }
 /**
  * 画板活动
