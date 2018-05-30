@@ -47,14 +47,6 @@ class Listener extends EventEmitter {
    */
   private _lotteryID: number = 0
   /**
-   * app快速抽奖ID
-   * 
-   * @private
-   * @type {number}
-   * @memberof Listener
-   */
-  private _appLightenID: number = 0
-  /**
    * 开始监听
    * 
    * @memberof Listener
@@ -93,7 +85,6 @@ class Listener extends EventEmitter {
     if (dataJson.real_roomid === undefined || dataJson.giftId === undefined) return
     const url = apiLiveOrigin + rafflePathname
     const roomID = dataJson.real_roomid
-    this._AppLightenCheck(roomID)
     this._RaffleCheck(url, roomID, 'raffle')
   }
   /**
@@ -107,18 +98,18 @@ class Listener extends EventEmitter {
    */
   private async _RaffleCheck(url: string, roomID: number, raffle: 'smallTV' | 'raffle') {
     const check: request.Options = {
-      uri: `${url}/check?roomid=${roomID}`,
-      json: true,
-      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
+      uri: `${url}/check?${AppClient.signQueryBase(`roomid=${roomID}`)}`,
+      json: true
     }
-    const raffleCheck = await tools.XHR<raffleCheck>(check)
+    const raffleCheck = await tools.XHR<raffleCheck>(check, 'Android')
     if (raffleCheck !== undefined && raffleCheck.response.statusCode === 200
       && raffleCheck.body.code === 0 && raffleCheck.body.data.list.length > 0) {
       raffleCheck.body.data.list.forEach(data => {
-        const message: raffleMSG = {
+        const message: message = {
           cmd: raffle,
           roomID,
           id: +data.raffleId,
+          type: data.type,
           time: +data.time
         }
         this._RaffleHandler(message)
@@ -144,39 +135,12 @@ class Listener extends EventEmitter {
     if (lotteryCheck !== undefined && lotteryCheck.response.statusCode === 200
       && lotteryCheck.body.code === 0 && lotteryCheck.body.data.guard.length > 0) {
       lotteryCheck.body.data.guard.forEach(data => {
-        const message: lotteryMSG = {
+        const message: message = {
           cmd: 'lottery',
           roomID,
           id: +data.id,
-          type: data.keyword
-        }
-        this._RaffleHandler(message)
-      })
-    }
-  }
-  /**
-   * 检查客户端房间信息
-   * 
-   * @private
-   * @param {number} roomID 
-   * @memberof Listener
-   */
-  private async _AppLightenCheck(roomID: number) {
-    const room: request.Options = {
-      uri: `${apiLiveOrigin}/AppRoom/index?${AppClient.signQueryBase(`room_id=${roomID}`)}`,
-      json: true
-    }
-    const roomInfo = await tools.XHR<roomInfo>(room, 'Android')
-    if (roomInfo !== undefined && roomInfo.response.statusCode === 200
-      && roomInfo.body.code === 0 && roomInfo.body.data.event_corner.length > 0) {
-      roomInfo.body.data.event_corner.forEach(event => {
-        const type = event.event_type.split('-')
-        if (type.length !== 2) return
-        const message: lotteryMSG = {
-          cmd: 'appLighten',
-          roomID,
-          id: +type[1],
-          type: type[0]
+          type: data.keyword,
+          time: 0
         }
         this._RaffleHandler(message)
       })
@@ -186,18 +150,16 @@ class Listener extends EventEmitter {
    * 监听抽奖消息
    * 
    * @private
-   * @param {(raffleMSG | lotteryMSG)} raffleMSG 
+   * @param {message} raffleMSG 
    * @memberof Listener
    */
-  private _RaffleHandler(raffleMSG: raffleMSG | lotteryMSG) {
+  private _RaffleHandler(raffleMSG: message) {
     const roomID = raffleMSG.roomID
     const id = raffleMSG.id
-    let msg = ''
     switch (raffleMSG.cmd) {
       case 'smallTV':
         if (this._smallTVID >= id) return
         this._smallTVID = id
-        msg = '小电视'
         break
       case 'raffle':
         if (this._raffleID >= id) return
@@ -207,16 +169,11 @@ class Listener extends EventEmitter {
         if (this._lotteryID >= id) return
         this._lotteryID = id
         break
-      case 'appLighten':
-        if (this._appLightenID >= id) return
-        this._appLightenID = id
-        msg = '客户端'
-        break
       default:
         return
     }
     this.emit('raffle', raffleMSG)
-    tools.Log(`房间 ${tools.getShortRoomID(roomID)} 开启了第 ${id} 轮${msg}抽奖`)
+    tools.Log(`房间 ${tools.getShortRoomID(roomID)} 开启了第 ${id} 轮抽奖`)
   }
 }
 export default Listener
