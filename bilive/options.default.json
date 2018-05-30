@@ -18,7 +18,7 @@
       9
     ],
     "droprate": 0,
-    "calcgifttime": "-1"
+    "calcGiftTime": "-1"
   },
   "user": {},
   "newUserData": {
@@ -72,12 +72,12 @@
     },
     "droprate": {
       "description": "丢弃概率",
-      "tip": "就是每个用户多少概率漏掉1个奖啦，范围0~100",
+      "tip": "就是每个用户多少概率漏掉1个奖啦, 范围0~100",
       "type": "number"
     },
-    "calcgifttime": {
+    "calcGiftTime": {
       "description": "汇报礼物时间",
-      "tip": "在这个时间点会统计服务器上所有用户的礼物数量情况，滚键盘则关闭，格式： HH:MM",
+      "tip": "在这个时间点会统计服务器上所有用户的礼物数量情况, 滚键盘则关闭, 格式: HH:mm",
       "type": "string"
     },
     "nickname": {

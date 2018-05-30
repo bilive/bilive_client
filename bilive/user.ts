@@ -248,13 +248,8 @@ class User extends Online {
       // masterID
       const mid = roomInfo.body.data.mid
       const room_id = roomInfo.body.data.room_id
-      // 获取包裹信息
-      const bag: request.Options = {
-        uri: `${apiLiveOrigin}/gift/v2/gift/m_bag_list?${AppClient.signQueryBase(this.tokenQuery)}`,
-        json: true,
-        headers: this.headers
-      }
-      const bagInfo = await tools.XHR<bagInfo>(bag, 'Android')
+      // 包裹信息
+      const bagInfo = await this.checkBag()
       if (bagInfo === undefined || bagInfo.response.statusCode !== 200) return
       if (bagInfo.body.code === 0) {
         if (bagInfo.body.data.length > 0) {
@@ -286,11 +281,12 @@ class User extends Online {
     else tools.Log(this.nickname, '自动送礼', '获取房间信息失败', roomInfo.body)
   }
   /**
-   * 查询礼物
+   * 获取包裹信息
    * 
+   * @returns {(Promise<response<bagInfo> | undefined>)} 
    * @memberof User
    */
-  public async checkgift() {
+  public checkBag() {
     const bag: request.Options = {
       uri: `${apiLiveOrigin}/gift/v2/gift/m_bag_list?${AppClient.signQueryBase(this.tokenQuery)}`,
       json: true,
