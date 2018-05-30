@@ -46,7 +46,7 @@
                   </div>
                   <input type="text" class="form-control">
                   <div class="input-group-append">
-                    <label class="input-group-text pl-4">
+                    <label class="form-check-label input-group-text pl-4">
                       <input type="checkbox" class="form-check-input">
                       <span>保持连接</span>
                     </label>
@@ -94,6 +94,7 @@
   </div>
   <!-- 模板 -->
   <div id="template" class="d-none">
+    <!-- 输入框 -->
     <template id="configTextTemplate">
       <div class="input-group mb-1">
         <div class="input-group-prepend">
@@ -102,6 +103,7 @@
         <input type="text" class="form-control">
       </div>
     </template>
+    <!-- 复选框 -->
     <template id="configCheckboxTemplate">
       <div class="form-check mb-1">
         <label class="form-check-label">
@@ -110,6 +112,19 @@
         </label>
       </div>
     </template>
+    <!-- 带复选框的输入框 -->
+    <template id="configChecktextTemplate">
+      <div class="input-group mb-1">
+        <div class="input-group-prepend">
+          <label class="input-group-text pl-4">
+            <input type="checkbox" class="form-check-input">
+            <span class="_description" data-toggle="tooltip" data-placement="top"></span>
+          </label>
+        </div>
+        <input type="text" class="form-control">
+      </div>
+    </template>
+    <!-- 用户 -->
     <template id="userTemplate">
       <div class="col-md-3 mb-3 userData">
         <div class="card border-primary">
@@ -122,6 +137,7 @@
         </div>
       </div>
     </template>
+    <!-- 模态框 -->
     <template id="modalContentTemplate">
       <div class="modal-content">
         <div class="modal-header">
@@ -138,6 +154,7 @@
         </div>
       </div>
     </template>
+    <!-- 验证码 -->
     <template id="captchaTemplate">
       <div class="card">
         <img class="card-img-top" alt="验证码">
