@@ -76,13 +76,13 @@ class AppClient {
     return Math.floor(Math.random() * 1e+8) + 1e+7
   }
   /**
- * 谜一样的DeviceID
- * 
- * @readonly
- * @static
- * @type {string}
- * @memberof AppClient
- */
+   * 谜一样的DeviceID
+   * 
+   * @readonly
+   * @static
+   * @type {string}
+   * @memberof AppClient
+   */
   public static get DeviceID(): string {
     const words = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
     let deviceID = ''
@@ -199,7 +199,6 @@ class AppClient {
    */
   public headers: request.Headers = {
     'Connection': 'Keep-Alive',
-    'Device-ID': AppClient.DeviceID,
     'User-Agent': 'Mozilla/5.0 BiliDroid/5.26.3 (bbcallen@gmail.com)'
   }
   /**
@@ -294,6 +293,8 @@ class AppClient {
    * @memberof AppClient
    */
   public async init() {
+    // 设置 Device-ID
+    this.headers['Device-ID'] = AppClient.DeviceID
     // 设置 Buvid
     const buvid = await tools.XHR<string>({
       uri: 'http://data.bilibili.com/gv/',

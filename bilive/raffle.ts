@@ -2,7 +2,7 @@ import request from 'request'
 import tools from './lib/tools'
 import User from './user'
 import AppClient from './lib/app_client'
-import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, lotteryPathname } from './index'
+import { apiLiveOrigin, smallTVPathname, rafflePathname, lotteryPathname } from './index'
 /**
  * 自动参与抽奖
  * 
@@ -106,8 +106,9 @@ class Raffle {
     const join: request.Options = {
       method: 'POST',
       uri: `${this._url}/join`,
-      body: AppClient.signQueryBase(`raffleId=${this._raffleId}&roomid=${this._roomID}&type=${this._type}&${this._user.tokenQuery}`),
-      json: true
+      body: AppClient.signQueryBase(`${this._user.tokenQuery}&raffleId=${this._raffleId}&roomid=${this._roomID}&type=${this._type}`),
+      json: true,
+      headers: this._user.headers
     }
     const raffleJoin = await tools.XHR<raffleJoin>(join, 'Android')
     if (raffleJoin !== undefined && raffleJoin.response.statusCode === 200 && raffleJoin.body.code === 0) {
@@ -123,8 +124,9 @@ class Raffle {
    */
   private async _RaffleReward() {
     const reward: request.Options = {
-      uri: `${this._url}/notice?${AppClient.signQueryBase(`raffleId=${this._raffleId}&type=${this._type}&${this._user.tokenQuery}`)}`,
+      uri: `${this._url}/notice?${AppClient.signQueryBase(`${this._user.tokenQuery}&raffleId=${this._raffleId}&type=${this._type}`)}`,
       json: true,
+      headers: this._user.headers
     }
     const raffleReward = await tools.XHR<raffleReward>(reward, 'Android')
     if (raffleReward === undefined || raffleReward.response.statusCode !== 200) return
@@ -151,12 +153,11 @@ class Raffle {
     const reward: request.Options = {
       method: 'POST',
       uri: `${this._url}/join`,
-      body: `roomid=${this._roomID}&id=${this._raffleId}&type=${this._type}&csrf_token=${tools.getCookie(this._user.jar, 'bili_jct')}`,
-      jar: this._user.jar,
+      body: AppClient.signQueryBase(`${this._user.tokenQuery}&id=${this._raffleId}&roomid=${this._roomID}&type=${this._type}`),
       json: true,
-      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(this._roomID)}` }
+      headers: this._user.headers
     }
-    const lotteryReward = await tools.XHR<lotteryReward>(reward)
+    const lotteryReward = await tools.XHR<lotteryReward>(reward, 'Android')
     if (lotteryReward !== undefined && lotteryReward.response.statusCode === 200 && lotteryReward.body.code === 0)
       tools.Log(this._user.nickname, `抽奖 ${this._raffleId}`, lotteryReward.body.data.message)
   }

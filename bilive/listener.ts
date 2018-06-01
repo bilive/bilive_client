@@ -3,7 +3,7 @@ import { EventEmitter } from 'events'
 import tools from './lib/tools'
 import AppClient from './lib/app_client'
 import DMclient from './dm_client_re'
-import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, _options } from './index'
+import { apiLiveOrigin, smallTVPathname, rafflePathname, _options } from './index'
 /**
  * 监听服务器消息
  * 
@@ -127,11 +127,10 @@ class Listener extends EventEmitter {
   // @ts-ignore 暂时无用
   private async _LotteryCheck(url: string, roomID: number) {
     const check: request.Options = {
-      uri: `${url}/check?roomid=${roomID}`,
-      json: true,
-      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
+      uri: `${url}/check?${AppClient.signQueryBase(`roomid=${roomID}`)}`,
+      json: true
     }
-    const lotteryCheck = await tools.XHR<lotteryCheck>(check)
+    const lotteryCheck = await tools.XHR<lotteryCheck>(check, 'Android')
     if (lotteryCheck !== undefined && lotteryCheck.response.statusCode === 200
       && lotteryCheck.body.code === 0 && lotteryCheck.body.data.guard.length > 0) {
       lotteryCheck.body.data.guard.forEach(data => {

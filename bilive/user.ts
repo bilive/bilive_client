@@ -239,16 +239,16 @@ class User extends Online {
     const roomID = this.userData.sendGiftRoom
     // 获取房间信息
     const room: request.Options = {
-      uri: `${apiLiveOrigin}/AppRoom/index?${AppClient.signQueryBase(`room_id=${roomID}`)}`,
+      uri: `${apiLiveOrigin}/room/v1/Room/mobileRoomInit?id=${roomID}}`,
       json: true
     }
-    const roomInfo = await tools.XHR<roomInfo>(room, 'Android')
-    if (roomInfo === undefined || roomInfo.response.statusCode !== 200) return
-    if (roomInfo.body.code === 0) {
+    const roomInit = await tools.XHR<roomInit>(room, 'Android')
+    if (roomInit === undefined || roomInit.response.statusCode !== 200) return
+    if (roomInit.body.code === 0) {
       // masterID
-      const mid = roomInfo.body.data.mid
-      const room_id = roomInfo.body.data.room_id
-      // 包裹信息
+      const mid = roomInit.body.data.uid
+      const room_id = roomInit.body.data.room_id
+      // 获取包裹信息
       const bagInfo = await this.checkBag()
       if (bagInfo === undefined || bagInfo.response.statusCode !== 200) return
       if (bagInfo.body.code === 0) {
@@ -258,9 +258,9 @@ class User extends Online {
               // expireat单位为分钟, 永久礼物值为0
               const send: request.Options = {
                 method: 'POST',
-                uri: `${apiLiveOrigin}/gift/v2/live/bag_send`,
-                body: AppClient.signQueryBase(`bag_id=${giftData.id}&biz_code=live&biz_id=${room_id}&gift_id=${giftData.gift_id}\
-&gift_num=${giftData.gift_num}&ruid=${mid}&uid=${giftData.uid}&rnd=${AppClient.RND}&${this.tokenQuery}`),
+                uri: `${apiLiveOrigin}/gift/v2/live/bag_send?${AppClient.signQueryBase(this.tokenQuery)}`,
+                body: `uid=${giftData.uid}&ruid=${mid}&gift_id=${giftData.gift_id}&gift_num=${giftData.gift_num}&bag_id=${giftData.id}\
+&biz_id=${room_id}&rnd=${AppClient.RND}&biz_code=live&jumpFrom=21002`,
                 json: true,
                 headers: this.headers
               }
@@ -278,7 +278,7 @@ class User extends Online {
       }
       else tools.Log(this.nickname, '自动送礼', '获取包裹信息失败', bagInfo.body)
     }
-    else tools.Log(this.nickname, '自动送礼', '获取房间信息失败', roomInfo.body)
+    else tools.Log(this.nickname, '自动送礼', '获取房间信息失败', roomInit.body)
   }
   /**
    * 获取包裹信息
@@ -313,8 +313,8 @@ class User extends Online {
       if (linkGroup.body.data.list.length > 0) {
         for (const groupInfo of linkGroup.body.data.list) {
           const sign: request.Options = {
-            uri: `${apiVCOrigin}/link_setting/v1/link_setting/sign_in?${AppClient.signQueryBase(`group_id=${groupInfo.group_id}\
-&owner_id=${groupInfo.owner_uid}&${this.tokenQuery}`)}`,
+            uri: `${apiVCOrigin}/link_setting/v1/link_setting/sign_in?${AppClient.signQueryBase(`${this.tokenQuery}&group_id=${groupInfo.group_id}\
+&owner_id=${groupInfo.owner_uid}`)}`,
             json: true,
             headers: this.headers
           }

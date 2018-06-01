@@ -90,14 +90,14 @@ interface giftNameNum {
   name: string
   number: giftHas
 }
+interface userNickGift {
+  nickname: string
+  gift: userGiftID
+}
 interface giftHas {
   all: number
   twoDay: number
   oneDay: number
-}
-interface userNickGift {
-  nickname: string
-  gift: userGiftID
 }
 type giftList = Map<number, giftNameNum>
 type userGiftList = Map<string, userNickGift>
@@ -334,24 +334,6 @@ interface awardData {
   isEnd: number
 }
 /**
- * 房间信息app
- * 
- * @interface roomInfo
- */
-interface roomInfo {
-  code: number
-  data: roomInfoData
-}
-interface roomInfoData {
-  room_id: number
-  mid: number
-  event_corner: roomInfoDataEvent[]
-}
-interface roomInfoDataEvent {
-  event_type: string
-  event_img: string
-}
-/**
  * 房间信息
  * 
  * @interface roomInit
@@ -360,19 +342,21 @@ interface roomInit {
   code: number
   msg: string
   message: string
-  data: roomInitData
+  data: roomInitDataData
 }
-interface roomInitData {
-  encrypted: boolean
-  hidden_till: number
-  is_hidden: boolean
-  is_locked: boolean
-  lock_till: number
-  need_p2p: number
-  pwd_verified: boolean
+interface roomInitDataData {
   room_id: number
   short_id: number
   uid: number
+  need_p2p: number
+  is_hidden: boolean
+  is_locked: boolean
+  is_portrait: boolean
+  live_status: number
+  hidden_till: number
+  lock_till: number
+  encrypted: boolean
+  pwd_verified: boolean
 }
 /**
  * 分享房间返回
