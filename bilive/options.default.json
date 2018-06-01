@@ -7,7 +7,6 @@
   },
   "config": {
     "defaultUserID": 0,
-    "defaultRoomID": 3,
     "eventRooms": [
       3
     ],
@@ -43,11 +42,6 @@
     "defaultUserID": {
       "description": "默认监听UID",
       "tip": "用来监听系统消息的用户ID, 默认为0",
-      "type": "number"
-    },
-    "defaultRoomID": {
-      "description": "默认监听RoomID",
-      "tip": "用来监听系统消息的房间, 默认为3(官方音乐台)",
       "type": "number"
     },
     "eventRooms": {

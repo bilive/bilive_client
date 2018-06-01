@@ -195,7 +195,7 @@ class User extends Online {
    */
   public async silver2coin() {
     if (this._silver2coin || !this.userData.silver2coin) return
-    const roomID = _options.config.defaultRoomID
+    const roomID = _options.config.eventRooms[0]
     let ok = 0
     const checkExchange = (exchangeRes: response<silver2coin> | undefined) => {
       if (exchangeRes === undefined || exchangeRes.response.statusCode !== 200) return

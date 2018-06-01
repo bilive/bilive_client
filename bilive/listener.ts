@@ -18,10 +18,10 @@ class Listener extends EventEmitter {
    * 用于接收弹幕消息
    * 
    * @private
-   * @type {DMclient}
+   * @type {Map<number, DMclient>}
    * @memberof Listener
    */
-  private _DMclient!: DMclient
+  private _DMclient: Map<number, DMclient> = new Map()
   /**
    * 小电视ID
    * 
@@ -52,14 +52,54 @@ class Listener extends EventEmitter {
    * @memberof Listener
    */
   public Start() {
-    const config = _options.config
-    const roomID = tools.getLongRoomID(config.defaultRoomID)
-    const userID = config.defaultUserID
-    this._DMclient = new DMclient({ roomID, userID })
-    this._DMclient
-      .on('SYS_MSG', dataJson => this._SYSMSGHandler(dataJson))
-      .on('SYS_GIFT', dataJson => this._SYSGiftHandler(dataJson))
-      .Connect()
+    this._addAreaRoom()
+  }
+  /**
+   * 添加分区房间
+   * 
+   * @private
+   * @memberof Listener
+   */
+  private async _addAreaRoom() {
+    const userID = _options.config.defaultUserID
+    // 获取直播列表
+    const getAllList = await tools.XHR<getAllList>({
+      uri: `${apiLiveOrigin}/room/v2/AppIndex/getAllList?${AppClient.baseQuery}`,
+      json: true
+    }, 'Android')
+    if (getAllList !== undefined && getAllList.response.statusCode === 200 && getAllList.body.code === 0) {
+      const moduleList = getAllList.body.data.module_list
+      moduleList.forEach(modules => {
+        if (modules.module_info.type === 9 && modules.list.length > 0) {
+          const areaId = modules.module_info.id
+          const areaTitle = modules.module_info.title
+          const roomID = (<getAllListDataRoomList>modules.list[0]).roomid
+          const areaDM = <DMclient>this._DMclient.get(areaId)
+          if (areaDM === undefined || areaDM.roomID !== roomID) {
+            if (areaDM !== undefined) {
+              areaDM
+                .removeAllListeners()
+                .Close()
+              this._DMclient.delete(areaId)
+              tools.Log(`已移除${areaTitle}分区房间`, roomID)
+            }
+            const newDMclient = new DMclient({ roomID, userID })
+            newDMclient
+              .on('SYS_MSG', dataJson => this._SYSMSGHandler(dataJson))
+              .on('SYS_GIFT', dataJson => this._SYSGiftHandler(dataJson))
+              .Connect()
+            this._DMclient.set(areaId, newDMclient)
+            tools.Log(`已监听${areaTitle}分区房间`, roomID)
+          }
+        }
+      })
+      await tools.Sleep(10 * 60 * 1000)
+      this._addAreaRoom()
+    }
+    else {
+      await tools.Sleep(3 * 1000)
+      this._addAreaRoom()
+    }
   }
   /**
    * 监听弹幕系统消息

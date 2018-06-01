@@ -22,7 +22,6 @@ interface server {
 interface config {
   [index: string]: number | string | number[]
   defaultUserID: number
-  defaultRoomID: number
   eventRooms: number[]
   adminServerChan: string
   raffleDelay: number
@@ -55,7 +54,6 @@ interface userData {
 interface optionsInfo {
   [index: string]: configInfoData
   defaultUserID: configInfoData
-  defaultRoomID: configInfoData
   eventRooms: configInfoData
   adminServerChan: configInfoData
   raffleDelay: configInfoData
@@ -194,6 +192,70 @@ interface lotteryCheckDataSender {
   uid: number
   uname: string
   face: string
+}
+/**
+ * 获取直播列表
+ * 
+ * @interface getAllList
+ */
+interface getAllList {
+  code: number
+  msg: string
+  message: string
+  data: getAllListData
+}
+interface getAllListData {
+  interval: number
+  module_list: getAllListDataList[]
+}
+type getAllListDataList = getAllListDataModules | getAllListDataRooms
+interface getAllListDataModules {
+  module_info: getAllListDataModuleInfo
+  list: getAllListDataModuleList[]
+}
+interface getAllListDataRooms {
+  module_info: getAllListDataRoomInfo
+  list: getAllListDataRoomList[]
+}
+interface getAllListDataBaseInfo {
+  id: number
+  type: number
+  pic: string
+  title: string
+  link: string
+}
+interface getAllListDataModuleInfo extends getAllListDataBaseInfo {
+  count?: number
+}
+interface getAllListDataRoomInfo extends getAllListDataBaseInfo {
+  type: 6 | 9
+}
+interface getAllListDataModuleList {
+  id: number
+  pic: string
+  link: string
+  title: string
+}
+interface getAllListDataRoomList {
+  roomid: number
+  title: string
+  uname: string
+  online: number
+  cover: string
+  link: string
+  face: string
+  area_v2_parent_id: number
+  area_v2_parent_name: string
+  area_v2_id: number
+  area_v2_name: string
+  play_url: string
+  current_quality: number
+  accept_quality: number[]
+  broadcast_type: number
+  pendent_ld: string
+  pendent_ru: string
+  rec_type: number
+  pk_id: number
 }
 // raffle
 /**
