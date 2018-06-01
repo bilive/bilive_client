@@ -395,6 +395,7 @@ function getConfigTemplate(config) {
         var clone = document.importNode(configTemplate.content, true);
         var descriptionDiv = clone.querySelector('._description');
         var inputInput = clone.querySelector('.form-control');
+        var checkboxInput = clone.querySelector('.form-check-input');
         switch (info.type) {
             case 'number':
                 inputInput.value = configValue.toString();
@@ -409,8 +410,8 @@ function getConfigTemplate(config) {
                 inputInput.oninput = function () { return config[key] = inputInput.value; };
                 break;
             case 'boolean':
-                inputInput.checked = configValue;
-                inputInput.onchange = function () { return config[key] = inputInput.checked; };
+                checkboxInput.checked = configValue;
+                checkboxInput.onchange = function () { return config[key] = checkboxInput.checked; };
                 break;
             default:
                 break;

@@ -243,6 +243,7 @@ function getConfigTemplate(config: config | userData): DocumentFragment {
     const clone = document.importNode(configTemplate.content, true)
     const descriptionDiv = <HTMLDivElement>clone.querySelector('._description')
     const inputInput = <HTMLInputElement>clone.querySelector('.form-control')
+    const checkboxInput = <HTMLInputElement>clone.querySelector('.form-check-input')
     switch (info.type) {
       case 'number':
         inputInput.value = (<number>configValue).toString()
@@ -257,8 +258,8 @@ function getConfigTemplate(config: config | userData): DocumentFragment {
         inputInput.oninput = () => config[key] = inputInput.value
         break
       case 'boolean':
-        inputInput.checked = <boolean>configValue
-        inputInput.onchange = () => config[key] = inputInput.checked
+        checkboxInput.checked = <boolean>configValue
+        checkboxInput.onchange = () => config[key] = checkboxInput.checked
         break
       default:
         break
