@@ -76,7 +76,7 @@ class Listener extends EventEmitter {
           const roomID = (<getAllListDataRoomList>modules.list[0]).roomid
           const areaDM = <DMclient>this._DMclient.get(areaId)
           if (areaDM === undefined || areaDM.roomID !== roomID) {
-            if (areaDM !== undefined) {
+            if (areaDM.roomID !== roomID) {
               areaDM
                 .removeAllListeners()
                 .Close()
