@@ -77,11 +77,12 @@ class Listener extends EventEmitter {
           const areaDM = <DMclient>this._DMclient.get(areaID)
           if (areaDM === undefined || areaDM.roomID !== roomID) {
             if (areaDM !== undefined) {
+              const areaRoomID = areaDM.roomID
               areaDM
                 .removeAllListeners()
                 .Close()
               this._DMclient.delete(areaID)
-              tools.Log(`已移除${areaTitle}分区房间`, roomID)
+              tools.Log(`已移除${areaTitle}分区房间`, areaRoomID)
             }
             const newDMclient = new DMclient({ roomID, userID })
             newDMclient
