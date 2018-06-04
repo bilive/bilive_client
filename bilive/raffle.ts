@@ -2,7 +2,7 @@ import request from 'request'
 import tools from './lib/tools'
 import User from './user'
 import AppClient from './lib/app_client'
-import { liveOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, lotteryPathname } from './index'
+import { apiLiveOrigin, smallTVPathname, rafflePathname, lotteryPathname } from './index'
 /**
  * 自动参与抽奖
  * 
@@ -15,10 +15,10 @@ class Raffle {
    * @memberof Raffle
    */
   constructor(raffleOptions: raffleOptions) {
-    if (raffleOptions.type !== undefined) this._type = raffleOptions.type
-    if (raffleOptions.time !== undefined) this._time = raffleOptions.time
     this._raffleId = raffleOptions.raffleId
     this._roomID = raffleOptions.roomID
+    this._type = raffleOptions.type
+    this._time = raffleOptions.time
     this._user = raffleOptions.user
   }
   /**
@@ -28,7 +28,7 @@ class Raffle {
    * @type {string}
    * @memberof Raffle
    */
-  private _type?: string
+  private _type: string
   /**
    * time
    * 
@@ -36,7 +36,7 @@ class Raffle {
    * @type {number}
    * @memberof Raffle
    */
-  private _time: number = 100
+  private _time: number
   /**
    * 参与ID
    * 
@@ -104,12 +104,13 @@ class Raffle {
    */
   private async _Raffle() {
     const join: request.Options = {
-      uri: `${this._url}/join?roomid=${this._roomID}&raffleId=${this._raffleId}`,
-      jar: this._user.jar,
+      method: 'POST',
+      uri: `${this._url}/join`,
+      body: AppClient.signQueryBase(`${this._user.tokenQuery}&raffleId=${this._raffleId}&roomid=${this._roomID}&type=${this._type}`),
       json: true,
-      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(this._roomID)}` }
+      headers: this._user.headers
     }
-    const raffleJoin = await tools.XHR<raffleJoin>(join)
+    const raffleJoin = await tools.XHR<raffleJoin>(join, 'Android')
     if (raffleJoin !== undefined && raffleJoin.response.statusCode === 200 && raffleJoin.body.code === 0) {
       await tools.Sleep(this._time * 1000 + 15 * 1000)
       this._RaffleReward()
@@ -123,12 +124,11 @@ class Raffle {
    */
   private async _RaffleReward() {
     const reward: request.Options = {
-      uri: `${this._url}/notice?roomid=${this._roomID}&raffleId=${this._raffleId}`,
-      jar: this._user.jar,
+      uri: `${this._url}/notice?${AppClient.signQueryBase(`${this._user.tokenQuery}&raffleId=${this._raffleId}&type=${this._type}`)}`,
       json: true,
-      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(this._roomID)}` }
+      headers: this._user.headers
     }
-    const raffleReward = await tools.XHR<raffleReward>(reward)
+    const raffleReward = await tools.XHR<raffleReward>(reward, 'Android')
     if (raffleReward === undefined || raffleReward.response.statusCode !== 200) return
     if (raffleReward.body.code === -400 || raffleReward.body.data.status === 3) {
       await tools.Sleep(30 * 1000)
@@ -153,31 +153,13 @@ class Raffle {
     const reward: request.Options = {
       method: 'POST',
       uri: `${this._url}/join`,
-      body: `roomid=${this._roomID}&id=${this._raffleId}&type=${this._type}&csrf_token=${tools.getCookie(this._user.jar, 'bili_jct')}`,
-      jar: this._user.jar,
-      json: true,
-      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(this._roomID)}` }
-    }
-    const lotteryReward = await tools.XHR<lotteryReward>(reward)
-    if (lotteryReward !== undefined && lotteryReward.response.statusCode === 200 && lotteryReward.body.code === 0)
-      tools.Log(this._user.nickname, `抽奖 ${this._raffleId}`, lotteryReward.body.data.message)
-  }
-  /**
-   * app快速抽奖
-   * 
-   * @memberof Raffle
-   */
-  public async AppLighten() {
-    const reward: request.Options = {
-      uri: `${apiLiveOrigin}/YunYing/roomEvent?${AppClient.signQueryBase(`event_type=${this._type}-${this._raffleId}\
-&room_id=${this._roomID}&${this._user.tokenQuery}`)}`,
+      body: AppClient.signQueryBase(`${this._user.tokenQuery}&id=${this._raffleId}&roomid=${this._roomID}&type=${this._type}`),
       json: true,
       headers: this._user.headers
     }
-    const appLightenReward = await tools.XHR<appLightenReward>(reward, 'Android')
-    if (appLightenReward !== undefined
-      && appLightenReward.response.statusCode === 200 && appLightenReward.body.code === 0)
-      tools.Log(this._user.nickname, `抽奖 ${this._raffleId}`, `获得${appLightenReward.body.data.gift_desc}`)
+    const lotteryReward = await tools.XHR<lotteryReward>(reward, 'Android')
+    if (lotteryReward !== undefined && lotteryReward.response.statusCode === 200 && lotteryReward.body.code === 0)
+      tools.Log(this._user.nickname, `抽奖 ${this._raffleId}`, lotteryReward.body.data.message)
   }
 }
 export default Raffle

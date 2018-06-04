@@ -7,7 +7,6 @@
   },
   "config": {
     "defaultUserID": 0,
-    "defaultRoomID": 3,
     "eventRooms": [
       3
     ],
@@ -18,7 +17,7 @@
       9
     ],
     "droprate": 0,
-    "calcgifttime": "-1"
+    "calcGiftTime": "-1"
   },
   "user": {},
   "newUserData": {
@@ -45,11 +44,6 @@
       "tip": "用来监听系统消息的用户ID, 默认为0",
       "type": "number"
     },
-    "defaultRoomID": {
-      "description": "默认监听RoomID",
-      "tip": "用来监听系统消息的房间, 默认为3(官方音乐台)",
-      "type": "number"
-    },
     "eventRooms": {
       "description": "挂机活动房间以\",\"分隔",
       "tip": "挂取活动道具的房间, 默认为3(官方音乐台), 有时活动只有主播报名才可以参加",
@@ -72,12 +66,12 @@
     },
     "droprate": {
       "description": "丢弃概率",
-      "tip": "就是每个用户多少概率漏掉1个奖啦，范围0~100",
+      "tip": "就是每个用户多少概率漏掉1个奖啦, 范围0~100",
       "type": "number"
     },
-    "calcgifttime": {
+    "calcGiftTime": {
       "description": "汇报礼物时间",
-      "tip": "在这个时间点会统计服务器上所有用户的礼物数量情况，滚键盘则关闭，格式： HH:MM",
+      "tip": "在这个时间点会统计服务器上所有用户的礼物数量情况, 滚键盘则关闭, 格式: HH:mm",
       "type": "string"
     },
     "nickname": {

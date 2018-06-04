@@ -36,6 +36,7 @@ interface config {
   raffleDelay: number
   rafflePause: number[]
   droprate: number
+  calcGiftTime: string
 }
 interface userData {
   [index: string]: string | boolean | number
@@ -63,6 +64,7 @@ interface optionsInfo {
   raffleDelay: configInfoData
   rafflePause: configInfoData
   droprate: configInfoData
+  calcGiftTime: configInfoData
   nickname: configInfoData
   userName: configInfoData
   passWord: configInfoData

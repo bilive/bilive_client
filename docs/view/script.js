@@ -159,8 +159,8 @@ function login() {
  */
 function showConfig() {
     return __awaiter(this, void 0, void 0, function () {
-        var _this = this;
         var saveConfigButton, addUserButton, showLogButton, configMSG, config, configDF;
+        var _this = this;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -394,7 +394,8 @@ function getConfigTemplate(config) {
             configTemplate = template.querySelector('#configTextTemplate');
         var clone = document.importNode(configTemplate.content, true);
         var descriptionDiv = clone.querySelector('._description');
-        var inputInput = clone.querySelector('input');
+        var inputInput = clone.querySelector('.form-control');
+        var checkboxInput = clone.querySelector('.form-check-input');
         switch (info.type) {
             case 'number':
                 inputInput.value = configValue.toString();
@@ -409,9 +410,8 @@ function getConfigTemplate(config) {
                 inputInput.oninput = function () { return config[key] = inputInput.value; };
                 break;
             case 'boolean':
-                inputInput.type = 'checkbox';
-                inputInput.checked = configValue;
-                inputInput.onchange = function () { return config[key] = inputInput.checked; };
+                checkboxInput.checked = configValue;
+                checkboxInput.onchange = function () { return config[key] = checkboxInput.checked; };
                 break;
             default:
                 break;

@@ -159,7 +159,7 @@ async function showUser() {
   const userMSG = await options.getAllUID()
   const uidArray = userMSG.data
   const df = document.createDocumentFragment()
-  for (let uid of uidArray) {
+  for (const uid of uidArray) {
     const userDataMSG = await options.getUserData(uid)
     const userData = userDataMSG.data
     const userDF = getUserDF(uid, userData)
@@ -233,7 +233,7 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
  */
 function getConfigTemplate(config: config | userData): DocumentFragment {
   const df = document.createDocumentFragment()
-  for (let key in config) {
+  for (const key in config) {
     const info = optionsInfo[key]
     if (info == null) continue
     const configValue = config[key]
@@ -242,7 +242,8 @@ function getConfigTemplate(config: config | userData): DocumentFragment {
     else configTemplate = <HTMLTemplateElement>template.querySelector('#configTextTemplate')
     const clone = document.importNode(configTemplate.content, true)
     const descriptionDiv = <HTMLDivElement>clone.querySelector('._description')
-    const inputInput = <HTMLInputElement>clone.querySelector('input')
+    const inputInput = <HTMLInputElement>clone.querySelector('.form-control')
+    const checkboxInput = <HTMLInputElement>clone.querySelector('.form-check-input')
     switch (info.type) {
       case 'number':
         inputInput.value = (<number>configValue).toString()
@@ -253,13 +254,12 @@ function getConfigTemplate(config: config | userData): DocumentFragment {
         inputInput.oninput = () => config[key] = inputInput.value.split(',').map(value => { return parseInt(value) })
         break
       case 'string':
-        inputInput.value = (<string>configValue)
+        inputInput.value = <string>configValue
         inputInput.oninput = () => config[key] = inputInput.value
         break
       case 'boolean':
-        inputInput.type = 'checkbox'
-        inputInput.checked = <boolean>configValue
-        inputInput.onchange = () => config[key] = inputInput.checked
+        checkboxInput.checked = <boolean>configValue
+        checkboxInput.onchange = () => config[key] = checkboxInput.checked
         break
       default:
         break

@@ -22,13 +22,12 @@ interface server {
 interface config {
   [index: string]: number | string | number[]
   defaultUserID: number
-  defaultRoomID: number
   eventRooms: number[]
   adminServerChan: string
   raffleDelay: number
   rafflePause: number[]
   droprate: number
-  calcgifttime: string
+  calcGiftTime: string
 }
 interface userCollection {
   [index: string]: userData
@@ -55,12 +54,12 @@ interface userData {
 interface optionsInfo {
   [index: string]: configInfoData
   defaultUserID: configInfoData
-  defaultRoomID: configInfoData
   eventRooms: configInfoData
   adminServerChan: configInfoData
   raffleDelay: configInfoData
   rafflePause: configInfoData
   droprate: configInfoData
+  calcGiftTime: configInfoData
   nickname: configInfoData
   userName: configInfoData
   passWord: configInfoData
@@ -77,13 +76,30 @@ interface optionsInfo {
   sendGift: configInfoData
   sendGiftRoom: configInfoData
   signGroup: configInfoData
-  calcgifttime: configInfoData
 }
 interface configInfoData {
   description: string
   tip: string
   type: string
+  cognate?: string
 }
+// 礼物统计相关
+interface giftNameNum {
+  name: string
+  number: giftHas
+}
+interface userNickGift {
+  nickname: string
+  gift: userGiftID
+}
+interface giftHas {
+  all: number
+  twoDay: number
+  oneDay: number
+}
+type giftList = Map<number, giftNameNum>
+type userGiftList = Map<string, userNickGift>
+type userGiftID = Map<number, giftHas>
 // bilive_client
 /**
  * 消息格式
@@ -94,26 +110,8 @@ interface message {
   cmd: 'smallTV' | 'raffle' | 'lottery' | 'appLighten'
   roomID: number
   id: number
-}
-/**
- * 抽奖raffle信息
- * 
- * @interface raffleMSG
- * @extends {message}
- */
-interface raffleMSG extends message {
-  cmd: 'smallTV' | 'raffle'
-  time: number
-}
-/**
- * 抽奖lottery信息
- * 
- * @interface lotteryMSG
- * @extends {message}
- */
-interface lotteryMSG extends message {
-  cmd: 'appLighten' | 'lottery'
   type: string
+  time: number
 }
 // listener
 /**
@@ -125,20 +123,30 @@ interface raffleCheck {
   code: number
   msg: string
   message: string
-  data: {
-    list: raffleCheckData[]
-  }
+  data: raffleCheckData
 }
 interface raffleCheckData {
+  last_raffle_id: number
+  last_raffle_type: string
+  asset_animation_pic: string
+  asset_tips_pic: string
+  list: raffleCheckDataList[]
+}
+interface raffleCheckDataList {
   raffleId: number
-  type: 'small_tv' | string
-  form: string
-  from_user: {
-    uname: string
-    face: string
-  }
+  title: string
+  type: string
+  from: string
+  from_user: raffleCheckDataListFromuser
   time: number
+  max_time: number
   status: number
+  asset_animation_pic: string
+  asset_tips_pic: string
+}
+interface raffleCheckDataListFromuser {
+  uname: string
+  face: string
 }
 /**
  * 抽奖lottery检查
@@ -185,17 +193,78 @@ interface lotteryCheckDataSender {
   uname: string
   face: string
 }
+/**
+ * 获取直播列表
+ * 
+ * @interface getAllList
+ */
+interface getAllList {
+  code: number
+  msg: string
+  message: string
+  data: getAllListData
+}
+interface getAllListData {
+  interval: number
+  module_list: getAllListDataList[]
+}
+type getAllListDataList = getAllListDataModules | getAllListDataRooms
+interface getAllListDataModules {
+  module_info: getAllListDataModuleInfo
+  list: getAllListDataModuleList[]
+}
+interface getAllListDataRooms {
+  module_info: getAllListDataRoomInfo
+  list: getAllListDataRoomList[]
+}
+interface getAllListDataBaseInfo {
+  id: number
+  type: number
+  pic: string
+  title: string
+  link: string
+}
+interface getAllListDataModuleInfo extends getAllListDataBaseInfo {
+  count?: number
+}
+interface getAllListDataRoomInfo extends getAllListDataBaseInfo {
+  type: 6 | 9
+}
+interface getAllListDataModuleList {
+  id: number
+  pic: string
+  link: string
+  title: string
+}
+interface getAllListDataRoomList {
+  roomid: number
+  title: string
+  uname: string
+  online: number
+  cover: string
+  link: string
+  face: string
+  area_v2_parent_id: number
+  area_v2_parent_name: string
+  area_v2_id: number
+  area_v2_name: string
+  play_url: string
+  current_quality: number
+  accept_quality: number[]
+  broadcast_type: number
+  pendent_ld: string
+  pendent_ru: string
+  rec_type: number
+  pk_id: number
+}
 // raffle
 /**
  * 抽奖设置
  * 
  * @interface raffleOptions
  */
-interface raffleOptions {
-  type?: string
-  time?: number
+interface raffleOptions extends message {
   raffleId: number
-  roomID: number
   user: any
 }
 /**
@@ -230,6 +299,8 @@ interface raffleReward {
   data: raffleRewardData
 }
 interface raffleRewardData {
+  raffleId: number
+  type: string
   gift_id: number
   gift_name: string
   gift_num: number
@@ -237,21 +308,6 @@ interface raffleRewardData {
   gift_type: number
   gift_content: string
   status?: number
-}
-/**
- * App快速抽奖结果信息
- * 
- * @interface appLightenReward
- */
-interface appLightenReward {
-  code: number
-  msg: string
-  message: string
-  data: appLightenRewardData
-}
-interface appLightenRewardData {
-  gift_img: string
-  gift_desc: string
 }
 /**
  * 抽奖lottery
@@ -340,24 +396,6 @@ interface awardData {
   isEnd: number
 }
 /**
- * 房间信息app
- * 
- * @interface roomInfo
- */
-interface roomInfo {
-  code: number
-  data: roomInfoData
-}
-interface roomInfoData {
-  room_id: number
-  mid: number
-  event_corner: roomInfoDataEvent[]
-}
-interface roomInfoDataEvent {
-  event_type: string
-  event_img: string
-}
-/**
  * 房间信息
  * 
  * @interface roomInit
@@ -366,19 +404,21 @@ interface roomInit {
   code: number
   msg: string
   message: string
-  data: roomInitData
+  data: roomInitDataData
 }
-interface roomInitData {
-  encrypted: boolean
-  hidden_till: number
-  is_hidden: boolean
-  is_locked: boolean
-  lock_till: number
-  need_p2p: number
-  pwd_verified: boolean
+interface roomInitDataData {
   room_id: number
   short_id: number
   uid: number
+  need_p2p: number
+  is_hidden: boolean
+  is_locked: boolean
+  is_portrait: boolean
+  live_status: number
+  hidden_till: number
+  lock_till: number
+  encrypted: boolean
+  pwd_verified: boolean
 }
 /**
  * 分享房间返回

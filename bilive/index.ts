@@ -65,7 +65,8 @@ class BiLive {
       else this._raffle = true
     }
     else this._raffle = true
-    if (cstString === _options.config.calcgifttime) this.calcgift()
+    // 礼物总数统计
+    if (cstString === _options.config.calcGiftTime) this.calcGift()
   }
   /**
    * 监听
@@ -81,10 +82,10 @@ class BiLive {
    * 参与抽奖
    * 
    * @private
-   * @param {raffleMSG} raffleMSG 
+   * @param {message} raffleMSG 
    * @memberof BiLive
    */
-  private async _Raffle(raffleMSG: raffleMSG | lotteryMSG) {
+  private async _Raffle(raffleMSG: message) {
     if (!this._raffle) return
     const raffleDelay = _options.config.raffleDelay
     if (raffleDelay !== 0) await tools.Sleep(raffleDelay)
@@ -93,84 +94,80 @@ class BiLive {
       const droprate = _options.config.droprate
       if (droprate !== 0 && Math.random() < droprate / 100)
         return tools.Log(user.nickname, '丢弃抽奖', raffleMSG.id)
-      const raffleOptions: raffleOptions = {
-        raffleId: raffleMSG.id,
-        roomID: raffleMSG.roomID,
-        user
-      }
+      const raffleOptions: raffleOptions = { ...raffleMSG, raffleId: raffleMSG.id, user }
       switch (raffleMSG.cmd) {
         case 'smallTV':
-          raffleOptions.time = raffleMSG.time
           return new Raffle(raffleOptions).SmallTV()
         case 'raffle':
-          raffleOptions.time = raffleMSG.time
           return new Raffle(raffleOptions).Raffle()
         case 'lottery':
-          raffleOptions.type = raffleMSG.type
           return new Raffle(raffleOptions).Lottery()
-        case 'appLighten':
-          raffleOptions.type = raffleMSG.type
-          return new Raffle(raffleOptions).AppLighten()
         default:
           return
       }
     })
   }
   /**
- * calcgift
- */
-  private async calcgift() {
-    var giftBundles: { "id": number; "name": string; "total": number; "oneDay": number; "twoDay": number; }[] = []
-    var faillist: { "user": string; "reason": string; }[] = []
-    var checking: Promise<any>[] = [];
-    _user.forEach((user) => {
-      checking.push(user.checkgift().then(value => {
-        var baginfo = value
-        if (baginfo === undefined || baginfo.response.statusCode !== 200) {
-          faillist.push({ "user": user.nickname, "reason": "未知" });
-          return;
-        }
-        if (baginfo.body.code === 0) {
-          for (const giftData of baginfo.body.data) {
-            var target = -1;
-            for (let index = 0; index < giftBundles.length; index++) {
-              if (giftBundles[index].id == giftData.gift_id) {
-                target = index;
-                break;
-              }
-            }
-            if (target == -1) {
-              giftBundles.push({ "id": giftData.gift_id, "name": giftData.gift_name, "total": giftData.gift_num, "oneDay": (giftData.expireat > 0 && giftData.expireat < 24 * 60 * 60) ? giftData.gift_num : 0, "twoDay": (giftData.expireat > 0 && giftData.expireat < 48 * 60 * 60) ? giftData.gift_num : 0 })
-            } else {
-              giftBundles[target].total += giftData.gift_num;
-              giftBundles[target].oneDay += (giftData.expireat > 0 && giftData.expireat < 24 * 60 * 60) ? giftData.gift_num : 0
-              giftBundles[target].twoDay += (giftData.expireat > 0 && giftData.expireat < 48 * 60 * 60) ? giftData.gift_num : 0
-            }
+   * 礼物总数统计
+   * 
+   * @private
+   * @memberof BiLive
+   */
+  private async calcGift() {
+    // 缓存礼物名
+    const giftList: giftList = new Map()
+    // 缓存用户礼物数
+    const userGiftList: userGiftList = new Map()
+    for (const [uid, user] of _user) {
+      const bagInfo = await user.checkBag()
+      if (bagInfo === undefined || bagInfo.response.statusCode !== 200 || bagInfo.body.code !== 0 || bagInfo.body.data.length === 0)
+        userGiftList.set(uid, { nickname: user.nickname, gift: new Map() })
+      else {
+        const gift: userGiftID = new Map()
+        for (const giftData of bagInfo.body.data) {
+          // 添加礼物名
+          if (!giftList.has(giftData.gift_id)) giftList.set(giftData.gift_id, { name: giftData.gift_name, number: { all: 0, twoDay: 0, oneDay: 0 } })
+          const allGiftNum = <giftNameNum>giftList.get(giftData.gift_id)
+          allGiftNum.number.all += giftData.gift_num
+          // 添加礼物数
+          if (!gift.has(giftData.gift_id)) gift.set(giftData.gift_id, { all: 0, twoDay: 0, oneDay: 0 })
+          const giftNum = <giftHas>gift.get(giftData.gift_id)
+          giftNum.all += giftData.gift_num
+          // 临期礼物
+          if (giftData.expireat > 0 && giftData.expireat < 2 * 24 * 60 * 60) {
+            allGiftNum.number.twoDay += giftData.gift_num
+            giftNum.twoDay += giftData.gift_num
           }
-        } else {
-          faillist.push({ "user": user.nickname, "reason": JSON.stringify(baginfo.body) });
+          if (giftData.expireat > 0 && giftData.expireat < 24 * 60 * 60) {
+            allGiftNum.number.oneDay += giftData.gift_num
+            giftNum.oneDay += giftData.gift_num
+          }
         }
-      }))
-    });
-    await Promise.all(checking);
-    var checkresulttext = "###礼物检查结果\n";
-    checkresulttext = checkresulttext + "| ==礼物名称== | ==总共== | ==48小时之内== | ==24小时之内== |\n| :-: | :-: | :-: | :-: |\n"
-    giftBundles.forEach(giftBundle => {
-      checkresulttext = checkresulttext + "| " + giftBundle.name + " | " + giftBundle.total + " | " + giftBundle.twoDay + " |" + giftBundle.oneDay + " |\n";
-    });
-    var faillisttext = "###检查失败用户\n"
-    faillisttext = faillisttext + "| =========昵称========= | =========原因========= |\n| :-: | :-: |\n"
-    faillist.forEach(failuser => {
-      faillisttext = faillisttext + "| " + failuser.user + " | " + failuser.reason + " |\n";
-    });
-    var texttosend = "";
-    if (faillist.length > 0) {
-      texttosend = checkresulttext + "\n" + faillisttext;
-    } else {
-      texttosend = checkresulttext;
+        userGiftList.set(uid, { nickname: user.nickname, gift })
+      }
     }
-    tools.sendSCMSG(texttosend);
-
+    // 构造表格
+    let table = '用户\\礼物'
+    let row = ':-:'
+    let allGift = '总计'
+    // 第一行为礼物名
+    giftList.forEach(gift => {
+      table += `|${gift.name}/48H/24H`
+      row += '|:-:'
+      allGift += `|${gift.number.all}/${gift.number.twoDay}/${gift.number.oneDay}`
+    })
+    table += '\n' + row + '\n' + allGift
+    // 插入用户礼物信息
+    userGiftList.forEach(userGift => {
+      const nickname = userGift.nickname
+      const gift = userGift.gift
+      table += `\n|${nickname}`
+      giftList.forEach((_name, id) => {
+        const giftNum = gift.has(id) ? <giftHas>gift.get(id) : { all: 0, twoDay: 0, oneDay: 0 }
+        table += `|${giftNum.all}/${giftNum.twoDay}/${giftNum.oneDay}`
+      })
+    })
+    tools.sendSCMSG(table)
   }
 }
 // 自定义一些常量
