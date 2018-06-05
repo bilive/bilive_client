@@ -151,6 +151,7 @@ class Listener extends EventEmitter {
           roomID,
           id: +data.raffleId,
           type: data.type,
+          title: data.title,
           time: +data.time
         }
         this._RaffleHandler(message)
@@ -180,6 +181,7 @@ class Listener extends EventEmitter {
           roomID,
           id: +data.id,
           type: data.keyword,
+          title: '总督抽奖',
           time: 0
         }
         this._RaffleHandler(message)
@@ -213,7 +215,7 @@ class Listener extends EventEmitter {
         return
     }
     this.emit('raffle', raffleMSG)
-    tools.Log(`房间 ${tools.getShortRoomID(roomID)} 开启了第 ${id} 轮抽奖`)
+    tools.Log(`房间 ${tools.getShortRoomID(roomID)} 开启了第 ${id} 轮${raffleMSG.title}`)
   }
 }
 export default Listener

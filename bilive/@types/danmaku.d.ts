@@ -415,17 +415,31 @@ interface RAFFLE_START extends danmuJson {
 }
 interface RAFFLE_START_data {
   /** 抽奖编号 */
+  id: string
+  /** 持续时间 */
+  dtime: number
+  /** 系统广播 */
+  msg: SYS_MSG
+  /** 抽奖编号 */
   raffleId: number
+  /** 文案 */
+  title: string
   /** 文案 */
   type: string
   /** 赠送人 */
   from: string
   /** 持续时间 */
   time: number
+  /** 持续时间 */
+  max_time: number
+  /** 动画图片 */
+  asset_animation_pic: string
+  /** 静态图片 */
+  asset_tips_pic: string
 }
 /**
  * 抽奖结束
- * {"cmd":"RAFFLE_END","roomid":2785651,"data":{"raffleId":5081,"type":"newspring","from":"秃物祝大家新年快乐","fromFace":"http://i1.hdslb.com/bfs/face/34de240643bc2e5078e9aff222ff1601e6c9d31d.jpg","win":{"uname":"明太太太太太太太太太","face":"http://i1.hdslb.com/bfs/face/34de240643bc2e5078e9aff222ff1601e6c9d31d.jpg","giftId":"stuff-1","giftName":"经验原石","giftNum":10}},"_roomid":2785651}
+ * {"cmd":"RAFFLE_END","data":{"id":"56496","uname":"等着豆子发芽","sname":"外星人","giftName":"2.3333w银瓜子","mobileTips":"恭喜 等着豆子发芽 获得2.3333w银瓜子","raffleId":"56496","type":"GIFT_20003","from":"外星人","fromFace":"http://i2.hdslb.com/bfs/face/60c1d92c378f3ec9769ee8d46300d6829d14869d.jpg","fromGiftId":20003,"win":{"uname":"等着豆子发芽","face":"http://i1.hdslb.com/bfs/face/11e57d535980dfab77682427433efee9bca0bc3e.jpg","giftName":"银瓜子","giftId":"silver","giftNum":23333,"msg":"恭喜<%等着豆子发芽%>获得大奖<%2.3333w银瓜子%>, 感谢<%外星人%>的赠送"}},"_roomid":5619438}
  * 
  * @interface RAFFLE_END
  * @extends {danmuJson}
@@ -455,10 +469,12 @@ interface RAFFLE_END_data_win {
   giftId: string
   /** 礼物数量 100000 | 10*/
   giftNum: number
+  /** 中奖消息 */
+  msg: string
 }
 /**
  * 小电视抽奖开始
- * {"cmd":"TV_START","data":{"id":"36682","dtime":180,"msg":{"cmd":"SYS_MSG","msg":"【红色海蜗牛】:?在直播间:?【510】:?赠送 小电视一个，请前往抽奖","msg_text":"【红色海蜗牛】:?在直播间:?【510】:?赠送 小电视一个，请前往抽奖","rep":1,"styleType":2,"url":"http://live.bilibili.com/510","roomid":510,"real_roomid":80397,"rnd":1517306497,"tv_id":"36682"},"raffleId":36682,"type":"small_tv","from":"红色海蜗牛","time":180},"_roomid":80397}
+ * {"cmd":"TV_START","data":{"id":"56473","dtime":180,"msg":{"cmd":"SYS_MSG","msg":"GDinBoston:?送给:?宝贤酱:?一个小电视飞船，点击前往TA的房间去抽奖吧","msg_text":"GDinBoston:?送给:?宝贤酱:?一个小电视飞船，点击前往TA的房间去抽奖吧","rep":1,"styleType":2,"url":"http://live.bilibili.com/5520","roomid":5520,"real_roomid":4069122,"rnd":1527998406,"tv_id":0},"raffleId":56473,"title":"小电视飞船抽奖","type":"small_tv","from":"GDinBoston","from_user":{"uname":"GDinBoston","face":"http://i2.hdslb.com/bfs/face/6f42b610b2b3846bf054f78c348051c21ff223f1.jpg"},"time":180,"max_time":180,"time_wait":120,"asset_animation_pic":"http://i0.hdslb.com/bfs/live/746a8db0702740ec63106581825667ae525bb11a.gif","asset_tips_pic":"http://s1.hdslb.com/bfs/live/1a3acb48c59eb10010ad53b59623e14dc1339968.png"},"_roomid":4069122}
  * 
  * @interface TV_START
  * @extends {danmuJson}
@@ -467,16 +483,20 @@ interface TV_START extends danmuJson {
   data: TV_START_data
 }
 interface TV_START_data extends RAFFLE_START_data {
-  /** 小电视编号 */
-  id: string
-  /** 持续时间 */
-  dtime: number
-  msg: SYS_MSG
   type: 'small_tv'
+  /** 赠送人信息 */
+  from_user: TV_START_data_from
+  time_wait: number
+}
+interface TV_START_data_from {
+  /** 赠送人 */
+  uname: string
+  /** 赠送人头像地址 */
+  face: string
 }
 /**
  * 小电视抽奖结束
- * {"cmd":"TV_END","data":{"id":"36682","uname":"梦醒二生梦","sname":"红色海蜗牛","giftName":"10W银瓜子","mobileTips":"恭喜 梦醒二生梦 获得10W银瓜子","raffleId":"36682","type":"small_tv","from":"红色海蜗牛","fromFace":"http://i2.hdslb.com/bfs/face/0125426600e2d414f925ed0ed0ac011e42b7c35a.gif","win":{"uname":"梦醒二生梦","face":"http://i0.hdslb.com/bfs/face/ff8d14a116dcc59b3de30f3ac821f683b85e7150.jpg","giftName":"银瓜子","giftId":"silver","giftNum":100000}},"_roomid":80397}
+ * {"cmd":"TV_END","data":{"id":"56503","uname":"-清柠_","sname":"君子应如兰","giftName":"小电视抱枕","mobileTips":"恭喜 -清柠_ 获得小电视抱枕","raffleId":"56503","type":"small_tv","from":"君子应如兰","fromFace":"http://i1.hdslb.com/bfs/face/dfde2619c96280fa5f3f309d20207c8426a3722b.jpg","fromGiftId":25,"win":{"uname":"-清柠_","face":"http://i2.hdslb.com/bfs/face/e37a453b392be0342de2bae3caa18533273ad043.jpg","giftName":"小电视抱枕","giftId":"small_tv","giftNum":1,"msg":"恭喜<%-清柠_%>获得大奖<%小电视抱枕%>, 感谢<%君子应如兰%>的赠送"}},"_roomid":40270}
  * 
  * @interface TV_END
  * @extends {danmuJson}

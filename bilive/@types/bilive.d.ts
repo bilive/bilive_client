@@ -107,10 +107,11 @@ type userGiftID = Map<number, giftHas>
  * @interface message
  */
 interface message {
-  cmd: 'smallTV' | 'raffle' | 'lottery' | 'appLighten'
+  cmd: 'smallTV' | 'raffle' | 'lottery'
   roomID: number
   id: number
   type: string
+  title: string
   time: number
 }
 // listener
