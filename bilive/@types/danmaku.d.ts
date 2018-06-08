@@ -432,6 +432,8 @@ interface RAFFLE_START_data {
   time: number
   /** 持续时间 */
   max_time: number
+  /** 等待时间 */
+  time_wait: number
   /** 动画图片 */
   asset_animation_pic: string
   /** 静态图片 */
@@ -854,6 +856,16 @@ interface ROOM_RANK_Data {
   h5_url: string
   timestamp: number
 }
+/**
+ * {"cmd":"PK_MATCH","pk_status":100,"pk_id":3291,"data":{"init_id":273022,"match_id":52320,"escape_time":5,"is_portrait":false,"uname":"栗子蛋糕酱","face":"http://i0.hdslb.com/bfs/face/6fb781f75b9c30d2d8b384793fcd02ad3238b1bd.jpg","uid":922127},"roomid":273022,"_roomid":273022}
+ * {"cmd":"PK_PRE","pk_id":3291,"pk_status":200,"data":{"init_id":273022,"match_id":52320,"count_down":5,"pk_topic":"跳一支舞  ","pk_pre_time":1528442545,"pk_start_time":1528442550,"pk_end_time":1528442610,"end_time":1528442670},"_roomid":273022}
+ * {"cmd":"PK_START","pk_id":3291,"pk_status":300,"data":{"init_id":273022,"match_id":52320,"pk_topic":"跳一支舞  "},"_roomid":273022}
+ * {"cmd":"PK_PROCESS","pk_id":3291,"pk_status":300,"data":{"uid":220870717,"init_votes":0,"match_votes":1,"user_votes":1},"_roomid":273022}
+ * {"cmd":"PK_END","pk_id":3291,"pk_status":400,"data":{"init_id":273022,"match_id":52320,"punish_topic":"惩罚：唱《九妹》"},"_roomid":273022}
+ * {"cmd":"PK_SETTLE","pk_id":3291,"pk_status":400,"data":{"pk_id":3291,"init_info":{"uid":28008980,"init_id":273022,"uname":"崛起而零距离的目标和梦想和理想之","face":"http://i0.hdslb.com/bfs/face/2c3a364cf409a85b4c651a6afbf6ffe22208c654.jpg","votes":0,"is_winner":false},"match_info":{"uid":922127,"match_id":52320,"uname":"栗子蛋糕酱","face":"http://i0.hdslb.com/bfs/face/6fb781f75b9c30d2d8b384793fcd02ad3238b1bd.jpg","votes":1,"is_winner":true,"vip_type":2,"exp":{"color":5805790,"user_level":35,"master_level":{"level":7,"color":6406234}},"vip":{"vip":0,"svip":0},"face_frame":"","badge":{"url":"http://i0.hdslb.com/bfs/live/b5e9ebd5ddb979a482421ca4ea2f8c1cc593370b.png","desc":"","position":3}},"best_user":{"uid":220870717,"uname":"陶渊明呼呼","face":"http://i1.hdslb.com/bfs/face/dfa72087e929665d3542778144bad0b7f0406998.jpg","vip_type":2,"exp":{"color":6406234,"user_level":14,"master_level":{"level":1,"color":6406234}},"vip":{"vip":1,"svip":0},"privilege_type":0,"face_frame":"","badge":{"url":"http://i0.hdslb.com/bfs/live/b5e9ebd5ddb979a482421ca4ea2f8c1cc593370b.png","desc":"","position":3}},"punish_topic":"惩罚：唱《九妹》"},"_roomid":273022}
+ * {"cmd":"PK_MIC_END","pk_id":3291,"pk_status":1000,"data":{"type":0},"_roomid":273022}
+ */
+
 /**
  * 画板活动
  * 

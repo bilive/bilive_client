@@ -139,6 +139,7 @@ interface raffleCheckDataList {
   type: string
   from: string
   from_user: raffleCheckDataListFromuser
+  time_wait: number
   time: number
   max_time: number
   status: number
@@ -310,6 +311,7 @@ interface raffleRewardData {
   gift_content: string
   status?: number
 }
+type raffleAward = raffleReward
 /**
  * 抽奖lottery
  * 

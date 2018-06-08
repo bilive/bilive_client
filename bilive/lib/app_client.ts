@@ -31,7 +31,7 @@ class AppClient {
   // bilibili 客户端
   private static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
   public static readonly appKey: string = '1d8b6e7d45233436'
-  public static readonly build: string = '5260003'
+  public static readonly build: string = '5270000'
   public static readonly mobiApp: string = 'android'
   // bilibili 国际版
   // private static readonly __secretKey: string = '36efcfed79309338ced0380abd824ac1'
@@ -199,7 +199,7 @@ class AppClient {
    */
   public headers: request.Headers = {
     'Connection': 'Keep-Alive',
-    'User-Agent': 'Mozilla/5.0 BiliDroid/5.26.3 (bbcallen@gmail.com)'
+    'User-Agent': 'Mozilla/5.0 BiliDroid/5.27.0 (bbcallen@gmail.com)'
   }
   /**
    * cookieJar

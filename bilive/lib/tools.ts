@@ -19,7 +19,7 @@ function getHeaders(platform: string): request.Headers {
     case 'Android':
       return {
         'Connection': 'Keep-Alive',
-        'User-Agent': 'Mozilla/5.0 BiliDroid/5.26.3 (bbcallen@gmail.com)'
+        'User-Agent': 'Mozilla/5.0 BiliDroid/5.27.0 (bbcallen@gmail.com)'
       }
     case 'WebView':
       return {
@@ -28,7 +28,7 @@ function getHeaders(platform: string): request.Headers {
         'Connection': 'keep-alive',
         'Cookie': 'l=v',
         'Origin': liveOrigin,
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 8.0.0; G8142 Build/47.1.A.8.49; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/65.0.3325.109 Mobile Safari/537.36 BiliApp/5260003',
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 8.0.0; G8142 Build/47.1.A.8.49; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/65.0.3325.109 Mobile Safari/537.36 BiliApp/5270000',
         'X-Requested-With': 'tv.danmaku.bili'
       }
     default:

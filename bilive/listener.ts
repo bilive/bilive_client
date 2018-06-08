@@ -149,7 +149,7 @@ class Listener extends EventEmitter {
           id: +data.raffleId,
           type: data.type,
           title: data.title,
-          time: +data.time
+          time: +data.time_wait
         }
         this._RaffleHandler(message)
       })
