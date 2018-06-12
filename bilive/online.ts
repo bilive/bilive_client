@@ -4,14 +4,14 @@ import AppClient from './lib/app_client'
 import { apiLiveOrigin, _options, liveOrigin } from './index'
 /**
  * Creates an instance of Online.
- * 
+ *
  * @class Online
  * @extends {AppClient}
  */
 class Online extends AppClient {
   /**
    * Creates an instance of Online.
-   * @param {userData} userData 
+   * @param {userData} userData
    * @memberof Online
    */
   constructor(userData: userData) {
@@ -36,13 +36,13 @@ class Online extends AppClient {
   public jar!: request.CookieJar
   /**
    * 验证码 DataURL
-   * 
+   *
    * @memberof Online
    */
   public captchaJPEG = ''
   /**
    * 如果抽奖做到外面的话应该有用
-   * 
+   *
    * @readonly
    * @memberof Online
    */
@@ -51,7 +51,7 @@ class Online extends AppClient {
   }
   /**
    * 负责心跳定时
-   * 
+   *
    * @protected
    * @type {NodeJS.Timer}
    * @memberof Online
@@ -60,8 +60,8 @@ class Online extends AppClient {
   /**
    * 当账号出现异常时, 会返回'captcha'或'stop'
    * 'captcha'为登录需要验证码, 若无法处理需Stop()
-   * 
-   * @returns {(Promise<'captcha' | 'stop' | void>)} 
+   *
+   * @returns {(Promise<'captcha' | 'stop' | void>)}
    * @memberof Online
    */
   public async Start(): Promise<'captcha' | 'stop' | void> {
@@ -76,7 +76,7 @@ class Online extends AppClient {
   }
   /**
    * 停止挂机
-   * 
+   *
    * @memberof Online
    */
   public Stop() {
@@ -87,9 +87,9 @@ class Online extends AppClient {
   }
   /**
    * 检查是否登录
-   * 
+   *
    * @private
-   * @returns {(Promise<'captcha' | 'stop' | void>)} 
+   * @returns {(Promise<'captcha' | 'stop' | void>)}
    * @memberof Online
    */
   public async getOnlineInfo(roomID = _options.config.defaultRoomID): Promise<'captcha' | 'stop' | void> {
@@ -104,7 +104,7 @@ class Online extends AppClient {
   }
   /**
    * 设置心跳循环
-   * 
+   *
    * @protected
    * @memberof Online
    */
@@ -119,38 +119,36 @@ class Online extends AppClient {
   /**
    * 发送在线心跳包
    * B站改版以后纯粹用来检查登录凭证是否失效
-   * 
+   *
    * @protected
-   * @returns {(Promise<'cookieError' | 'tokenError' | void>)} 
+   * @returns {(Promise<'cookieError' | 'tokenError' | void>)}
    * @memberof Online
    */
   protected async _onlineHeart(): Promise<'cookieError' | 'tokenError' | void> {
     const roomID = _options.config.defaultRoomID
-    const online: request.Options = {
+    const heartPC = await tools.XHR<userOnlineHeart>({
       method: 'POST',
       uri: `${apiLiveOrigin}/User/userOnlineHeart`,
       jar: this.jar,
       json: true,
       headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
-    }
-    const heartPC = await tools.XHR<userOnlineHeart>(online)
+    })
     if (heartPC !== undefined && heartPC.response.statusCode === 200 && heartPC.body.code === 3) return 'cookieError'
     // 客户端
-    const heartbeat: request.Options = {
+    const heart = await tools.XHR<userOnlineHeart>({
       method: 'POST',
       uri: `${apiLiveOrigin}/mobile/userOnlineHeart?${AppClient.signQueryBase(this.tokenQuery)}`,
       body: `room_id=${tools.getLongRoomID(roomID)}&scale=xxhdpi`,
       json: true,
       headers: this.headers
-    }
-    const heart = await tools.XHR<userOnlineHeart>(heartbeat, 'Android')
+    }, 'Android')
     if (heart !== undefined && heart.response.statusCode === 200 && heart.body.code === 3) return 'tokenError'
   }
   /**
    * cookie失效
-   * 
+   *
    * @protected
-   * @returns {(Promise<'captcha' | 'stop' | void>)} 
+   * @returns {(Promise<'captcha' | 'stop' | void>)}
    * @memberof Online
    */
   protected async _cookieError(): Promise<'captcha' | 'stop' | void> {
@@ -167,9 +165,9 @@ class Online extends AppClient {
   }
   /**
    * token失效
-   * 
+   *
    * @protected
-   * @returns {(Promise<'captcha' | 'stop' | void>)} 
+   * @returns {(Promise<'captcha' | 'stop' | void>)}
    * @memberof Online
    */
   protected async _tokenError(): Promise<'captcha' | 'stop' | void> {

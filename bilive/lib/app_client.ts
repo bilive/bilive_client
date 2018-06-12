@@ -31,7 +31,7 @@ class AppClient {
   // bilibili 客户端
   private static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
   public static readonly appKey: string = '1d8b6e7d45233436'
-  public static readonly build: string = '5250000'
+  public static readonly build: string = '5260003'
   public static readonly mobiApp: string = 'android'
   // bilibili 国际版
   // private static readonly __secretKey: string = '36efcfed79309338ced0380abd824ac1'
@@ -74,6 +74,20 @@ class AppClient {
    */
   public static get RND(): number {
     return Math.floor(Math.random() * 1e+8) + 1e+7
+  }
+/**
+ * 谜一样的DeviceID
+ *
+ * @readonly
+ * @static
+ * @type {string}
+ * @memberof AppClient
+ */
+  public static get DeviceID(): string {
+    const words = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+    let deviceID = ''
+    for (let i = 0; i < 20; i++) deviceID += words[Math.floor(Math.random() * 62)]
+    return deviceID
   }
   /**
    * 基本请求参数
@@ -185,8 +199,8 @@ class AppClient {
    */
   public headers: request.Headers = {
     'Connection': 'Keep-Alive',
-    'Device-ID': 'Pwc3BzUCYwJjUWAGegZ6',
-    'User-Agent': 'Mozilla/5.0 BiliDroid/5.22.0 (bbcallen@gmail.com)'
+    'Device-ID': AppClient.DeviceID,
+    'User-Agent': 'Mozilla/5.0 BiliDroid/5.26.3 (bbcallen@gmail.com)'
   }
   /**
    * cookieJar
@@ -247,7 +261,7 @@ class AppClient {
 &password=${passWord}&platform=${AppClient.platform}&ts=${AppClient.TS}&username=${encodeURIComponent(this.userName)}`
     const auth: request.Options = {
       method: 'POST',
-      uri: 'https://passport.bilibili.com/api/v2/oauth2/login',
+      uri: 'https://passport.bilibili.com/api/v3/oauth2/login',
       body: AppClient.signQuery(authQuery, false),
       jar: this.__jar,
       json: true,
@@ -280,6 +294,8 @@ class AppClient {
    * @memberof AppClient
    */
   public async init() {
+    // 设置 Device-ID
+    this.headers['Device-ID'] = AppClient.DeviceID
     // 设置 Buvid
     const buvid = await tools.XHR<string>({
       uri: 'http://data.bilibili.com/gv/',
@@ -414,12 +430,13 @@ interface authResponseData {
   status: number
   token_info: authResponseTokeninfo
   cookie_info: authResponseCookieinfo
+  sso: string[]
 }
 interface authResponseCookieinfo {
-  cookies: authResponseCookie[]
+  cookies: authResponseCookieinfoCooky[]
   domains: string[]
 }
-interface authResponseCookie {
+interface authResponseCookieinfoCooky {
   name: string
   value: string
   http_only: number

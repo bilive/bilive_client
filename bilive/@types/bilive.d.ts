@@ -86,39 +86,77 @@ interface configInfoData {
  * @interface message
  */
 interface message {
-  cmd: 'smallTV' | 'raffle' | 'lottery' | 'appLighten'
+  cmd: 'smallTV' | 'skyscraper' | 'raffle' | 'lottery' | 'appLighten'
   roomID: number
   id: number
-}
-/**
- * 抽奖raffle信息
-=======
- * 抽奖信息
->>>>>>> master
- *
- * @interface raffleMSG
- * @extends {message}
- */
-interface raffleMSG extends message {
-  cmd: 'smallTV' | 'raffle'
+  type: string
   time: number
 }
-/**
- * 抽奖lottery信息
- *
- * @interface lotteryMSG
-=======
- * app快速抽奖信息
- *
- * @interface appLightenMSG
->>>>>>> master
- * @extends {message}
- */
-interface lotteryMSG extends message {
-  cmd: 'appLighten' | 'lottery'
-  type: string
-}
 // listener
+/**
+ * 获取直播列表
+ *
+ * @interface getAllList
+ */
+interface getAllList {
+  code: number
+  msg: string
+  message: string
+  data: getAllListData
+}
+interface getAllListData {
+  interval: number
+  module_list: getAllListDataList[]
+}
+type getAllListDataList = getAllListDataModules | getAllListDataRooms
+interface getAllListDataModules {
+  module_info: getAllListDataModuleInfo
+  list: getAllListDataModuleList[]
+}
+interface getAllListDataRooms {
+  module_info: getAllListDataRoomInfo
+  list: getAllListDataRoomList[]
+}
+interface getAllListDataBaseInfo {
+  id: number
+  type: number
+  pic: string
+  title: string
+  link: string
+}
+interface getAllListDataModuleInfo extends getAllListDataBaseInfo {
+  count?: number
+}
+interface getAllListDataRoomInfo extends getAllListDataBaseInfo {
+  type: 6 | 9
+}
+interface getAllListDataModuleList {
+  id: number
+  pic: string
+  link: string
+  title: string
+}
+interface getAllListDataRoomList {
+  roomid: number
+  title: string
+  uname: string
+  online: number
+  cover: string
+  link: string
+  face: string
+  area_v2_parent_id: number
+  area_v2_parent_name: string
+  area_v2_id: number
+  area_v2_name: string
+  play_url: string
+  current_quality: number
+  accept_quality: number[]
+  broadcast_type: number
+  pendent_ld: string
+  pendent_ru: string
+  rec_type: number
+  pk_id: number
+}
 /**
  * 搜索总督房间
  *
@@ -221,11 +259,8 @@ interface lotteryCheckDataSender {
  *
  * @interface raffleOptions
  */
-interface raffleOptions {
-  type?: string
-  time?: number
+interface raffleOptions extends message {
   raffleId: number
-  roomID: number
   user: any
 }
 /**

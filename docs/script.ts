@@ -38,7 +38,7 @@ dDiv.addEventListener('animationend', () => {
 })
 /**
  * 显示登录界面
- * 
+ *
  */
 function showLogin() {
   const pathInput = <HTMLInputElement>loginDiv.querySelector('#path input')
@@ -46,6 +46,13 @@ function showLogin() {
   const keepInput = <HTMLInputElement>loginDiv.querySelector('#protocol input[type="checkbox"]')
   const connectButton = <HTMLElement>loginDiv.querySelector('#connect button')
   const connectSpan = <HTMLSpanElement>loginDiv.querySelector('#connect span')
+  if (location.hash !== '') {
+    const loginInfo = location.hash.match(/path=(.*)&protocol=(.*)/)
+    if (loginInfo !== null) {
+      pathInput.value = loginInfo[1]
+      protocolInput.value = loginInfo[2]
+    }
+  }
   connectButton.onclick = async () => {
     const protocols = [protocolInput.value]
     if (keepInput.checked) protocols.push('keep')
@@ -57,7 +64,7 @@ function showLogin() {
 }
 /**
  * 登录成功
- * 
+ *
  */
 async function login() {
   const infoMSG = await options.getInfo()
@@ -82,7 +89,7 @@ async function login() {
 }
 /**
  * 加载全局设置
- * 
+ *
  */
 async function showConfig() {
   const saveConfigButton = <HTMLElement>document.querySelector('#saveConfig')
@@ -122,7 +129,7 @@ async function showConfig() {
 }
 /**
  * 加载Log
- * 
+ *
  */
 async function showLog() {
   const logMSG = await options.getLog()
@@ -146,13 +153,13 @@ async function showLog() {
 }
 /**
  * 加载用户设置
- * 
+ *
  */
 async function showUser() {
   const userMSG = await options.getAllUID()
   const uidArray = userMSG.data
   const df = document.createDocumentFragment()
-  for (let uid of uidArray) {
+  for (const uid of uidArray) {
     const userDataMSG = await options.getUserData(uid)
     const userData = userDataMSG.data
     const userDF = getUserDF(uid, userData)
@@ -162,10 +169,10 @@ async function showUser() {
 }
 /**
  * 新建用户模板
- * 
- * @param {string} uid 
- * @param {userData} userData 
- * @returns {DocumentFragment} 
+ *
+ * @param {string} uid
+ * @param {userData} userData
+ * @returns {DocumentFragment}
  */
 function getUserDF(uid: string, userData: userData): DocumentFragment {
   const userTemplate = <HTMLTemplateElement>template.querySelector('#userTemplate')
@@ -220,13 +227,13 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
 }
 /**
  * 设置模板
- * 
- * @param {(config | userData)} config 
- * @returns {DocumentFragment} 
+ *
+ * @param {(config | userData)} config
+ * @returns {DocumentFragment}
  */
 function getConfigTemplate(config: config | userData): DocumentFragment {
   const df = document.createDocumentFragment()
-  for (let key in config) {
+  for (const key in config) {
     const info = optionsInfo[key]
     if (info == null) continue
     const configValue = config[key]
@@ -235,7 +242,8 @@ function getConfigTemplate(config: config | userData): DocumentFragment {
     else configTemplate = <HTMLTemplateElement>template.querySelector('#configTextTemplate')
     const clone = document.importNode(configTemplate.content, true)
     const descriptionDiv = <HTMLDivElement>clone.querySelector('._description')
-    const inputInput = <HTMLInputElement>clone.querySelector('input')
+    const inputInput = <HTMLInputElement>clone.querySelector('.form-control')
+    const checkboxInput = <HTMLInputElement>clone.querySelector('.form-check-input')
     switch (info.type) {
       case 'number':
         inputInput.value = (<number>configValue).toString()
@@ -246,13 +254,12 @@ function getConfigTemplate(config: config | userData): DocumentFragment {
         inputInput.oninput = () => config[key] = inputInput.value.split(',').map(value => { return parseInt(value) })
         break
       case 'string':
-        inputInput.value = (<string>configValue)
+        inputInput.value = <string>configValue
         inputInput.oninput = () => config[key] = inputInput.value
         break
       case 'boolean':
-        inputInput.type = 'checkbox'
-        inputInput.checked = <boolean>configValue
-        inputInput.onchange = () => config[key] = inputInput.checked
+        checkboxInput.checked = <boolean>configValue
+        checkboxInput.onchange = () => config[key] = checkboxInput.checked
         break
       default:
         break
@@ -266,8 +273,8 @@ function getConfigTemplate(config: config | userData): DocumentFragment {
 }
 /**
  * 处理连接中断
- * 
- * @param {string} data 
+ *
+ * @param {string} data
  */
 function wsClose(data: string) {
   const connectSpan = <HTMLSpanElement>loginDiv.querySelector('#connect span')
@@ -280,8 +287,8 @@ function wsClose(data: string) {
 /**
  * 弹窗提示
  * 无参数时只显示遮罩
- * 
- * @param {modalOPtions} [options] 
+ *
+ * @param {modalOPtions} [options]
  */
 function modal(options?: modalOPtions) {
   if (options != null) {

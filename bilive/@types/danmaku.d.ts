@@ -1,6 +1,6 @@
 /**
  * 弹幕基本格式
- * 
+ *
  * @interface danmuJson
  */
 interface danmuJson {
@@ -13,7 +13,7 @@ interface danmuJson {
 /**
  * 弹幕消息
  * {"info":[[0,5,25,16738408,1517306023,1405289835,0,"c23b254e",0],"好想抱回家",[37089851,"Dark2笑",0,1,1,10000,1,"#7c1482"],[17,"言叶","枫言w",367,16752445,"union"],[35,0,10512625,">50000"],["title-140-2","title-140-2"],0,1,{"uname_color":"#7c1482"}],"cmd":"DANMU_MSG","_roomid":1175880}
- * 
+ *
  * @interface DANMU_MSG
  * @extends {danmuJson}
  */
@@ -105,7 +105,7 @@ interface DANMU_MSG_info_other {
 /**
  * 礼物消息, 用户包裹和瓜子的数据直接在里面, 真是窒息
  * {"cmd":"SEND_GIFT","data":{"giftName":"B坷垃","num":1,"uname":"Vilitarain","rcost":28963232,"uid":2081485,"top_list":[{"uid":3091444,"uname":"丶你真难听","face":"http://i1.hdslb.com/bfs/face/b1e39bae99efc6277b95993cd2a0d7c176b52ce2.jpg","rank":1,"score":1657600,"guard_level":3,"isSelf":0},{"uid":135813741,"uname":"EricOuO","face":"http://i2.hdslb.com/bfs/face/db8cf9a9506d2e3fe6dcb3d8f2eee4da6c0e3e2d.jpg","rank":2,"score":1606200,"guard_level":2,"isSelf":0},{"uid":10084110,"uname":"平凡无奇迷某人","face":"http://i2.hdslb.com/bfs/face/df316f596d7dcd8625de7028172027aa399323af.jpg","rank":3,"score":1333100,"guard_level":3,"isSelf":0}],"timestamp":1517306026,"giftId":3,"giftType":0,"action":"赠送","super":1,"price":9900,"rnd":"1517301823","newMedal":1,"newTitle":0,"medal":{"medalId":"397","medalName":"七某人","level":1},"title":"","beatId":"0","biz_source":"live","metadata":"","remain":0,"gold":100,"silver":77904,"eventScore":0,"eventNum":0,"smalltv_msg":[],"specialGift":null,"notice_msg":[],"capsule":{"normal":{"coin":68,"change":1,"progress":{"now":1100,"max":10000}},"colorful":{"coin":0,"change":0,"progress":{"now":0,"max":5000}}},"addFollow":0,"effect_block":0},"_roomid":50583}
- * 
+ *
  * @interface SEND_GIFT
  * @extends {danmuJson}
  */
@@ -215,10 +215,31 @@ interface SEND_GIFT_data_capsule_data_progress {
   max: number
 }
 /**
+ * 礼物连击结束
+ * {"cmd":"COMBO_END","data":{"uname":"虫章虫良阝恶霸","r_uname":"坂本叔","combo_num":99,"price":100,"gift_name":"凉了","gift_id":20010,"start_time":1527510537,"end_time":1527510610},"_roomid":5067}
+ *
+ * @interface COMBO_END
+ * @extends {danmuJson}
+ */
+interface COMBO_END extends danmuJson {
+  data: COMBO_ENDData
+}
+interface COMBO_ENDData {
+  uname: string
+  r_uname: string
+  combo_num: number
+  price: number
+  gift_name: string
+  gift_id: number
+  start_time: number
+  end_time: number
+ }
+/**
  * 系统消息, 广播
  * {"cmd":"SYS_MSG","msg":"亚军主播【赤瞳不是翅桶是赤瞳】开播啦，一起去围观！","msg_text":"亚军主播【赤瞳不是翅桶是赤瞳】开播啦，一起去围观！","url":"http://live.bilibili.com/5198","_roomid":23058}
  * {"cmd":"SYS_MSG","msg":"【国民六妹】:?在直播间:?【896056】:?赠送 小电视一个，请前往抽奖","msg_text":"【国民六妹】:?在直播间:?【896056】:?赠送 小电视一个，请前往抽奖","rep":1,"styleType":2,"url":"http://live.bilibili.com/896056","roomid":896056,"real_roomid":896056,"rnd":1517304134,"tv_id":"36676","_roomid":1199214}
- * 
+ * {"cmd":"SYS_MSG","msg":"忧伤小草:?送给:?龙崎77-:?一个摩天大楼，点击前往TA的房间去抽奖吧","msg_text":"忧伤小草:?送给:?龙崎77-:?一个摩天大楼，点击前往TA的房间去抽奖吧","rep":1,"styleType":2,"url":"http://live.bilibili.com/307","roomid":307,"real_roomid":371020,"rnd":1382374449,"tv_id":0,"_roomid":23058}
+ *
  * @interface SYS_MSG
  * @extends {danmuJson}
  */
@@ -244,13 +265,13 @@ interface SYS_MSG extends danmuJson {
   real_roomid: number
   rnd: number
   /** 小电视编号 */
-  tv_id: string
+  tv_id?: string | 0
 }
 /**
  * 系统礼物消息, 广播
  * {"cmd":"SYS_GIFT","msg":"叫我大兵就对了:?  在贪玩游戏的:?直播间5254205:?内赠送:?109:?共225个","rnd":"930578893","uid":30623524,"msg_text":"叫我大兵就对了在贪玩游戏的直播间5254205内赠送红灯笼共225个","_roomid":23058}
  * {"cmd":"SYS_GIFT","msg":"亚瑟不懂我心在直播间26057开启了新春抽奖，红包大派送啦！一起来沾沾喜气吧！","msg_text":"亚瑟不懂我心在直播间26057开启了新春抽奖，红包大派送啦！一起来沾沾喜气吧！","tips":"亚瑟不懂我心在直播间26057开启了新春抽奖，红包大派送啦！一起来沾沾喜气吧！","url":"http://live.bilibili.com/26057","roomid":26057,"real_roomid":26057,"giftId":110,"msgTips":0,"_roomid":23058}
- * 
+ *
  * @interface SYS_GIFT
  * @extends {danmuJson}
  */
@@ -282,7 +303,7 @@ interface SYS_GIFT extends danmuJson {
  * 欢迎消息
  * {"cmd":"WELCOME","data":{"uid":42469177,"uname":"还是森然","isadmin":0,"vip":1},"roomid":10248,"_roomid":10248}
  * {"cmd":"WELCOME","data":{"uid":36157605,"uname":"北熠丶","is_admin":false,"vip":1},"_roomid":5096}
- * 
+ *
  * @interface WELCOME
  * @extends {danmuJson}
  */
@@ -314,7 +335,7 @@ interface WELCOME_data extends WELCOME_data_base_admin {
 /**
  * 欢迎消息-舰队
  * {"cmd":"WELCOME_GUARD","data":{"uid":33401915,"username":"按时咬希尔","guard_level":3,"water_god":0},"roomid":1374115,"_roomid":1374115}
- * 
+ *
  * @interface WELCOME_GUARD
  * @extends {danmuJson}
  */
@@ -333,7 +354,7 @@ interface WELCOME_GUARD_data {
 /**
  * 欢迎消息-活动
  * {"cmd":"WELCOME_ACTIVITY","data":{"uid":38728279,"uname":"胖橘喵_只听歌不聊骚","type":"goodluck"},"_roomid":12722}
- * 
+ *
  * @interface WELCOME_ACTIVITY
  * @extends {danmuJson}
  */
@@ -351,7 +372,7 @@ interface WELCOME_ACTIVITY_data {
 /**
  * 舰队购买
  * {"cmd":"GUARD_BUY","data":{"uid":43510479,"username":"416の老木鱼","guard_level":3,"num":1},"roomid":"24308","_roomid":24308}
- * 
+ *
  * @interface GUARD_BUY
  * @extends {danmuJson}
  */
@@ -372,7 +393,7 @@ interface GUARD_BUY_data {
  * 舰队消息
  * {"cmd":"GUARD_MSG","msg":"欢迎 :?总督 Tikiあいしてる:? 登船","roomid":237328,"_roomid":237328}
  * {"cmd":"GUARD_MSG","msg":"用户 :?EricOuO:? 在主播 七七见奈波丶 的直播间开通了总督","buy_type":1,"_roomid":23058}
- * 
+ *
  * @interface GUARD_MSG
  * @extends {danmuJson}
  */
@@ -384,7 +405,8 @@ interface GUARD_MSG extends danmuJson {
 /**
  * 抽奖开始
  * {"cmd":"RAFFLE_START","roomid":11365,"data":{"raffleId":5082,"type":"newspring","from":"LexBurner","time":60},"_roomid":11365}
- * 
+ * {"cmd":"RAFFLE_START","data":{"id":"54588","dtime":180,"msg":{"cmd":"SYS_MSG","msg":"一圆滚滚:?送给:?-牛奶喵:?一个摩天大楼，点击前往TA的房间去抽奖吧","msg_text":"一圆滚滚:?送给:?-牛奶喵:?一个摩天大楼，点击前往TA的房间去抽奖吧","rep":1,"styleType":2,"url":"http://live.bilibili.com/344839","roomid":344839,"real_roomid":344839,"rnd":1003073948,"tv_id":0},"raffleId":54588,"title":"摩天大楼抽奖","type":"GIFT_20003","from":"一圆滚滚","from_user":{"uname":"一圆滚滚","face":"http://static.hdslb.com/images/member/noface.gif"},"time":180,"max_time":180,"time_wait":120,"asset_animation_pic":"http://i0.hdslb.com/bfs/live/7e47e9cfb744acd0319a4480e681258ce3a611fe.gif","asset_tips_pic":"http://s1.hdslb.com/bfs/live/380bcd708da496d75737c68930965dd67b82879d.png"},"_roomid":344839}
+ *
  * @interface RAFFLE_START
  * @extends {danmuJson}
  */
@@ -404,7 +426,7 @@ interface RAFFLE_START_data {
 /**
  * 抽奖结束
  * {"cmd":"RAFFLE_END","roomid":2785651,"data":{"raffleId":5081,"type":"newspring","from":"秃物祝大家新年快乐","fromFace":"http://i1.hdslb.com/bfs/face/34de240643bc2e5078e9aff222ff1601e6c9d31d.jpg","win":{"uname":"明太太太太太太太太太","face":"http://i1.hdslb.com/bfs/face/34de240643bc2e5078e9aff222ff1601e6c9d31d.jpg","giftId":"stuff-1","giftName":"经验原石","giftNum":10}},"_roomid":2785651}
- * 
+ *
  * @interface RAFFLE_END
  * @extends {danmuJson}
  */
@@ -437,7 +459,7 @@ interface RAFFLE_END_data_win {
 /**
  * 小电视抽奖开始
  * {"cmd":"TV_START","data":{"id":"36682","dtime":180,"msg":{"cmd":"SYS_MSG","msg":"【红色海蜗牛】:?在直播间:?【510】:?赠送 小电视一个，请前往抽奖","msg_text":"【红色海蜗牛】:?在直播间:?【510】:?赠送 小电视一个，请前往抽奖","rep":1,"styleType":2,"url":"http://live.bilibili.com/510","roomid":510,"real_roomid":80397,"rnd":1517306497,"tv_id":"36682"},"raffleId":36682,"type":"small_tv","from":"红色海蜗牛","time":180},"_roomid":80397}
- * 
+ *
  * @interface TV_START
  * @extends {danmuJson}
  */
@@ -455,7 +477,7 @@ interface TV_START_data extends RAFFLE_START_data {
 /**
  * 小电视抽奖结束
  * {"cmd":"TV_END","data":{"id":"36682","uname":"梦醒二生梦","sname":"红色海蜗牛","giftName":"10W银瓜子","mobileTips":"恭喜 梦醒二生梦 获得10W银瓜子","raffleId":"36682","type":"small_tv","from":"红色海蜗牛","fromFace":"http://i2.hdslb.com/bfs/face/0125426600e2d414f925ed0ed0ac011e42b7c35a.gif","win":{"uname":"梦醒二生梦","face":"http://i0.hdslb.com/bfs/face/ff8d14a116dcc59b3de30f3ac821f683b85e7150.jpg","giftName":"银瓜子","giftId":"silver","giftNum":100000}},"_roomid":80397}
- * 
+ *
  * @interface TV_END
  * @extends {danmuJson}
  */
@@ -477,7 +499,7 @@ interface TV_END_data extends RAFFLE_END_data {
 /**
  * 活动相关
  * {"roomid":11365,"cmd":"EVENT_CMD","data":{"event_type":"newspring-5082","event_img":"http://s1.hdslb.com/bfs/static/blive/live-assets/mobile/activity/newspring_2018/raffle.png"},"_roomid":11365}
- * 
+ *
  * @interface EVENT_CMD
  * @extends {danmuJson}
  */
@@ -494,7 +516,7 @@ interface EVENT_CMD_data {
 /**
  * 抽奖LOTTERY
  * {"cmd":"LOTTERY_START","data":{"id":216101,"roomid":5712065,"message":"290974992 在【5712065】购买了总督，请前往抽奖","type":"guard","link":"https://live.bilibili.com/5712065","lottery":{"id":216101,"sender":{"uid":290974992,"uname":"","face":""},"keyword":"guard","time":86400,"status":1,"mobile_display_mode":2,"mobile_static_asset":"","mobile_animation_asset":""}},"_roomid":5712065}
- * 
+ *
  * @interface LOTTERY_START
  * @extends {danmuJson}
  */
@@ -538,7 +560,7 @@ interface LOTTERY_START_data_lottery_sender {
 }
 /**
  * 快速抽奖
- * 
+ *
  * @interface LIGHTEN_START
  * @extends {danmuJson}
  */
@@ -552,7 +574,7 @@ interface LIGHTEN_START_Data {
 }
 /**
  * 快速抽奖结束
- * 
+ *
  * @interface LIGHTEN_END
  * @extends {danmuJson}
  */
@@ -567,7 +589,7 @@ interface LIGHTEN_END_Data {
  * 特殊礼物消息
  * {"cmd":"SPECIAL_GIFT","data":{"39":{"id":169666,"time":90,"hadJoin":0,"num":1,"content":"啦噜啦噜","action":"start","storm_gif":"http://static.hdslb.com/live-static/live-room/images/gift-section/mobilegift/2/jiezou.gif?2017011901"}},"_roomid":5096}
  * {"cmd":"SPECIAL_GIFT","data":{"39":{"id":169666,"action":"end"}},"_roomid":5096}
- * 
+ *
  * @interface SPECIAL_GIFT
  * @extends {danmuJson}
  */
@@ -604,7 +626,7 @@ interface SPECIAL_GIFT_data_beatStorm_end {
 /**
  * 准备直播
  * {"cmd":"PREPARING","round":1,"roomid":"66287","_roomid":66287}
- * 
+ *
  * @interface PREPARING
  * @extends {danmuJson}
  */
@@ -614,14 +636,14 @@ interface PREPARING extends danmuJson {
 /**
  * 开始直播
  * {"cmd":"LIVE","roomid":66688,"_roomid":66688}
- * 
+ *
  * @interface LIVE
  * @extends {danmuJson}
  */
 interface LIVE extends danmuJson { }
 /**
  * 开始手机直播
- * 
+ *
  * @interface MOBILE_LIVE
  * @extends {danmuJson}
  */
@@ -631,7 +653,7 @@ interface MOBILE_LIVE extends danmuJson {
 /**
  * 房间开启禁言
  * {"cmd":"ROOM_SILENT_ON","data":{"type":"level","level":1,"second":1517318804},"roomid":544893,"_roomid":544893}
- * 
+ *
  * @interface ROOM_SILENT_ON
  * @extends {danmuJson}
  */
@@ -649,7 +671,7 @@ interface ROOM_SILENT_ON_data {
 /**
  * 房间禁言结束
  * {"cmd":"ROOM_SILENT_OFF","data":[],"roomid":"101526","_roomid":101526}
- * 
+ *
  * @interface ROOM_SILENT_OFF
  * @extends {danmuJson}
  */
@@ -659,7 +681,7 @@ interface ROOM_SILENT_OFF extends danmuJson {
 /**
  * 房间屏蔽
  * {"cmd":"ROOM_SHIELD","type":0,"user":"","keyword":"","roomid":939654,"_roomid":939654}
- * 
+ *
  * @interface ROOM_SHIELD
  * @extends {danmuJson}
  */
@@ -671,7 +693,7 @@ interface ROOM_SHIELD extends danmuJson {
 /**
  * 房间封禁消息
  * {"cmd":"ROOM_BLOCK_MSG","uid":"12482716","uname":"筱小公主","roomid":5501645,"_roomid":5501645}
- * 
+ *
  * @interface ROOM_BLOCK_MSG
  * @extends {danmuJson}
  */
@@ -684,7 +706,7 @@ interface ROOM_BLOCK_MSG extends danmuJson {
 /**
  * 管理员变更
  * {"cmd":"ROOM_ADMINS","uids":[37690892,22741742,21861760,35306422,40186466,27138800],"roomid":5667325,"_roomid":5667325}
- * 
+ *
  * @interface ROOM_ADMINS
  * @extends {danmuJson}
  */
@@ -695,7 +717,7 @@ interface ROOM_ADMINS extends danmuJson {
 /**
  * 房间设置变更
  * {"cmd":"CHANGE_ROOM_INFO","background":"http://i0.hdslb.com/bfs/live/6411059a373a594e648b26d9714d7eab4ee556ed.jpg","_roomid":24308}
- * 
+ *
  * @interface CHANGE_ROOM_INFO
  * @extends {danmuJson}
  */
@@ -706,7 +728,7 @@ interface CHANGE_ROOM_INFO extends danmuJson {
 /**
  * 许愿瓶
  * {"cmd":"WISH_BOTTLE","data":{"action":"update","id":6301,"wish":{"id":6301,"uid":610390,"type":1,"type_id":109,"wish_limit":99999,"wish_progress":39370,"status":1,"content":"灯笼挂着好看","ctime":"2018-01-21 13:20:12","count_map":[1,20,225]}},"_roomid":14893}
- * 
+ *
  * @interface WISH_BOTTLE
  * @extends {danmuJson}
  */
@@ -731,10 +753,10 @@ interface WISH_BOTTLE_data_wish {
   wish_limit: number
   /** 当前礼物数量 */
   wish_progress: number
-  /** 
-   * 'delete': -1 
-   * 'update' | 'create': 1 
-   * 'full': 2 
+  /**
+   * 'delete': -1
+   * 'update' | 'create': 1
+   * 'full': 2
    * 'finish': 3
    */
   status: number
@@ -748,7 +770,7 @@ interface WISH_BOTTLE_data_wish {
 /**
  * 活动
  * {"cmd":"ACTIVITY_EVENT","data":{"keyword":"newspring_2018","type":"cracker","limit":300000,"progress":41818},"_roomid":14893}
- * 
+ *
  * @interface ACTIVITY_EVENT
  * @extends {danmuJson}
  */
@@ -767,7 +789,7 @@ interface ACTIVITY_EVENT_data {
 }
 /**
  * 实物抽奖结束
- * 
+ *
  * @interface WIN_ACTIVITY
  * @extends {danmuJson}
  */
@@ -778,7 +800,7 @@ interface WIN_ACTIVITY extends danmuJson {
 /**
  * 直播强制切断
  * {"cmd":"CUT_OFF","msg":"违反直播规范","roomid":945626,"_roomid":945626}
- * 
+ *
  * @interface CUT_OFF
  * @extends {danmuJson}
  */
@@ -788,7 +810,7 @@ interface CUT_OFF extends danmuJson {
 }
 /**
  * 直播封禁
- * 
+ *
  * @interface ROOM_LOCK
  * @extends {danmuJson}
  */
@@ -796,13 +818,30 @@ interface ROOM_LOCK extends danmuJson {
   expire: string // 封禁时间 yyyy-MM-dd HH:mm:ss
 }
 /**
+ * 房间排行榜
+ * {"cmd":"ROOM_RANK","data":{"roomid":1327236,"rank_desc":"元气榜 4","color":"#B15BFF","h5_url":"https://live.bilibili.com/p/eden/rank-h5?nav=hour&uid=33594828","timestamp":1525871406},"_roomid":1327236}
+ * {"cmd":"ROOM_RANK","data":{"roomid":6154037,"rank_desc":"今日榜 49","color":"#00BB00","h5_url":"https://live.bilibili.com/pages/lpl2018/lol2018msi.html&uid=194484313","timestamp":1525871406},"_roomid":6154037}
+ *
+ * @interface ROOM_RANK
+ */
+interface ROOM_RANK {
+  data: ROOM_RANK_Data
+}
+interface ROOM_RANK_Data {
+  roomid: number
+  rank_desc: string
+  color: string
+  h5_url: string
+  timestamp: number
+}
+/**
  * 画板活动
- * 
+ *
  * @interface DRAW_UPDATE
  * @extends {danmuJson}
  */
 interface DRAW_UPDATE extends danmuJson {
-  /** 
+  /**
    * 个人用户一像素 x_min === x_max y_min === y_max
    * 管理员可用笔刷
    */

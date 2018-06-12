@@ -1,4 +1,3 @@
-import request from 'request'
 import { EventEmitter } from 'events'
 import tools from './lib/tools'
 import AppClient from './lib/app_client'
@@ -18,41 +17,20 @@ class Listener extends EventEmitter {
    * 用于接收弹幕消息
    *
    * @private
-   * @type {DMclient}
+   * @type {Map<number, DMclient>}
    * @memberof Listener
    */
-  private _DMclient!: DMclient
+  private _DMclient: Map<number, DMclient> = new Map()
   /**
-   * 小电视ID
+   * 小电视/摩天大楼ID, 活动抽奖ID, lottery抽奖ID, app抽奖ID
    *
    * @private
    * @type {number}
    * @memberof Listener
    */
   private _smallTVID: number = 0
-  /**
-   * 抽奖ID
-   *
-   * @private
-   * @type {number}
-   * @memberof Listener
-   */
   private _raffleID: number = 0
-  /**
-   * 快速抽奖ID
-   *
-   * @private
-   * @type {number}
-   * @memberof Listener
-   */
   private _lotteryID: number = 0
-  /**
-   * app快速抽奖ID
-   *
-   * @private
-   * @type {number}
-   * @memberof Listener
-   */
   private _appLightenID: number = 0
   /**
    * 开始监听
@@ -63,12 +41,69 @@ class Listener extends EventEmitter {
     const config = _options.config
     const roomID = tools.getLongRoomID(config.defaultRoomID)
     const userID = config.defaultUserID
-    this._DMclient = new DMclient({ roomID, userID })
-    this._DMclient
+    this._addAreaRoom(0)
+    const RegularDM = new DMclient({ roomID, userID })
+    RegularDM
       .on('SYS_MSG', dataJson => this._SYSMSGHandler(dataJson))
       .on('SYS_GIFT', dataJson => this._SYSGiftHandler(dataJson))
       .on('GUARD_MSG', dataJson => this._LotteryHandler(dataJson))
       .Connect()
+  }
+  /**
+   * 获取各分区开播房间
+   *
+   * @private
+   *
+   * @memberof Listener
+   */
+  private async _addAreaRoom(prior: number, id?: number) {
+    const userID = tools.getLongRoomID(_options.config.defaultRoomID)
+    const getAllList = await tools.XHR<getAllList>({// 获取直播列表
+      uri: `${apiLiveOrigin}/room/v2/AppIndex/getAllList?${AppClient.baseQuery}`,
+      json: true
+    }, 'Android')
+    if (getAllList !== undefined && getAllList.response.statusCode === 200 && getAllList.body.code === 0) {
+      let moduleList = getAllList.body.data.module_list
+      if (id !== undefined) {
+        while (moduleList[0].module_info.id !== id) {
+          moduleList.splice(0, 1)
+        }
+        moduleList.splice(1, moduleList.length - 1)
+      }
+      moduleList.forEach(modules => {
+        if (modules.module_info.type === 9 && modules.list.length > 0) {
+          const areaID = modules.module_info.id
+          if (areaID !== 7) {
+            const roomID = (<getAllListDataRoomList>modules.list[prior]).roomid
+            const areaDM = <DMclient>this._DMclient.get(areaID)
+            if (areaDM !== undefined) {
+              const areaRoomID = areaDM.roomID
+              if (areaRoomID !== roomID) {
+                areaDM
+                  .removeAllListeners()
+                  .Close()
+                this._DMclient.delete(areaRoomID)
+              }
+              else {
+                this._addAreaRoom(prior + 1, areaID)
+                return
+              }
+            }
+            const newDMclient = new DMclient({ roomID, userID })
+            newDMclient
+              .on('SYS_MSG', dataJson => this._SYSMSGHandler2(dataJson))
+              .on('PREPARING', async () => this._addAreaRoom(0, areaID))
+              .Connect()
+            this._DMclient.set(areaID, newDMclient)
+          }
+        }
+      })
+    }
+    else {
+      await tools.Sleep(3 * 1000)
+      if (id !== undefined) this._addAreaRoom(0, id)
+      else this._addAreaRoom(0)
+    }
   }
   /**
    * 监听弹幕系统消息
@@ -81,7 +116,21 @@ class Listener extends EventEmitter {
     if (dataJson.real_roomid === undefined || dataJson.tv_id === undefined) return
     const url = apiLiveOrigin + smallTVPathname
     const roomID = dataJson.real_roomid
-    this._RaffleCheck(url, roomID, 'smallTV')
+    if (dataJson.msg_text.search('摩天大楼') === -1) this._RaffleCheck(url, roomID, 'smallTV')
+    else this._RaffleCheck(url, roomID, 'skyscraper')
+  }
+  /**
+   * 监听非娱乐分区摩天大楼消息
+   *
+   * @private
+   * @param {SYS_MSG} dataJson
+   * @memberof Listener
+   */
+  private _SYSMSGHandler2(dataJson: SYS_MSG) {
+    if (dataJson.real_roomid === undefined || dataJson.tv_id === undefined || dataJson.msg_text.search('摩天大楼') === -1) return
+    const url = apiLiveOrigin + smallTVPathname
+    const roomID = dataJson.real_roomid
+    this._RaffleCheck(url, roomID, 'skyscraper')
   }
   /**
    * 监听系统礼物消息
@@ -110,11 +159,10 @@ class Listener extends EventEmitter {
     const res = rege.exec(dataJson.msg)
     if (res === null) return
     const upID = res[0].toString().substr(3)
-    const searchID: request.Options = {
+    const searchCheck = await tools.XHR<searchID>({
       uri: encodeURI('https://search.bilibili.com/api/search?search_type=live&keyword=' + upID),
       json: true
-    }
-    const searchCheck = await tools.XHR<searchID>(searchID)
+    })
     if (searchCheck === undefined || searchCheck.body.result.live_user === null) return
     const roomID = searchCheck.body.result.live_user[0].roomid
     this._LotteryCheck(url, roomID)
@@ -125,23 +173,23 @@ class Listener extends EventEmitter {
    * @private
    * @param {string} url
    * @param {number} roomID
-   * @param {('smallTV' | 'raffle')} raffle
+   * @param {('smallTV'| 'skyscraper' | 'raffle')} raffle
    * @memberof Listener
    */
-  private async _RaffleCheck(url: string, roomID: number, raffle: 'smallTV' | 'raffle') {
-    const check: request.Options = {
+  private async _RaffleCheck(url: string, roomID: number, raffle: 'smallTV' | 'skyscraper' | 'raffle') {
+    const raffleCheck = await tools.XHR<raffleCheck>({
       uri: `${url}/check?roomid=${roomID}`,
       json: true,
       headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
-    }
-    const raffleCheck = await tools.XHR<raffleCheck>(check)
+    })
     if (raffleCheck !== undefined && raffleCheck.response.statusCode === 200
       && raffleCheck.body.code === 0 && raffleCheck.body.data.list.length > 0) {
       raffleCheck.body.data.list.forEach(data => {
-        const message: raffleMSG = {
+        const message: message = {
           cmd: raffle,
           roomID,
           id: +data.raffleId,
+          type: raffle,
           time: +data.time
         }
         this._RaffleHandler(message)
@@ -156,22 +204,20 @@ class Listener extends EventEmitter {
    * @param {number} roomID
    * @memberof Listener
    */
-  // @ts-ignore 暂时无用
   private async _LotteryCheck(url: string, roomID: number) {
-    const check: request.Options = {
+    const lotteryCheck = await tools.XHR<lotteryCheck>({
       uri: `${url}/check?roomid=${roomID}`,
-      json: true,
-      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
-    }
-    const lotteryCheck = await tools.XHR<lotteryCheck>(check)
+      json: true
+    })
     if (lotteryCheck !== undefined && lotteryCheck.response.statusCode === 200
       && lotteryCheck.body.code === 0 && lotteryCheck.body.data.guard.length > 0) {
       lotteryCheck.body.data.guard.forEach(data => {// 只考虑总督，节奏风暴不考虑
-        const message: lotteryMSG = {
+        const message: message = {
           cmd: 'lottery',
           roomID,
           id: +data.id,
-          type: data.keyword
+          type: data.keyword,
+          time: 0
         }
         this._RaffleHandler(message)
       })
@@ -185,21 +231,21 @@ class Listener extends EventEmitter {
    * @memberof Listener
    */
   private async _AppLightenCheck(roomID: number) {
-    const room: request.Options = {
+    const roomInfo = await tools.XHR<roomInfo>({
       uri: `${apiLiveOrigin}/AppRoom/index?${AppClient.signQueryBase(`room_id=${roomID}`)}`,
       json: true
-    }
-    const roomInfo = await tools.XHR<roomInfo>(room, 'Android')
+    }, 'Android')
     if (roomInfo !== undefined && roomInfo.response.statusCode === 200
       && roomInfo.body.code === 0 && roomInfo.body.data.event_corner.length > 0) {
       roomInfo.body.data.event_corner.forEach(event => {
         const type = event.event_type.split('-')
         if (type.length !== 2) return
-        const message: lotteryMSG = {
+        const message: message = {
           cmd: 'appLighten',
           roomID,
           id: +type[1],
-          type: type[0]
+          type: type[0],
+          time: 0
         }
         this._RaffleHandler(message)
       })
@@ -209,10 +255,10 @@ class Listener extends EventEmitter {
    * 监听抽奖消息
    *
    * @private
-   * @param {(raffleMSG | lotteryMSG)} raffleMSG
+   * @param {message} raffleMSG
    * @memberof Listener
    */
-  private async _RaffleHandler(raffleMSG: raffleMSG | lotteryMSG) {
+  private async _RaffleHandler(raffleMSG: message) {
     const roomID = raffleMSG.roomID
     const id = raffleMSG.id
     let msg = ''
@@ -221,6 +267,12 @@ class Listener extends EventEmitter {
         if (this._smallTVID >= id) return
         this._smallTVID = id
         msg = '小电视'
+        break
+      case 'skyscraper':
+        if (this._smallTVID >= id) return
+        this._smallTVID = id
+        raffleMSG.cmd = 'smallTV'
+        msg = '摩天大楼'
         break
       case 'raffle':
         if (this._raffleID >= id) return
@@ -240,14 +292,16 @@ class Listener extends EventEmitter {
       default:
         return
     }
-    const entry0: request.Options = {//验证是否为钓鱼房间，整合到listener
+    const entryCheck0 = await tools.XHR<entryCheck0>({//验证是否为钓鱼房间，整合到listener
       uri: `${apiLiveOrigin}/room/v1/Room/room_init?id=${tools.getShortRoomID(roomID)}`,
       json: true,
       headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
+    })
+    if (entryCheck0 === undefined) {
+      await tools.Sleep(5 * 1000)
+      this._RaffleHandler(raffleMSG)
     }
-    const entryCheck0 = await tools.XHR<entryCheck0>(entry0)
-    if (entryCheck0 === undefined) return
-    if (entryCheck0.body.data.encrypted === true || entryCheck0.body.data.is_hidden === true || entryCheck0.body.data.is_locked === true) {
+    else if (entryCheck0.body.data.encrypted === true || entryCheck0.body.data.is_hidden === true || entryCheck0.body.data.is_locked === true) {
       tools.Log(`发现钓鱼房间 ${tools.getShortRoomID(roomID)}`)
       return
     }

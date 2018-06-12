@@ -74,17 +74,13 @@ class BiLive {
    * @param {raffleMSG} raffleMSG
    * @memberof BiLive
    */
-  private async _Raffle(raffleMSG: raffleMSG | lotteryMSG) {
+  private async _Raffle(raffleMSG: message) {
     if (!this._raffle) return
     const raffleDelay = _options.config.raffleDelay
     if (raffleDelay !== 0) await tools.Sleep(raffleDelay)
     _user.forEach(user => {
       if (user.captchaJPEG !== '' || !user.userData.raffle) return
-      const raffleOptions: raffleOptions = {
-        raffleId: raffleMSG.id,
-        roomID: raffleMSG.roomID,
-        user
-      }
+      const raffleOptions: raffleOptions = { ...raffleMSG, raffleId: raffleMSG.id, user }
       switch (raffleMSG.cmd) {
         case 'smallTV':
           raffleOptions.time = raffleMSG.time

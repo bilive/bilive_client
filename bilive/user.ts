@@ -1,4 +1,3 @@
-import request from 'request'
 import tools, { response } from './lib/tools'
 import Online from './online'
 import AppClient from './lib/app_client'
@@ -94,23 +93,21 @@ class User extends Online {
     if (this._sign || !this.userData.doSign) return
     let ok = 0
     // 签到
-    const sign: request.Options = {
+    const signInfo = await tools.XHR<signInfo>({
       uri: `${apiLiveOrigin}/AppUser/getSignInfo?${AppClient.signQueryBase(this.tokenQuery)}`,
       json: true,
       headers: this.headers
-    }
-    const signInfo = await tools.XHR<signInfo>(sign, 'Android')
+    }, 'Android')
     if (signInfo !== undefined && signInfo.response.statusCode === 200 && signInfo.body.code === 0) {
       ok++
       tools.Log(this.nickname, '每日签到', '已签到')
     }
     // 道具包裹
-    const getBag: request.Options = {
+    const getBagGift = await tools.XHR<getBagGift>({
       uri: `${apiLiveOrigin}/AppBag/getSendGift?${AppClient.signQueryBase(this.tokenQuery)}`,
       json: true,
       headers: this.headers
-    }
-    const getBagGift = await tools.XHR<getBagGift>(getBag, 'Android')
+    }, 'Android')
     if (getBagGift !== undefined && getBagGift.response.statusCode === 200 && getBagGift.body.code === 0) {
       ok++
       tools.Log(this.nickname, '每日签到', '已获取每日包裹')
@@ -125,21 +122,19 @@ class User extends Online {
   public async treasureBox() {
     if (this._treasureBox || !this.userData.treasureBox) return
     // 获取宝箱状态,换房间会重新冷却
-    const current: request.Options = {
+    const currentTask = await tools.XHR<currentTask>({
       uri: `${apiLiveOrigin}/mobile/freeSilverCurrentTask?${AppClient.signQueryBase(this.tokenQuery)}`,
       json: true,
       headers: this.headers
-    }
-    const currentTask = await tools.XHR<currentTask>(current, 'Android')
+    }, 'Android')
     if (currentTask !== undefined && currentTask.response.statusCode === 200) {
       if (currentTask.body.code === 0) {
         await tools.Sleep(currentTask.body.data.minute * 6e4)
-        const award: request.Options = {
+        await tools.XHR<award>({
           uri: `${apiLiveOrigin}/mobile/freeSilverAward?${AppClient.signQueryBase(this.tokenQuery)}`,
           json: true,
           headers: this.headers
-        }
-        await tools.XHR<award>(award, 'Android')
+        }, 'Android')
         this.treasureBox()
       }
       else if (currentTask.body.code === -10017) {
@@ -171,15 +166,14 @@ class User extends Online {
       // 做任务
       let ok = 0
       for (const taskID of tasks) {
-        const task: request.Options = {
+        const taskres = await tools.XHR({
           method: 'POST',
           uri: `${apiLiveOrigin}/activity/v1/task/receive_award`,
           body: `task_id=${taskID}`,
           jar: this.jar,
           json: true,
           headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
-        }
-        const taskres = await tools.XHR(task)
+        })
         if (taskres !== undefined && taskres.response.statusCode === 200
           && (taskres.response.body.code === 0 || taskres.response.body.code === -400)) ok++
         if (ok === tasks.length) {
@@ -213,23 +207,21 @@ class User extends Online {
       else tools.Log(this.nickname, '银瓜子兑换硬币', '兑换失败', exchangeRes.body)
       if (ok === 2) this._silver2coin = true
     }
-    const exchange: request.Options = {
+    const silver2coin = await tools.XHR<silver2coin>({
       method: 'POST',
       uri: `${apiLiveOrigin}/AppExchange/silver2coin?${AppClient.signQueryBase(this.tokenQuery)}`,
       json: true,
       headers: this.headers
-    }
-    const silver2coin = await tools.XHR<silver2coin>(exchange, 'Android')
+    }, 'Android')
     checkExchange(silver2coin)
     await tools.Sleep(3000)
-    const exchangeWeb: request.Options = {
+    const silver2coinWeb = await tools.XHR<silver2coin>({
       method: 'POST',
       uri: `${apiLiveOrigin}/exchange/silver2coin`,
       jar: this.jar,
       json: true,
       headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
-    }
-    const silver2coinWeb = await tools.XHR<silver2coin>(exchangeWeb)
+    })
     checkExchange(silver2coinWeb)
   }
   /**
@@ -277,38 +269,34 @@ class User extends Online {
     if (!this.userData.sendGift || this.userData.sendGiftRoom === 0) return
     const roomID = this.userData.sendGiftRoom
     // 获取房间信息
-    const room: request.Options = {
+    const roomInfo = await tools.XHR<roomInfo>({
       uri: `${apiLiveOrigin}/AppRoom/index?${AppClient.signQueryBase(`room_id=${roomID}`)}`,
       json: true
-    }
-    const roomInfo = await tools.XHR<roomInfo>(room, 'Android')
+    }, 'Android')
     if (roomInfo === undefined || roomInfo.response.statusCode !== 200) return
     if (roomInfo.body.code === 0) {
       // masterID
       const mid = roomInfo.body.data.mid
       const room_id = roomInfo.body.data.room_id
       // 获取包裹信息
-      const bag: request.Options = {
+      const bagInfo = await tools.XHR<bagInfo>({
         uri: `${apiLiveOrigin}/gift/v2/gift/m_bag_list?${AppClient.signQueryBase(this.tokenQuery)}`,
         json: true,
         headers: this.headers
-      }
-      const bagInfo = await tools.XHR<bagInfo>(bag, 'Android')
+      }, 'Android')
       if (bagInfo === undefined || bagInfo.response.statusCode !== 200) return
       if (bagInfo.body.code === 0) {
         if (bagInfo.body.data.length > 0) {
           for (const giftData of bagInfo.body.data) {
             if (giftData.expireat > 0 && giftData.expireat < 12 * 60 * 60) {
               // expireat单位为分钟, 永久礼物值为0
-              const send: request.Options = {
+              const sendBag = await tools.XHR<sendBag>({
                 method: 'POST',
                 uri: `${apiLiveOrigin}/gift/v2/live/bag_send`,
-                body: AppClient.signQueryBase(`bag_id=${giftData.id}&biz_code=live&biz_id=${room_id}&gift_id=${giftData.gift_id}\
-&gift_num=${giftData.gift_num}&ruid=${mid}&uid=${giftData.uid}&rnd=${AppClient.RND}&${this.tokenQuery}`),
+                body: AppClient.signQueryBase(`bag_id=${giftData.id}&biz_code=live&biz_id=${room_id}&gift_id=${giftData.gift_id}&gift_num=${giftData.gift_num}&ruid=${mid}&uid=${giftData.uid}&rnd=${AppClient.RND}&${this.tokenQuery}`),
                 json: true,
                 headers: this.headers
-              }
-              const sendBag = await tools.XHR<sendBag>(send, 'Android')
+              }, 'Android')
               if (sendBag === undefined || sendBag.response.statusCode !== 200) continue
               if (sendBag.body.code === 0) {
                 const sendBagData = sendBag.body.data
@@ -392,7 +380,7 @@ class User extends Online {
                   gift_value = 19900
                   bag_value = gift_value * giftData.gift_num//蓝白胖次
                 break
-                case 12.:
+                case 12:
                   gift_value = 100
                   bag_value = gift_value * giftData.gift_num//游戏机（活动礼物）
                 break
@@ -447,24 +435,20 @@ class User extends Online {
   public async signGroup() {
     if (!this.userData.signGroup) return
     // 获取已加入应援团列表
-    const group: request.Options = {
+    const linkGroup = await tools.XHR<linkGroup>({
       uri: `${apiVCOrigin}/link_group/v1/member/my_groups?${AppClient.signQueryBase(this.tokenQuery)}`,
       json: true,
       headers: this.headers
-    }
-    const linkGroup = await tools.XHR<linkGroup>(group, 'Android')
+    }, 'Android')
     if (linkGroup === undefined || linkGroup.response.statusCode !== 200) return
     if (linkGroup.body.code === 0) {
       if (linkGroup.body.data.list.length > 0) {
         for (const groupInfo of linkGroup.body.data.list) {
-          const sign: request.Options = {
-            uri: `${apiVCOrigin}/link_setting/v1/link_setting/sign_in?${AppClient.signQueryBase(`group_id=${groupInfo.group_id}\
-&owner_id=${groupInfo.owner_uid}&${this.tokenQuery}`)}`,
+          const signGroup = await tools.XHR<signGroup>({
+            uri: `${apiVCOrigin}/link_setting/v1/link_setting/sign_in?${AppClient.signQueryBase(`group_id=${groupInfo.group_id}&owner_id=${groupInfo.owner_uid}&${this.tokenQuery}`)}`,
             json: true,
             headers: this.headers
-          }
-          // 应援团自动签到
-          const signGroup = await tools.XHR<signGroup>(sign, 'Android')
+          }, 'Android')
           if (signGroup === undefined || signGroup.response.statusCode !== 200) continue
           if (signGroup.body.data.add_num > 0)
             tools.Log(this.nickname, '应援团签到', `在${groupInfo.group_name}签到获得 ${signGroup.body.data.add_num} 点亲密度`)
