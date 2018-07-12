@@ -75,13 +75,7 @@ class Listener extends EventEmitter {
           const roomID = (<getAllListDataRoomList>modules.list[0]).roomid
           const areaDM = <DMclient>this._DMclient.get(areaID)
           if (areaDM === undefined || areaDM.roomID !== roomID) {
-            if (areaDM !== undefined) {
-              const areaRoomID = areaDM.roomID
-              areaDM
-                .removeAllListeners()
-                .Close()
-              this._DMclient.delete(areaRoomID)
-            }
+            if (areaDM !== undefined) areaDM.removeAllListeners().Close()
             const newDMclient = new DMclient({ roomID, userID })
             newDMclient
               .on('SYS_MSG', dataJson => this._SYSMSGHandler(dataJson))
