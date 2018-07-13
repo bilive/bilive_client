@@ -80,11 +80,13 @@ async function testIP(apiIPs: string[]): Promise<number> {
       tunnel: false,
       method: 'GET',
       timeout: 2000,
+      json: true,
       headers
     }
     test.push(new Promise<undefined>(resolve => {
-      request(options, (error, response) => {
-        if (error === null && response.statusCode === 200) api.IPs.add(ip)
+      request(options, (error, response, body) => {
+        if (error === null && response.statusCode === 200 && body.code === 0)
+          api.IPs.add(ip)
         return resolve(undefined)
       })
     }))
