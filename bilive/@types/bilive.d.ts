@@ -107,10 +107,11 @@ type userGiftID = Map<number, giftHas>
  * @interface message
  */
 interface message {
-  cmd: 'smallTV' | 'raffle' | 'lottery' | 'appLighten'
+  cmd: 'smallTV' | 'raffle' | 'lottery'
   roomID: number
   id: number
   type: string
+  title: string
   time: number
 }
 // listener
@@ -138,6 +139,7 @@ interface raffleCheckDataList {
   type: string
   from: string
   from_user: raffleCheckDataListFromuser
+  time_wait: number
   time: number
   max_time: number
   status: number
@@ -309,6 +311,7 @@ interface raffleRewardData {
   gift_content: string
   status?: number
 }
+type raffleAward = raffleReward
 /**
  * 抽奖lottery
  * 

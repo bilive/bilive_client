@@ -215,6 +215,31 @@ interface SEND_GIFT_data_capsule_data_progress {
   max: number
 }
 /**
+ * 礼物连击, 我十分怀疑之前的COMBO_END是打错了
+ * {"cmd":"COMBO_SEND","data":{"uid":12767334,"uname":"Edoのsomo愛豆子","combo_num":2,"gift_name":"？？？","gift_id":20007,"action":"赠送"},"_roomid":1274658}
+ *
+ * @interface COMBO_SEND
+ * @extends {danmuJson}
+ */
+interface COMBO_SEND extends danmuJson {
+  /** 礼物连击 */
+  data: COMBO_SEND_data
+}
+interface COMBO_SEND_data {
+  /** 送礼人UID */
+  uid: number
+  /** 送礼人 */
+  uname: string
+  /** 连击次数 */
+  combo_num: number
+  /** 礼物数量 */
+  gift_name: string
+  /** 礼物名 */
+  gift_id: number
+  /** 赠送, 投喂 */
+  action: string
+}
+/**
  * 礼物连击结束
  * {"cmd":"COMBO_END","data":{"uname":"虫章虫良阝恶霸","r_uname":"坂本叔","combo_num":99,"price":100,"gift_name":"凉了","gift_id":20010,"start_time":1527510537,"end_time":1527510610},"_roomid":5067}
  * 
@@ -222,16 +247,25 @@ interface SEND_GIFT_data_capsule_data_progress {
  * @extends {danmuJson}
  */
 interface COMBO_END extends danmuJson {
-  data: COMBO_ENDData
+  /** 礼物连击结束 */
+  data: COMBO_END_data
 }
-interface COMBO_ENDData {
+interface COMBO_END_data {
+  /** 送礼人 */
   uname: string
+  /** 主播 */
   r_uname: string
+  /** 连击次数 */
   combo_num: number
+  /** 礼物价值 */
   price: number
+  /** 礼物名 */
   gift_name: string
+  /** 礼物ID */
   gift_id: number
+  /** 开始时间 */
   start_time: number
+  /** 结束时间 */
   end_time: number
 }
 /**
@@ -415,17 +449,33 @@ interface RAFFLE_START extends danmuJson {
 }
 interface RAFFLE_START_data {
   /** 抽奖编号 */
+  id: string
+  /** 持续时间 */
+  dtime: number
+  /** 系统广播 */
+  msg: SYS_MSG
+  /** 抽奖编号 */
   raffleId: number
+  /** 文案 */
+  title: string
   /** 文案 */
   type: string
   /** 赠送人 */
   from: string
   /** 持续时间 */
   time: number
+  /** 持续时间 */
+  max_time: number
+  /** 等待时间 */
+  time_wait: number
+  /** 动画图片 */
+  asset_animation_pic: string
+  /** 静态图片 */
+  asset_tips_pic: string
 }
 /**
  * 抽奖结束
- * {"cmd":"RAFFLE_END","roomid":2785651,"data":{"raffleId":5081,"type":"newspring","from":"秃物祝大家新年快乐","fromFace":"http://i1.hdslb.com/bfs/face/34de240643bc2e5078e9aff222ff1601e6c9d31d.jpg","win":{"uname":"明太太太太太太太太太","face":"http://i1.hdslb.com/bfs/face/34de240643bc2e5078e9aff222ff1601e6c9d31d.jpg","giftId":"stuff-1","giftName":"经验原石","giftNum":10}},"_roomid":2785651}
+ * {"cmd":"RAFFLE_END","data":{"id":"56496","uname":"等着豆子发芽","sname":"外星人","giftName":"2.3333w银瓜子","mobileTips":"恭喜 等着豆子发芽 获得2.3333w银瓜子","raffleId":"56496","type":"GIFT_20003","from":"外星人","fromFace":"http://i2.hdslb.com/bfs/face/60c1d92c378f3ec9769ee8d46300d6829d14869d.jpg","fromGiftId":20003,"win":{"uname":"等着豆子发芽","face":"http://i1.hdslb.com/bfs/face/11e57d535980dfab77682427433efee9bca0bc3e.jpg","giftName":"银瓜子","giftId":"silver","giftNum":23333,"msg":"恭喜<%等着豆子发芽%>获得大奖<%2.3333w银瓜子%>, 感谢<%外星人%>的赠送"}},"_roomid":5619438}
  * 
  * @interface RAFFLE_END
  * @extends {danmuJson}
@@ -455,10 +505,12 @@ interface RAFFLE_END_data_win {
   giftId: string
   /** 礼物数量 100000 | 10*/
   giftNum: number
+  /** 中奖消息 */
+  msg: string
 }
 /**
  * 小电视抽奖开始
- * {"cmd":"TV_START","data":{"id":"36682","dtime":180,"msg":{"cmd":"SYS_MSG","msg":"【红色海蜗牛】:?在直播间:?【510】:?赠送 小电视一个，请前往抽奖","msg_text":"【红色海蜗牛】:?在直播间:?【510】:?赠送 小电视一个，请前往抽奖","rep":1,"styleType":2,"url":"http://live.bilibili.com/510","roomid":510,"real_roomid":80397,"rnd":1517306497,"tv_id":"36682"},"raffleId":36682,"type":"small_tv","from":"红色海蜗牛","time":180},"_roomid":80397}
+ * {"cmd":"TV_START","data":{"id":"56473","dtime":180,"msg":{"cmd":"SYS_MSG","msg":"GDinBoston:?送给:?宝贤酱:?一个小电视飞船，点击前往TA的房间去抽奖吧","msg_text":"GDinBoston:?送给:?宝贤酱:?一个小电视飞船，点击前往TA的房间去抽奖吧","rep":1,"styleType":2,"url":"http://live.bilibili.com/5520","roomid":5520,"real_roomid":4069122,"rnd":1527998406,"tv_id":0},"raffleId":56473,"title":"小电视飞船抽奖","type":"small_tv","from":"GDinBoston","from_user":{"uname":"GDinBoston","face":"http://i2.hdslb.com/bfs/face/6f42b610b2b3846bf054f78c348051c21ff223f1.jpg"},"time":180,"max_time":180,"time_wait":120,"asset_animation_pic":"http://i0.hdslb.com/bfs/live/746a8db0702740ec63106581825667ae525bb11a.gif","asset_tips_pic":"http://s1.hdslb.com/bfs/live/1a3acb48c59eb10010ad53b59623e14dc1339968.png"},"_roomid":4069122}
  * 
  * @interface TV_START
  * @extends {danmuJson}
@@ -467,16 +519,20 @@ interface TV_START extends danmuJson {
   data: TV_START_data
 }
 interface TV_START_data extends RAFFLE_START_data {
-  /** 小电视编号 */
-  id: string
-  /** 持续时间 */
-  dtime: number
-  msg: SYS_MSG
   type: 'small_tv'
+  /** 赠送人信息 */
+  from_user: TV_START_data_from
+  time_wait: number
+}
+interface TV_START_data_from {
+  /** 赠送人 */
+  uname: string
+  /** 赠送人头像地址 */
+  face: string
 }
 /**
  * 小电视抽奖结束
- * {"cmd":"TV_END","data":{"id":"36682","uname":"梦醒二生梦","sname":"红色海蜗牛","giftName":"10W银瓜子","mobileTips":"恭喜 梦醒二生梦 获得10W银瓜子","raffleId":"36682","type":"small_tv","from":"红色海蜗牛","fromFace":"http://i2.hdslb.com/bfs/face/0125426600e2d414f925ed0ed0ac011e42b7c35a.gif","win":{"uname":"梦醒二生梦","face":"http://i0.hdslb.com/bfs/face/ff8d14a116dcc59b3de30f3ac821f683b85e7150.jpg","giftName":"银瓜子","giftId":"silver","giftNum":100000}},"_roomid":80397}
+ * {"cmd":"TV_END","data":{"id":"56503","uname":"-清柠_","sname":"君子应如兰","giftName":"小电视抱枕","mobileTips":"恭喜 -清柠_ 获得小电视抱枕","raffleId":"56503","type":"small_tv","from":"君子应如兰","fromFace":"http://i1.hdslb.com/bfs/face/dfde2619c96280fa5f3f309d20207c8426a3722b.jpg","fromGiftId":25,"win":{"uname":"-清柠_","face":"http://i2.hdslb.com/bfs/face/e37a453b392be0342de2bae3caa18533273ad043.jpg","giftName":"小电视抱枕","giftId":"small_tv","giftNum":1,"msg":"恭喜<%-清柠_%>获得大奖<%小电视抱枕%>, 感谢<%君子应如兰%>的赠送"}},"_roomid":40270}
  * 
  * @interface TV_END
  * @extends {danmuJson}
@@ -624,7 +680,7 @@ interface SPECIAL_GIFT_data_beatStorm_end {
   action: 'end'
 }
 /**
- * 准备直播
+ * 准备直播, 下播
  * {"cmd":"PREPARING","round":1,"roomid":"66287","_roomid":66287}
  * 
  * @interface PREPARING
@@ -823,16 +879,275 @@ interface ROOM_LOCK extends danmuJson {
  * {"cmd":"ROOM_RANK","data":{"roomid":6154037,"rank_desc":"今日榜 49","color":"#00BB00","h5_url":"https://live.bilibili.com/pages/lpl2018/lol2018msi.html&uid=194484313","timestamp":1525871406},"_roomid":6154037}
  * 
  * @interface ROOM_RANK
+ * @extends {danmuJson}
  */
-interface ROOM_RANK {
+interface ROOM_RANK extends danmuJson {
+  /** 房间排行榜 */
   data: ROOM_RANK_Data
 }
 interface ROOM_RANK_Data {
+  /** 房间号 */
   roomid: number
+  /** 排行榜文案 */
   rank_desc: string
+  /** 排行榜颜色 */
   color: string
+  /** 排行榜页面 */
   h5_url: string
   timestamp: number
+}
+/**
+ * 连麦PK
+ *
+ * @interface PK_MIC_Base
+ * @extends {danmuJson}
+ */
+interface PK_MIC_Base extends danmuJson {
+  /** PK编号 */
+  pk_id: number
+  /** PK状态 */
+  pk_status: number
+}
+/**
+ * PK匹配
+ * {"cmd":"PK_MATCH","pk_status":100,"pk_id":3291,"data":{"init_id":273022,"match_id":52320,"escape_time":5,"is_portrait":false,"uname":"栗子蛋糕酱","face":"http://i0.hdslb.com/bfs/face/6fb781f75b9c30d2d8b384793fcd02ad3238b1bd.jpg","uid":922127},"roomid":273022,"_roomid":273022}
+ * 
+ * @interface PK_MATCH
+ * @extends {PK_MIC_Base}
+ */
+interface PK_MATCH extends PK_MIC_Base {
+  /** PK匹配 */
+  data: PK_MATCH_Data
+}
+interface PK_MATCH_Data {
+  /** 发起人房间号 */
+  init_id: number
+  /** 匹配人房间号 */
+  match_id: number
+  /** 逃跑时间 */
+  escape_time: number
+  is_portrait: boolean
+  /** 匹配人昵称 */
+  uname: string
+  /** 匹配人头像 */
+  face: string
+  /** 匹配人UID */
+  uid: number
+}
+/**
+ * PK准备
+ * {"cmd":"PK_PRE","pk_id":3291,"pk_status":200,"data":{"init_id":273022,"match_id":52320,"count_down":5,"pk_topic":"跳一支舞  ","pk_pre_time":1528442545,"pk_start_time":1528442550,"pk_end_time":1528442610,"end_time":1528442670},"_roomid":273022}
+ *
+ * @interface PK_PRE
+ * @extends {PK_MIC_Base}
+ */
+interface PK_PRE extends PK_MIC_Base {
+  /** PK准备 */
+  data: PK_PRE_Data
+}
+interface PK_PRE_Data {
+  /** 发起人房间号 */
+  init_id: number
+  /** 匹配人房间号 */
+  match_id: number
+  /** 倒计时 */
+  count_down: number
+  /** PK项目 */
+  pk_topic: string
+  /** PK匹配时间 */
+  pk_pre_time: number
+  /** PK开始时间 */
+  pk_start_time: number
+  /** PK结束时间 */
+  pk_end_time: number
+  /** 结束时间 */
+  end_time: number
+}
+/**
+ * PK开始
+ * {"cmd":"PK_START","pk_id":3291,"pk_status":300,"data":{"init_id":273022,"match_id":52320,"pk_topic":"跳一支舞  "},"_roomid":273022}
+ *
+ * @interface PK_START
+ * @extends {PK_MIC_Base}
+ */
+interface PK_START extends PK_MIC_Base {
+  /** PK开始 */
+  data: PK_START_Data
+}
+interface PK_START_Data {
+  /** 发起人房间号 */
+  init_id: number
+  /** 匹配人房间号 */
+  match_id: number
+  /** PK项目 */
+  pk_topic: string
+}
+/**
+ * PK进行
+ * {"cmd":"PK_PROCESS","pk_id":3291,"pk_status":300,"data":{"uid":220870717,"init_votes":0,"match_votes":1,"user_votes":1},"_roomid":273022}
+ *
+ * @interface PK_PROCESS
+ * @extends {PK_MIC_Base}
+ */
+interface PK_PROCESS extends PK_MIC_Base {
+  /** PK进行 */
+  data: PK_PROCESS_Data
+}
+interface PK_PROCESS_Data {
+  /** 投票人UID */
+  uid: number
+  /** 发起人票数 */
+  init_votes: number
+  /** 匹配人票数 */
+  match_votes: number
+  /** 投票人投票数 */
+  user_votes: number
+}
+/**
+ * PK结束
+ * {"cmd":"PK_END","pk_id":3291,"pk_status":400,"data":{"init_id":273022,"match_id":52320,"punish_topic":"惩罚：唱《九妹》"},"_roomid":273022}
+ *
+ * @interface PK_END
+ * @extends {PK_MIC_Base}
+ */
+interface PK_END extends PK_MIC_Base {
+  /** PK结束 */
+  data: PK_END_Data
+}
+interface PK_END_Data {
+  /** 发起人房间号 */
+  init_id: number
+  /** 匹配人房间号 */
+  match_id: number
+  /** 惩罚 */
+  punish_topic: string
+}
+/**
+ * PK结束数据
+ * {"cmd":"PK_SETTLE","pk_id":3291,"pk_status":400,"data":{"pk_id":3291,"init_info":{"uid":28008980,"init_id":273022,"uname":"崛起而零距离的目标和梦想和理想之","face":"http://i0.hdslb.com/bfs/face/2c3a364cf409a85b4c651a6afbf6ffe22208c654.jpg","votes":0,"is_winner":false},"match_info":{"uid":922127,"match_id":52320,"uname":"栗子蛋糕酱","face":"http://i0.hdslb.com/bfs/face/6fb781f75b9c30d2d8b384793fcd02ad3238b1bd.jpg","votes":1,"is_winner":true,"vip_type":2,"exp":{"color":5805790,"user_level":35,"master_level":{"level":7,"color":6406234}},"vip":{"vip":0,"svip":0},"face_frame":"","badge":{"url":"http://i0.hdslb.com/bfs/live/b5e9ebd5ddb979a482421ca4ea2f8c1cc593370b.png","desc":"","position":3}},"best_user":{"uid":220870717,"uname":"陶渊明呼呼","face":"http://i1.hdslb.com/bfs/face/dfa72087e929665d3542778144bad0b7f0406998.jpg","vip_type":2,"exp":{"color":6406234,"user_level":14,"master_level":{"level":1,"color":6406234}},"vip":{"vip":1,"svip":0},"privilege_type":0,"face_frame":"","badge":{"url":"http://i0.hdslb.com/bfs/live/b5e9ebd5ddb979a482421ca4ea2f8c1cc593370b.png","desc":"","position":3}},"punish_topic":"惩罚：唱《九妹》"},"_roomid":273022}
+ *
+ * @interface PK_SETTLE
+ * @extends {PK_MIC_Base}
+ */
+interface PK_SETTLE extends PK_MIC_Base {
+  /** PK结束数据 */
+  data: PK_SETTLE_Data
+}
+interface PK_SETTLE_Data {
+  /** PK编号 */
+  pk_id: number
+  /** 发起人信息 */
+  init_info: PK_SETTLE_Data_InitInfo
+  /** 匹配人信息 */
+  match_info: PK_SETTLE_Data_MatchInfo
+  /** 最佳助攻 */
+  best_user: PK_SETTLE_Data_BestUser
+  /** 惩罚 */
+  punish_topic: string
+}
+interface PK_SETTLE_Data_UserInfoBase {
+  /** 用户UID */
+  uid: number
+  /** 用户昵称 */
+  uname: string
+  /** 用户头像 */
+  face: string
+}
+interface PK_SETTLE_Data_UserInfo extends PK_SETTLE_Data_UserInfoBase {
+  /** 得票数 */
+  votes: number
+  /** 是否胜利 */
+  is_winner: boolean
+}
+interface PK_SETTLE_Data_UserInfoEx {
+  /** VIP类型 */
+  vip_type: number
+  /** 用户经验 */
+  exp: PK_SETTLE_Data_UserInfoEx_Exp
+  /** 用户VIP */
+  vip: PK_SETTLE_Data_UserInfoEx_Vip
+  /** 头像边框地址 */
+  face_frame: string
+  /** 徽章 */
+  badge: PK_SETTLE_Data_UserInfoEx_Badge
+}
+interface PK_SETTLE_Data_UserInfoEx_Badge {
+  /** 徽章图片地址 */
+  url: string
+  /** 描述 */
+  desc: string
+  /** 位置 */
+  position: number
+}
+interface PK_SETTLE_Data_UserInfoEx_Vip {
+  /** 普通VIP */
+  vip: number
+  /** 超级VIP */
+  svip: number
+}
+interface PK_SETTLE_Data_UserInfoEx_Exp {
+  /** 等级颜色 */
+  color: number
+  /** 用户等级 */
+  user_level: number
+  /** 直播等级 */
+  master_level: PK_SETTLE_Data_UserInfoEx_Exp_Master
+}
+interface PK_SETTLE_Data_UserInfoEx_Exp_Master {
+  /** 直播等级 */
+  level: number
+  /** 直播等级颜色 */
+  color: number
+}
+interface PK_SETTLE_Data_InitInfo extends PK_SETTLE_Data_UserInfo {
+  /** 发起人房间号 */
+  init_id: number
+}
+interface PK_SETTLE_Data_MatchInfo extends PK_SETTLE_Data_UserInfo, PK_SETTLE_Data_UserInfoEx {
+  /** 匹配人房间号 */
+  match_id: number
+}
+interface PK_SETTLE_Data_BestUser extends PK_SETTLE_Data_UserInfoBase, PK_SETTLE_Data_UserInfoEx { }
+/**
+ * 再次PK
+ * {"pk_status":400,"pk_id":8110,"cmd":"PK_CLICK_AGAIN","roomid":882855,"_roomid":882855}
+ *
+ * @interface PK_CLICK_AGAIN
+ * @extends {PK_MIC_Base}
+ */
+interface PK_CLICK_AGAIN extends PK_MIC_Base { }
+/**
+ * 再次PK匹配
+ * {"cmd":"PK_AGAIN","pk_id":8159,"pk_status":400,"data":{"new_pk_id":8179,"init_id":13566,"match_id":7326390,"escape_time":5,"is_portrait":true,"uname":"宇天学长","face":"http://i2.hdslb.com/bfs/face/488dda4a85251f9d0fd9ad82a733f874b5cec585.jpg","uid":261738266},"roomid":13566,"_roomid":13566}
+ *
+ * @interface PK_AGAIN
+ * @extends {PK_MIC_Base}
+ */
+interface PK_AGAIN extends PK_MIC_Base {
+  data: PK_AGAIN_Data;
+}
+interface PK_AGAIN_Data extends PK_MATCH_Data {
+  /** 新PK编号 */
+  new_pk_id: number
+}
+/**
+ * 连麦PK结束
+ * {"cmd":"PK_MIC_END","pk_id":3291,"pk_status":1000,"data":{"type":0},"_roomid":273022}
+ * {"cmd":"PK_MIC_END","pk_id":7803,"pk_status":1100,"data":{"type":0,"exception_id":1585470},"_roomid":11303074}
+ * {"cmd":"PK_MIC_END","pk_id":7810,"pk_status":1200,"data":{"type":0,"exception_id":353549},"_roomid":353549}
+ *
+ * @interface PK_MIC_END
+ * @extends {PK_MIC_Base}
+ */
+interface PK_MIC_END extends PK_MIC_Base {
+  /** 连麦PK结束 */
+  data: PK_MIC_END_Data
+}
+interface PK_MIC_END_Data {
+  /** 结束类型 */
+  type: number
+  /** 异常?编号 */
+  exception_id?: number
 }
 /**
  * 画板活动
