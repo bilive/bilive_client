@@ -404,6 +404,29 @@ interface WELCOME_ACTIVITY_data {
   type: string
 }
 /**
+ * 活动入场特效
+ * {"cmd":"ENTRY_EFFECT","data":{"id":3,"uid":210983254,"target_id":20848957,"show_avatar":1,"copy_writing":"欢迎 <%失去_理智%> 进入房间","highlight_color":"#FFF100","basemap_url":"http://i0.hdslb.com/bfs/live/d208b9654b93a70b4177e1aa7e2f0343f8a5ff1a.png","effective_time":1,"priority":50,"privilege_type":2,"face":"http://i0.hdslb.com/bfs/face/3d47da79e92d9b7c676abca94730f744d296e8cd.jpg"},"_roomid":66688}
+ *
+ * @interface ENTRY_EFFECT
+ * @extends {danmuJson}
+ */
+interface ENTRY_EFFECT extends danmuJson {
+  data: ENTRY_EFFECT_data
+}
+interface ENTRY_EFFECT_data {
+  id: number
+  uid: number
+  target_id: number
+  show_avatar: number
+  copy_writing: string
+  highlight_color: string
+  basemap_url: string
+  effective_time: number
+  priority: number
+  privilege_type: number
+  face: string
+}
+/**
  * 舰队购买
  * {"cmd":"GUARD_BUY","data":{"uid":43510479,"username":"416の老木鱼","guard_level":3,"num":1},"roomid":"24308","_roomid":24308}
  * 

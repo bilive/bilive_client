@@ -8,10 +8,12 @@
     // "checkJs": true,                       /* .js 文件中的报表出错。 */
     // "jsx": "preserve",                     /* 指定 JSX 代码生成: "preserve"、"react-native" 或 "react"。 */
     "declaration": false,                     /* 生成相应的 ".d.ts" 文件。 */
+    // "declarationMap": true,                /* 为每个相应的 ".d.ts" 文件生成 sourcemap。 */
     "sourceMap": false,                       /* 生成相应的 ".map" 文件。 */
     // "outFile": "./",                       /* 连接输出并将其发出到单个文件。 */
     "outDir": "build",                        /* 将输出结构重定向到目录。 */
     // "rootDir": "./",                       /* 指定输入文件的根目录。与 --outDir 一起用于控制输出目录结构。 */
+    // "composite": true,                     /* 启用项目编译 */
     "removeComments": true,                   /* 请勿将注释发出到输出。 */
     // "noEmit": true,                        /* 请勿发出输出。 */
     // "importHelpers": true,                 /* 从 "tslib" 导入发出帮助程序。 */
@@ -53,6 +55,9 @@
     /* 实验性选项 */
     // "experimentalDecorators": true,        /* 对 ES7 修饰器启用实验支持。 */
     // "emitDecoratorMetadata": true,         /* 对发出修饰器的类型元数据启用实验支持。 */
+
+    /* 高级选项 */
+    "locale": "zh-cn"                         /* 向用户显示消息时所用的区域设置(例如，"en-us") */
   },
   "exclude": [
     "./docs"
