@@ -24,7 +24,8 @@
     3. 复制原options文件夹到此文件夹
     4. 双击cmd文件
 
-### Docker(可避免执行环境问题)
+### Docker
+  * 可避免执行环境问题
     1. 安装[Git](https://git-scm.com/downloads) / 务必添加到环境变量，不然建立Docker镜像时候报错。
     2. 安装[Docker](https://docs.docker-cn.com/engine/installation/)
     3. 建立Docker镜像 `docker build https://github.com/lzghzr/bilive_client.git -t bilive_client`
