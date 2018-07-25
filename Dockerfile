@@ -4,9 +4,9 @@ EXPOSE 10080
 
 WORKDIR /app
 
-COPY . /app
+ONBUILD COPY . /app
 
-RUN npm install && \
-    npm run build
+ONBUILD RUN npm install && \
+            npm run build
 
 CMD ["sh","-c","npm start"]
