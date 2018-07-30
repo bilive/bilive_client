@@ -174,8 +174,7 @@ class User extends Online {
           json: true,
           headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
         })
-        if (taskres !== undefined && taskres.response.statusCode === 200
-          && (taskres.response.body.code === 0 || taskres.response.body.code === -400)) ok++
+        if (taskres !== undefined && taskres.response.statusCode === 200 && (taskres.response.body.code === 0 || taskres.response.body.code === -400)) ok++
         if (ok === tasks.length) {
           this._eventRoom = true
           tools.Log(this.nickname, '每日任务', '每日任务已完成')
@@ -321,7 +320,7 @@ class User extends Online {
     if (!this.userData.autoSend) return
     // 获取佩戴勋章信息
     const uid = this.userData.biliUID
-    const MInfo = await tools.XHR<MInfo>({
+    const WearInfo = await tools.XHR<WearInfo>({
       method: `POST`,
       uri: `${apiLiveOrigin}/live_user/v1/UserInfo/get_weared_medal`,
       body: `source=1&uid=${uid}&target_id=11153765&csrf_token=${tools.getCookie(this.jar, 'bili_jct')}`,//使用3号直播间查询
@@ -329,32 +328,26 @@ class User extends Online {
       jar: this.jar,
       headers: this.headers
     })
-    if (MInfo === undefined || MInfo.response.statusCode !== 200 || MInfo.body.code !== 0) return
-    if (MInfo.body.data !== null) {
-      const room_id = MInfo.body.data.roominfo.room_id
-      const ruid = MInfo.body.data.roominfo.uid
-      const day_limit = MInfo.body.data.day_limit
-      const today_feed  = parseInt(MInfo.body.data.today_feed)
-      var intimacy_needed = day_limit - today_feed
-      if (intimacy_needed === 0) {
-        tools.Log(this.nickname,`亲密度已达上限`)
-        return
-      }
+    if (WearInfo === undefined || WearInfo.response.statusCode !== 200 || WearInfo.body.code !== 0) return
+    if (WearInfo.body.data !== null) {
+      const room_id = WearInfo.body.data.roominfo.room_id
+      const mid = WearInfo.body.data.roominfo.uid
+      const day_limit = WearInfo.body.data.day_limit
+      const today_feed  = parseInt(WearInfo.body.data.today_feed)
+      let intimacy_needed = day_limit - today_feed
+      if (intimacy_needed === 0) return tools.Log(this.nickname,`亲密度已达上限`)
       // 获取包裹信息
-      var gift_value = 0
-      var bag_value = 0
-      var send_num = 0
-      const bagInfo = await tools.XHR<bagInfoW>({
-        uri: `${apiLiveOrigin}/gift/v2/gift/bag_list`,
+      let gift_value = 0, bag_value = 0, send_num = 0
+      const bagInfo = await tools.XHR<bagInfo>({
+        uri: `${apiLiveOrigin}/gift/v2/gift/m_bag_list?${AppClient.signQueryBase(this.tokenQuery)}`,
         json: true,
-        jar: this.jar,
         headers: this.headers
-      })
+      }, 'Android')
       if (bagInfo === undefined || bagInfo.response.statusCode !== 200) return
       if (bagInfo.body.code === 0) {
-        if (bagInfo.body.data.list.length > 0) {
-          for (const giftData of bagInfo.body.data.list) {
-            if (giftData.expire_at > 0) {
+        if (bagInfo.body.data.length > 0) {
+          for (const giftData of bagInfo.body.data) {
+            if (giftData.expireat > 0) {
               switch (giftData.gift_id) {//Gift_Config from http://api.live.bilibili.com/gift/v3/live/gift_config
                 case 1:
                   gift_value = 1
@@ -380,41 +373,25 @@ class User extends Online {
                   gift_value = 19900
                   bag_value = gift_value * giftData.gift_num//蓝白胖次
                 break
-                case 12:
-                  gift_value = 100
-                  bag_value = gift_value * giftData.gift_num//游戏机（活动礼物）
-                break
-                case 121:
-                  gift_value = 200
-                  bag_value = gift_value * giftData.gift_num//闪耀之星（活动礼物）
-                break
               }
-              if (intimacy_needed >= bag_value) {
-                send_num = giftData.gift_num
-              }
-              else {
-                send_num = Math.floor(intimacy_needed / gift_value)
-              }
+              if (intimacy_needed >= bag_value) send_num = giftData.gift_num
+              else send_num = Math.floor(intimacy_needed / gift_value)
               if (send_num > 0) {
-                const sendBagW = await tools.XHR<sendBagW>({
+                const sendBag = await tools.XHR<sendBag>({
                   method: 'POST',
                   uri: `${apiLiveOrigin}/gift/v2/live/bag_send`,
-                  body: `uid=${uid}&gift_id=${giftData.gift_id}&ruid=${ruid}&gift_num=${send_num}&bag_id=${giftData.bag_id}&platform=pc&biz_code=live&biz_id=${room_id}&rnd=${AppClient.RND}&storm_beat_id=0&metadata=&price=0&csrf_token=${tools.getCookie(this.jar, 'bili_jct')}`,
+                  body: AppClient.signQueryBase(`bag_id=${giftData.id}&biz_code=live&biz_id=${room_id}&gift_id=${giftData.gift_id}&gift_num=${send_num}&ruid=${mid}&uid=${giftData.uid}&rnd=${AppClient.RND}&${this.tokenQuery}`),
                   json: true,
-                  jar: this.jar,
                   headers: this.headers
-                })
-                if (sendBagW === undefined || sendBagW.response.statusCode !== 200) continue
-                if (sendBagW.body.code === 0) {
-                  const sendBagWData = sendBagW.body.data
-                  tools.Log(this.nickname, '自动送礼V2', `向房间 ${room_id} 赠送 ${sendBagWData.gift_num} 个${sendBagWData.gift_name}`)
+                }, 'Android')
+                if (sendBag === undefined || sendBag.response.statusCode !== 200) continue
+                if (sendBag.body.code === 0) {
+                  const sendBagData = sendBag.body.data
+                  tools.Log(this.nickname, '自动送礼V2', `向房间 ${room_id} 赠送 ${send_num} 个${sendBagData.gift_name}`)
                   intimacy_needed = intimacy_needed - send_num * gift_value
-                  if (intimacy_needed === 0) {
-                    tools.Log(this.nickname,`亲密度已达上限`)
-                    return
-                  }
+                  if (intimacy_needed === 0) return tools.Log(this.nickname,`亲密度已达上限`)
                 }
-                else tools.Log(this.nickname, '自动送礼V2', `向房间 ${room_id} 赠送 ${giftData.gift_num} 个${giftData.gift_name} 失败`, sendBagW.body)
+                else tools.Log(this.nickname, '自动送礼V2', `向房间 ${room_id} 赠送 ${send_num} 个${giftData.gift_name} 失败`, sendBag.body)
                 await tools.Sleep(5000)
               }
             }
@@ -464,7 +441,7 @@ class User extends Online {
    *
    * @memberof User
    */
-  public async GetUserInfo() {
+  public async getUserInfo() {
     if (!this.userData.getUserInfo) return
     const UserInfo = await tools.XHR<UserInfo>({
       uri: `${apiLiveOrigin}/User/getUserInfo?ts=${AppClient.TS}`,
@@ -472,14 +449,14 @@ class User extends Online {
       jar: this.jar,
       headers: this.headers
     })
-    if (UserInfo === undefined) return
-    if (UserInfo.response.statusCode === 200 && UserInfo.body.code === 0) {
+    if (UserInfo === undefined || UserInfo.response.statusCode !== 200) return
+    if (UserInfo.body.code === 'REPONSE_OK') {
       const InfoData = UserInfo.body.data
       tools.Log(this.nickname,`ID:${InfoData.uname}  LV${InfoData.user_level} EXP:${InfoData.user_intimacy}/${InfoData.user_next_intimacy} 排名:${InfoData.user_level_rank}`)
       tools.Log(`金瓜子：${InfoData.gold} 银瓜子：${InfoData.silver} 硬币：${InfoData.billCoin}`);
     }
     else tools.Log(this.nickname,'获取个人信息失败')
-    var MedalNum = 0
+    let MedalNum = 0
     const MedalInfo = await tools.XHR<MedalInfo>({
       uri: `${apiLiveOrigin}/i/api/medal?page=1&pageSize=25`,
       json: true,
@@ -490,23 +467,54 @@ class User extends Online {
     else {
       if (MedalInfo.response.statusCode === 200 && MedalInfo.body.code === 0) {
         const MedalData = MedalInfo.body.data
-        if (MedalInfo.body.data.count === 0) {
-          tools.Log(this.nickname,`无勋章`)
-        }
+        if (MedalData.count === 0) tools.Log(this.nickname,`无勋章`)
         else {
-          MedalInfo.body.data.fansMedalList.forEach(async (MedalData) => {
-  					if (MedalData.status === 1) {
-  						tools.Log(this.nickname,`佩戴勋章:${MedalData.medal_name}${MedalData.level} 亲密度:${MedalData.intimacy}/${MedalData.next_intimacy} 排名:${MedalData.rank}`);
-  					}
-  					else
-  						MedalNum++
-  				});
-  				if (MedalNum === MedalData.count)
-  					tools.Log(this.nickname,`未佩戴勋章`)
+          MedalData.fansMedalList.forEach(Medal => {
+  					if (Medal.status === 1) tools.Log(this.nickname,`佩戴勋章:${Medal.medal_name}${Medal.level} 亲密度:${Medal.intimacy}/${Medal.next_intimacy} 排名:${Medal.rank}`)
+  					else MedalNum++
+  				})
+  				if (MedalNum === MedalData.count) tools.Log(this.nickname,`未佩戴勋章`)
         }
       }
       else tools.Log(this.nickname,'获取勋章信息失败')
     }
+  }
+  /**
+   * 获取礼物包裹信息
+   *
+   * @memberof User
+   */
+  public async getGiftBag() {
+    const bagInfo = await tools.XHR<bagInfo>({
+      uri: `${apiLiveOrigin}/gift/v2/gift/m_bag_list?${AppClient.signQueryBase(this.tokenQuery)}`,
+      json: true,
+      headers: this.headers
+    }, 'Android')
+    if (bagInfo === undefined || bagInfo.response.statusCode !== 200) return
+    if (bagInfo.body.code === 0) {
+      if (bagInfo.body.data.length > 0) {
+        let str = ``
+        let order = 0
+        for (const giftData of bagInfo.body.data) {
+          order++
+          if (giftData.expireat > 0) {
+            let expireStr = ''
+            if (giftData.expireat / (24 * 60 * 60) >= 1) expireStr = `${Math.floor((giftData.expireat / (24 * 60 * 60))) + 1}天`
+            else if (giftData.expireat / (60 * 60) >= 1) expireStr = `${Math.floor((giftData.expireat / (60 * 60))) + 1}小时`
+            else if (giftData.expireat / 60 >= 1) expireStr = `${Math.floor((giftData.expireat / 60)) + 1}分钟`
+            if (order < bagInfo.body.data.length) str = str + `包裹${order}：${giftData.gift_num}个${giftData.gift_name}，有效期${expireStr}，`
+            else str = str + `包裹${order}：${giftData.gift_num}个${giftData.gift_name}，有效期${expireStr}`
+          }
+          else {
+            if (order < bagInfo.body.data.length) str = str + `包裹${order}：${giftData.gift_num}个${giftData.gift_name}，永久礼物，`
+            else str = str + `包裹${order}：${giftData.gift_num}个${giftData.gift_name}，永久礼物`
+          }
+        }
+        tools.Log(`用户 ${this.nickname} 的礼物情况:`, str)
+      }
+      else tools.Log(this.nickname, `包裹空空的`)
+    }
+    else tools.Log(this.nickname, `获取礼物包裹信息失败`)
   }
 }
 export default User

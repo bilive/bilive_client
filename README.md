@@ -8,7 +8,7 @@
 ## 自行编译
 1. 安装[git](https://git-scm.com/downloads)
 2. 安装[Node.js](https://nodejs.org/)
-3. `git clone https://github.com/Vector000/bilive_client.git` (第一次使用先clone)
+3. `git clone https://github.com/Vector000/bilive_client.git` (第一次使用先clone，或直接使用GitHub的Download ZIP)
 4. `cd bilive_client`
 5. `git pull` (获取项目更新)
 6. `npm install`
@@ -21,12 +21,10 @@
 
 ## 增添功能
 * 整点查询挂机用户个人/勋章信息（默认开启，可自定义）
-* 总督开通奖励（已测试通过）
-* 根据亲密度赠送礼物
+* 领取总督开通奖励
+* 根据亲密度赠送礼物，并修复之前脑抽搞出的bug
 * 硬币兑换银瓜子
-* 添加entry_action以规避小黑屋
-* 利用entry_action回显来规避钓鱼房间（加密房间）
-* 多分区监听（不是很稳定，容易监听到之前下播的房间，API的锅）
-
-## TO-DO
-* 可能会做一个快速发弹幕的功能
+* 添加entry_action以部分规避小黑屋
+* 利用entry_action回显来部分规避钓鱼房间（加密房间）
+* 多分区监听，每个分区默认监听3个房间以减少漏抽
+* 定时查询用户礼物包裹，便于管理

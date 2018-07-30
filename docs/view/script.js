@@ -159,8 +159,8 @@ function login() {
  */
 function showConfig() {
     return __awaiter(this, void 0, void 0, function () {
-        var saveConfigButton, addUserButton, showLogButton, configMSG, config, configDF;
         var _this = this;
+        var saveConfigButton, addUserButton, showLogButton, configMSG, config, configDF;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:

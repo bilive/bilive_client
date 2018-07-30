@@ -30,8 +30,9 @@ interface userDataMSG extends message {
 interface config {
   [index: string]: number | number[]
   defaultUserID: number
-  defaultRoomID: number
+  listenNumber: number
   eventRooms: number[]
+  adminServerChan: string
 }
 interface userData {
   [index: string]: string | boolean | number
@@ -46,8 +47,10 @@ interface userData {
   doSign: boolean
   treasureBox: boolean
   eventRoom: boolean
-  smallTV: boolean
   raffle: boolean
+  appraffle: boolean
+  silver2coin: boolean
+  coin2silver: boolean
   sendGift: boolean
   sendGiftRoom: number
   autoSend: boolean
@@ -56,7 +59,7 @@ interface userData {
 interface optionsInfo {
   [index: string]: configInfoData
   defaultUserID: configInfoData
-  defaultRoomID: configInfoData
+  listenNumber: configInfoData
   apiOrigin: configInfoData
   apiKey: configInfoData
   eventRooms: configInfoData
@@ -67,14 +70,16 @@ interface optionsInfo {
   accessToken: configInfoData
   cookie: configInfoData
   status: configInfoData
-  doSign: configInfoData
   getUserInfo: configInfoData
+  doSign: configInfoData
   treasureBox: configInfoData
-  eventRoom: configInfoData
-  smallTV: configInfoData
   raffle: configInfoData
-  sendGift: configInfoData,
-  sendGiftRoom: configInfoData,
+  appraffle: configInfoData
+  eventRoom: configInfoData
+  silver2coin: configInfoData
+  coin2silver: configInfoData
+  sendGift: configInfoData
+  sendGiftRoom: configInfoData
   autoSend: configInfoData
   signGroup: configInfoData
 }
