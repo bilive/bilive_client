@@ -65,7 +65,7 @@ class Listener extends EventEmitter {
    * @memberof Listener
    */
   private async _addAreaRoom(id?: number,oldroom?: number) {
-    const userID = tools.getLongRoomID(_options.config.defaultRoomID)
+    const userID = _options.config.defaultUserID
     const getAllList = await tools.XHR<getAllList>({// 获取直播列表
       uri: `${apiLiveOrigin}/room/v2/AppIndex/getAllList?${AppClient.baseQuery}`,
       json: true

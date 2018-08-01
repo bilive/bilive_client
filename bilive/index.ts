@@ -10,6 +10,8 @@ import Listener from './listener'
  */
 class BiLive {
   constructor() {}
+  // 是否开启抽奖
+  private _raffle = false
   // 全局计时器
   public loop!: NodeJS.Timer
   /**
@@ -52,6 +54,14 @@ class BiLive {
     if (((cstHour - 1) % 12 === 0) && cstMin === 0) _user.forEach(user => user.autoSend())// 每天01:00, 13:00做自动送礼V2
     if (cstMin === 0) _user.forEach(user => user.getUserInfo())//整点获取用户信息
     if (cstMin === 30 && cstHour % 4 === 0) _user.forEach(user => user.getGiftBag())//每天00:30开始每隔4h获取用户包裹信息
+    const rafflePause = _options.config.rafflePause// 抽奖暂停
+    if (rafflePause.length > 1) {
+      const start = rafflePause[0]
+      const end = rafflePause[1]
+      if (start > end && (cstHour >= start || cstHour < end) || (cstHour >= start && cstHour < end)) this._raffle = false
+      else this._raffle = true
+    }
+    else this._raffle = true
   }
   /**
    * 监听
@@ -72,7 +82,9 @@ class BiLive {
    */
   private async _Raffle(raffleMSG: message) {
     _user.forEach(user => {
+      if (!this._raffle && user.userData.raffleLimit) return
       if (user.captchaJPEG !== '' || !user.userData.raffle) return
+      if (Math.random() < _options.config.droprate / 100 && user.userData.raffleLimit) return tools.Log(user.nickname, "随机丢弃", raffleMSG.title, raffleMSG.id)
       const raffleOptions: raffleOptions = { ...raffleMSG, raffleId: raffleMSG.id, user }
       return new Raffle(raffleOptions).Start()
     })

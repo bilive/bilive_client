@@ -11,6 +11,11 @@
     "eventRooms": [
       3
     ],
+    "rafflePause": [
+      3,
+      9
+    ],
+    "droprate": 0,
     "adminServerChan": ""
   },
   "user": {},
@@ -29,6 +34,7 @@
     "treasureBox": false,
     "raffle": false,
     "appraffle": false,
+    "raffleLimit": true,
     "eventRoom": false,
     "silver2coin": false,
     "coin2silver": false,
@@ -52,6 +58,16 @@
       "description": "挂机活动房间以,分隔",
       "tip": "挂取活动道具的房间, 默认为3(官方音乐台), 有时活动只有主播报名才可以参加",
       "type": "numberArray"
+    },
+    "rafflePause": {
+      "description": "暂停抽奖时间",
+      "tip": "在某时间段内不参与抽奖，24h制，以\",\"分隔，只有一个时间时不启用",
+      "type": "numberArray"
+    },
+    "droprate": {
+      "description": "丢弃概率",
+      "tip": "随机丢弃某个抽奖的概率，范围0~100（百分比）",
+      "type": "number"
     },
     "adminServerChan": {
       "description": "SCKEY",
@@ -94,7 +110,7 @@
       "type": "boolean"
     },
     "getGiftBag": {
-      "description": "用户信息",
+      "description": "礼物包裹信息",
       "tip": "每4h查询用户包裹，默认关闭，需要可开启",
       "type": "boolean"
     },
@@ -116,6 +132,11 @@
     "appraffle": {
       "description": "App抽奖",
       "tip": "使用App抽奖，勾选则使用v3 api",
+      "type": "boolean"
+    },
+    "raffleLimit": {
+      "description": "抽奖限制",
+      "tip": "抽奖限制，默认开启，头铁的可以关掉XD",
       "type": "boolean"
     },
     "eventRoom": {

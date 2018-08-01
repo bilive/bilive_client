@@ -22,10 +22,11 @@ interface server {
 interface config {
   [index: string]: number | string | number[]
   defaultUserID: number
-  defaultRoomID: number
+  listenNumber: number
   eventRooms: number[]
+  rafflePause: number[]
+  droprate: number
   adminServerChan: string
-  raffleDelay: number
 }
 interface userCollection {
   [index: string]: userData
@@ -40,23 +41,28 @@ interface userData {
   refreshToken: string
   cookie: string
   status: boolean
+  getUserInfo: boolean
+  getGiftBag: boolean
   doSign: boolean
   treasureBox: boolean
-  eventRoom: boolean
   silver2coin: boolean
+  coin2silver: boolean
   raffle: boolean
+  appraffle: boolean
+  raffleLimit: boolean
+  eventRoom: boolean
   sendGift: boolean
   sendGiftRoom: number
+  autoSend: boolean
   signGroup: boolean
 }
 interface optionsInfo {
   [index: string]: configInfoData
   defaultUserID: configInfoData
-  defaultRoomID: configInfoData
   eventRooms: configInfoData
-  adminServerChan: configInfoData
-  raffleDelay: configInfoData
   rafflePause: configInfoData
+  droprate: configInfoData
+  adminServerChan: configInfoData
   nickname: configInfoData
   userName: configInfoData
   passWord: configInfoData
@@ -65,19 +71,26 @@ interface optionsInfo {
   refreshToken: configInfoData
   cookie: configInfoData
   status: configInfoData
+  getUserInfo: configInfoData
+  getGiftBag: configInfoData
   doSign: configInfoData
   treasureBox: configInfoData
-  eventRoom: configInfoData
   silver2coin: configInfoData
+  coin2silver: configInfoData
   raffle: configInfoData
+  appraffle: configInfoData
+  raffleLimit: configInfoData
+  eventRoom: configInfoData
   sendGift: configInfoData
   sendGiftRoom: configInfoData
+  autoSend: configInfoData
   signGroup: configInfoData
 }
 interface configInfoData {
   description: string
   tip: string
   type: string
+  cognate?: string
 }
 // bilive_client
 /**
