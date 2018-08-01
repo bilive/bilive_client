@@ -24,6 +24,7 @@
     "cookie": "",
     "status": false,
     "getUserInfo": true,
+    "getGiftBag": false,
     "doSign": false,
     "treasureBox": false,
     "raffle": false,
@@ -90,6 +91,11 @@
     "getUserInfo": {
       "description": "用户信息",
       "tip": "整点查询用户信息，默认开启",
+      "type": "boolean"
+    },
+    "getGiftBag": {
+      "description": "用户信息",
+      "tip": "每4h查询用户包裹，默认关闭，需要可开启",
       "type": "boolean"
     },
     "doSign": {

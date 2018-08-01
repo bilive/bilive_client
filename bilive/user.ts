@@ -485,6 +485,7 @@ class User extends Online {
    * @memberof User
    */
   public async getGiftBag() {
+    if (!this.userData.getGiftBag) return
     const bagInfo = await tools.XHR<bagInfo>({
       uri: `${apiLiveOrigin}/gift/v2/gift/m_bag_list?${AppClient.signQueryBase(this.tokenQuery)}`,
       json: true,
@@ -502,15 +503,15 @@ class User extends Online {
             if (giftData.expireat / (24 * 60 * 60) >= 1) expireStr = `${Math.floor((giftData.expireat / (24 * 60 * 60))) + 1}天`
             else if (giftData.expireat / (60 * 60) >= 1) expireStr = `${Math.floor((giftData.expireat / (60 * 60))) + 1}小时`
             else if (giftData.expireat / 60 >= 1) expireStr = `${Math.floor((giftData.expireat / 60)) + 1}分钟`
-            if (order < bagInfo.body.data.length) str = str + `包裹${order}：${giftData.gift_num}个${giftData.gift_name}，有效期${expireStr}，`
+            if (order < bagInfo.body.data.length) str = str + `包裹${order}：${giftData.gift_num}个${giftData.gift_name}，有效期${expireStr}\n`
             else str = str + `包裹${order}：${giftData.gift_num}个${giftData.gift_name}，有效期${expireStr}`
           }
           else {
-            if (order < bagInfo.body.data.length) str = str + `包裹${order}：${giftData.gift_num}个${giftData.gift_name}，永久礼物，`
+            if (order < bagInfo.body.data.length) str = str + `包裹${order}：${giftData.gift_num}个${giftData.gift_name}，永久礼物\n`
             else str = str + `包裹${order}：${giftData.gift_num}个${giftData.gift_name}，永久礼物`
           }
         }
-        tools.Log(`用户 ${this.nickname} 的礼物情况:`, str)
+        tools.Log(`用户 ${this.nickname} 的礼物情况:\n${str}`)
       }
       else tools.Log(this.nickname, `包裹空空的`)
     }
