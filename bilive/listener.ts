@@ -24,43 +24,60 @@ class Listener extends EventEmitter {
   private _DMclient: Map<number, DMclient> = new Map()
   /**
    * 小电视ID
-   * 
+   *
    * @private
-   * @type {number}
+   * @type {Set<number>}
    * @memberof Listener
    */
-  private _smallTVID: number = 0
+  private _smallTVID: Set<number> = new Set()
   /**
    * 抽奖ID
-   * 
+   *
    * @private
-   * @type {number}
+   * @type {Set<number>}
    * @memberof Listener
    */
-  private _raffleID: number = 0
+  private _raffleID: Set<number> = new Set()
   /**
    * 快速抽奖ID
-   * 
+   *
+   * @private
+   * @type {Set<number>}
+   * @memberof Listener
+   */
+  private _lotteryID: Set<number> = new Set()
+  /**
+   * 消息缓存
+   *
+   * @private
+   * @type {Set<string>}
+   * @memberof Listener
+   */
+  private _MSGCache: Set<string> = new Set()
+  /**
+   * 抽奖更新时间
+   *
    * @private
    * @type {number}
    * @memberof Listener
    */
-  private _lotteryID: number = 0
+  private _lastUpdate: number = Date.now()
   /**
    * 开始监听
    * 
    * @memberof Listener
    */
   public Start() {
-    this._addAreaRoom()
+    this.updateAreaRoom()
+    // 5s清空一次消息缓存
+    setInterval(() => this._MSGCache.clear(), 5 * 1000)
   }
   /**
-   * 添加分区房间
-   * 
-   * @private
+   * 更新分区房间
+   *
    * @memberof Listener
    */
-  private async _addAreaRoom() {
+  public async updateAreaRoom() {
     const userID = _options.config.defaultUserID
     // 获取直播列表
     const getAllList = await tools.XHR<getAllList>({
@@ -91,13 +108,18 @@ class Listener extends EventEmitter {
         roomDM.removeAllListeners().Close()
         this._DMclient.delete(roomID)
       })
-      await tools.Sleep(10 * 60 * 1000)
-      this._addAreaRoom()
     }
-    else {
-      await tools.Sleep(3 * 1000)
-      this._addAreaRoom()
-    }
+  }
+  /**
+   * 清空所有ID缓存
+   *
+   * @memberof Listener
+   */
+  public clearAllID() {
+    if (Date.now() - this._lastUpdate < 60 * 1000) return
+    this._smallTVID.clear()
+    this._raffleID.clear()
+    this._lotteryID.clear()
   }
   /**
    * 监听弹幕系统消息
@@ -107,7 +129,8 @@ class Listener extends EventEmitter {
    * @memberof Listener
    */
   private _SYSMSGHandler(dataJson: SYS_MSG) {
-    if (dataJson.real_roomid === undefined || dataJson.tv_id === undefined) return
+    if (dataJson.real_roomid === undefined || dataJson.tv_id === undefined || this._MSGCache.has(dataJson.msg_text)) return
+    this._MSGCache.add(dataJson.msg_text)
     const url = apiLiveOrigin + smallTVPathname
     const roomID = dataJson.real_roomid
     this._RaffleCheck(url, roomID, 'smallTV')
@@ -120,7 +143,8 @@ class Listener extends EventEmitter {
    * @memberof Listener
    */
   private _SYSGiftHandler(dataJson: SYS_GIFT) {
-    if (dataJson.real_roomid === undefined || dataJson.giftId === undefined) return
+    if (dataJson.real_roomid === undefined || dataJson.giftId === undefined || this._MSGCache.has(dataJson.msg_text)) return
+    this._MSGCache.add(dataJson.msg_text)
     const url = apiLiveOrigin + rafflePathname
     const roomID = dataJson.real_roomid
     this._RaffleCheck(url, roomID, 'raffle')
@@ -197,20 +221,22 @@ class Listener extends EventEmitter {
     const id = raffleMSG.id
     switch (raffleMSG.cmd) {
       case 'smallTV':
-        if (this._smallTVID >= id) return
-        this._smallTVID = id
+        if (this._smallTVID.has(id)) return
+        this._smallTVID.add(id)
         break
       case 'raffle':
-        if (this._raffleID >= id) return
-        this._raffleID = id
+        if (this._raffleID.has(id)) return
+        this._raffleID.add(id)
         break
       case 'lottery':
-        if (this._lotteryID >= id) return
-        this._lotteryID = id
+        if (this._lotteryID.has(id)) return
+        this._lotteryID.add(id)
         break
       default:
         return
     }
+    // 更新时间
+    this._lastUpdate = Date.now()
     this.emit('raffle', raffleMSG)
     tools.Log(`房间 ${tools.getShortRoomID(roomID)} 开启了第 ${id} 轮${raffleMSG.title}`)
   }

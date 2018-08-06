@@ -297,14 +297,14 @@ class AppClient {
     this.headers['Device-ID'] = AppClient.DeviceID
     // 设置 Buvid
     const buvid = await tools.XHR<string>({
-      uri: 'http://data.bilibili.com/gv/',
+      uri: 'https://data.bilibili.com/gv/',
       headers: this.headers
     }, 'Android')
     if (buvid !== undefined && buvid.response.statusCode === 200 && buvid.body.endsWith('infoc'))
       this.headers['Buvid'] = buvid.body
     // 设置 Display-ID
     const displayid = await tools.XHR<{ code: number, data: { id: string } }>({
-      uri: 'http://app.bilibili.com/x/v2/display/id?' + AppClient.signQueryBase(),
+      uri: 'https://app.bilibili.com/x/v2/display/id?' + AppClient.signQueryBase(),
       json: true,
       headers: this.headers
     }, 'Android')

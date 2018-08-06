@@ -11,6 +11,8 @@ import Listener from './listener'
 class BiLive {
   constructor() {
   }
+  // 系统消息监听
+  private _SYSListener!: Listener
   // 是否开启抽奖
   private _raffle = false
   // 全局计时器
@@ -67,6 +69,10 @@ class BiLive {
     else this._raffle = true
     // 礼物总数统计
     if (cstString === _options.config.calcGiftTime) this.calcGift()
+    // 更新监听房间
+    if (cstMin % 10 === 0) this._SYSListener.updateAreaRoom()
+    // 清空ID缓存
+    this._SYSListener.clearAllID()
   }
   /**
    * 监听
@@ -74,9 +80,10 @@ class BiLive {
    * @memberof BiLive
    */
   public Listener() {
-    const SListener = new Listener()
+    this._SYSListener = new Listener()
+    this._SYSListener
       .on('raffle', raffleMSG => this._Raffle(raffleMSG))
-    SListener.Start()
+      .Start()
   }
   /**
    * 参与抽奖
@@ -174,9 +181,9 @@ class BiLive {
   }
 }
 // 自定义一些常量
-const liveOrigin = 'http://live.bilibili.com'
-const apiVCOrigin = 'http://api.vc.bilibili.com'
-const apiLiveOrigin = 'http://api.live.bilibili.com'
+const liveOrigin = 'https://live.bilibili.com'
+const apiVCOrigin = 'https://api.vc.bilibili.com'
+const apiLiveOrigin = 'https://api.live.bilibili.com'
 const smallTVPathname = '/gift/v4/smalltv'
 const rafflePathname = '/activity/v1/Raffle'
 const lotteryPathname = '/lottery/v1/lottery'
