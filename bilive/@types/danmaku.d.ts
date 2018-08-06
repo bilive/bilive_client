@@ -877,6 +877,15 @@ interface WIN_ACTIVITY extends danmuJson {
   number: number
 }
 /**
+ * 直播警告
+ * {"cmd":"WARNING","msg":"违反直播着装规范，请立即调整","roomid":883802,"_roomid":883802}
+ * 
+ * @interface WARNING
+ */
+interface WARNING {
+  msg: string
+}
+/**
  * 直播强制切断
  * {"cmd":"CUT_OFF","msg":"违反直播规范","roomid":945626,"_roomid":945626}
  * 

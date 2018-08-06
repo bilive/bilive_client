@@ -5,29 +5,29 @@
   "main": "index.js",
   "scripts": {
     "build": "npm run build:client && npm run build:view",
-    "build:client": "tsc --locale zh-cn -p ./tsconfig.json && npm-run-posix-or-windows copy:client",
-    "build:view": "tsc --locale zh-cn -p ./docs/tsconfig.json && npm-run-posix-or-windows copy:view",
-    "copy:client": "cp ./bilive/options.default.json ./build/bilive/",
-    "copy:client:windows": "xcopy .\\bilive\\options.default.json .\\build\\bilive\\ /Y",
-    "copy:view": "cp -r ./docs/view/ ./docs/index.html ./build/",
-    "copy:view:windows": "xcopy .\\docs\\view\\* .\\build\\view\\ /Y && xcopy .\\docs\\index.html .\\build\\ /Y",
+    "build:client": "tsc -p tsconfig.json && npm-run-posix-or-windows copy:client",
+    "build:view": "tsc -p docs/tsconfig.json && npm-run-posix-or-windows copy:view",
+    "copy:client": "cp bilive/options.default.json build/bilive/",
+    "copy:client:windows": "xcopy bilive\\options.default.json build\\bilive\\ /Y",
+    "copy:view": "cp -r docs/view/ docs/index.html build/",
+    "copy:view:windows": "xcopy docs\\view\\* build\\view\\ /Y && xcopy docs\\index.html build\\ /Y",
     "clean": "rimraf build",
-    "start": "node ./build/app.js"
+    "start": "node build/app.js"
   },
   "author": "lzghzr",
   "license": "MIT",
   "devDependencies": {
-    "@types/bootstrap": "^4.1.0",
-    "@types/jquery": "^3.3.2",
-    "@types/node": "^9.6.20",
-    "@types/request": "^2.47.0",
-    "@types/ws": "^4.0.2",
+    "@types/bootstrap": "^4.1.2",
+    "@types/jquery": "^3.3.5",
+    "@types/node": "^10.5.6",
+    "@types/request": "^2.47.1",
+    "@types/ws": "^5.1.2",
     "npm-run-posix-or-windows": "^2.0.2",
     "rimraf": "^2.6.2",
-    "typescript": "^2.9.1"
+    "typescript": "^3.0.1"
   },
   "dependencies": {
     "request": "^2.87.0",
-    "ws": "^5.2.0"
+    "ws": "^6.0.0"
   }
 }
