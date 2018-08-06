@@ -69,8 +69,8 @@ class Listener extends EventEmitter {
    */
   public Start() {
     this.updateAreaRoom()
-    // 5s清空一次消息缓存
-    setInterval(() => this._MSGCache.clear(), 5 * 1000)
+    // 3s清空一次消息缓存
+    setInterval(() => this._MSGCache.clear(), 3 * 1000)
   }
   /**
    * 更新分区房间
@@ -159,6 +159,8 @@ class Listener extends EventEmitter {
    * @memberof Listener
    */
   private async _RaffleCheck(url: string, roomID: number, raffle: 'smallTV' | 'raffle') {
+    // 等待3s, 防止土豪刷屏
+    await tools.Sleep(3000)
     const check: request.Options = {
       uri: `${url}/check?${AppClient.signQueryBase(`roomid=${roomID}`)}`,
       json: true
