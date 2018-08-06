@@ -1,5 +1,5 @@
 import request from 'request'
-import tools, { response } from './lib/tools'
+import tools from './lib/tools'
 import Online from './online'
 import AppClient from './lib/app_client'
 import { liveOrigin, apiVCOrigin, apiLiveOrigin, _options, _user } from './index'
@@ -195,21 +195,6 @@ class User extends Online {
    */
   public async silver2coin() {
     if (this._silver2coin || !this.userData.silver2coin) return
-    const roomID = _options.config.eventRooms[0]
-    let ok = 0
-    const checkExchange = (exchangeRes: response<silver2coin> | undefined) => {
-      if (exchangeRes === undefined || exchangeRes.response.statusCode !== 200) return
-      if (exchangeRes.body.code === 0) {
-        ok++
-        tools.Log(this.nickname, '银瓜子兑换硬币', '成功兑换 1 个硬币')
-      }
-      else if (exchangeRes.body.code === 403 || exchangeRes.body.code === -403) {
-        ok++
-        tools.Log(this.nickname, '银瓜子兑换硬币', exchangeRes.body.msg)
-      }
-      else tools.Log(this.nickname, '银瓜子兑换硬币', '兑换失败', exchangeRes.body)
-      if (ok === 2) this._silver2coin = true
-    }
     const exchange: request.Options = {
       method: 'POST',
       uri: `${apiLiveOrigin}/AppExchange/silver2coin?${AppClient.signQueryBase(this.tokenQuery)}`,
@@ -217,17 +202,16 @@ class User extends Online {
       headers: this.headers
     }
     const silver2coin = await tools.XHR<silver2coin>(exchange, 'Android')
-    checkExchange(silver2coin)
-    await tools.Sleep(3000)
-    const exchangeWeb: request.Options = {
-      method: 'POST',
-      uri: `${apiLiveOrigin}/exchange/silver2coin`,
-      jar: this.jar,
-      json: true,
-      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
+    if (silver2coin === undefined || silver2coin.response.statusCode !== 200) return
+    if (silver2coin.body.code === 0) {
+      this._silver2coin = true
+      tools.Log(this.nickname, '银瓜子兑换硬币', '成功兑换 1 个硬币')
     }
-    const silver2coinWeb = await tools.XHR<silver2coin>(exchangeWeb)
-    checkExchange(silver2coinWeb)
+    else if (silver2coin.body.code === 403) {
+      this._silver2coin = true
+      tools.Log(this.nickname, '银瓜子兑换硬币', silver2coin.body.msg)
+    }
+    else tools.Log(this.nickname, '银瓜子兑换硬币', '兑换失败', silver2coin.body)
   }
   /**
    * 自动送礼
