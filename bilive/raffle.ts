@@ -99,6 +99,7 @@ class Raffle {
         if (gift.gift_name.includes('小电视')) tools.sendSCMSG(msg)
       }
     }
+    else tools.Log(this._options.user.nickname, this._options.title, this._options.raffleId, raffleAward.body)
   }
   /**
    * 抽奖Lottery
@@ -115,8 +116,11 @@ class Raffle {
       headers: this._options.user.headers
     }
     const lotteryReward = await tools.XHR<lotteryReward>(reward, 'Android')
-    if (lotteryReward !== undefined && lotteryReward.response.statusCode === 200 && lotteryReward.body.code === 0)
-      tools.Log(this._options.user.nickname, this._options.title, this._options.raffleId, lotteryReward.body.data.message)
+    if (lotteryReward !== undefined && lotteryReward.response.statusCode === 200) {
+      if (lotteryReward.body.code === 0)
+        tools.Log(this._options.user.nickname, this._options.title, this._options.raffleId, lotteryReward.body.data.message)
+      else tools.Log(this._options.user.nickname, this._options.title, this._options.raffleId, lotteryReward.body)
+    }
   }
 }
 export default Raffle
