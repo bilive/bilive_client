@@ -69,10 +69,12 @@ class BiLive {
     else this._raffle = true
     // 礼物总数统计
     if (cstString === _options.config.calcGiftTime) this.calcGift()
-    // 更新监听房间
-    if (cstMin % 10 === 0) this._SYSListener.updateAreaRoom()
-    // 清空ID缓存
-    this._SYSListener.clearAllID()
+    if (cstMin % 10 === 0) {
+      // 更新监听房间
+      this._SYSListener.updateAreaRoom()
+      // 清空ID缓存
+      this._SYSListener.clearAllID()
+    }
   }
   /**
    * 监听

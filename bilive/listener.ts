@@ -116,7 +116,7 @@ class Listener extends EventEmitter {
    * @memberof Listener
    */
   public clearAllID() {
-    if (Date.now() - this._lastUpdate < 60 * 1000) return
+    if (Date.now() - this._lastUpdate < 3 * 60 * 1000) return
     this._smallTVID.clear()
     this._raffleID.clear()
     this._lotteryID.clear()
