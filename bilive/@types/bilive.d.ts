@@ -46,10 +46,10 @@ interface userData {
   doSign: boolean
   treasureBox: boolean
   silver2coin: boolean
-  coin2silver: boolean
   raffle: boolean
   appraffle: boolean
   raffleLimit: boolean
+  ban: string
   eventRoom: boolean
   sendGift: boolean
   sendGiftRoom: number
@@ -76,10 +76,10 @@ interface optionsInfo {
   doSign: configInfoData
   treasureBox: configInfoData
   silver2coin: configInfoData
-  coin2silver: configInfoData
   raffle: configInfoData
   appraffle: configInfoData
   raffleLimit: configInfoData
+  ban: configInfoData
   eventRoom: configInfoData
   sendGift: configInfoData
   sendGiftRoom: configInfoData

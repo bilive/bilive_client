@@ -1,4 +1,4 @@
-import tools, { response } from './lib/tools'
+import tools from './lib/tools'
 import Online from './online'
 import AppClient from './lib/app_client'
 import { liveOrigin, apiVCOrigin, apiLiveOrigin, _options, _user } from './index'
@@ -26,7 +26,6 @@ class User extends Online {
   private _treasureBox = false
   private _eventRoom = false
   private _silver2coin = false
-  private _coin2silver = false
   /**
    * 当账号出现异常时, 会返回'captcha'或'stop'
    * 'captcha'为登录需要验证码, 若无法处理需Stop()
@@ -68,7 +67,6 @@ class User extends Online {
     this._treasureBox = false
     this._eventRoom = false
     this._silver2coin = false
-    this._coin2silver = false
   }
   /**
    * 日常
@@ -80,7 +78,6 @@ class User extends Online {
     this.treasureBox()
     this.eventRoom()
     this.silver2coin()
-    this.coin2silver()
     this.sendGift()
     this.signGroup()
   }
@@ -191,73 +188,22 @@ class User extends Online {
    */
   public async silver2coin() {
     if (this._silver2coin || !this.userData.silver2coin) return
-    const roomID = _options.config.eventRooms[0]
-    let ok = 0
-    const checkExchange = (exchangeRes: response<silver2coin> | undefined) => {
-      if (exchangeRes === undefined || exchangeRes.response.statusCode !== 200) return
-      if (exchangeRes.body.code === 0) {
-        ok++
-        tools.Log(this.nickname, '银瓜子兑换硬币', '成功兑换 1 个硬币')
-      }
-      else if (exchangeRes.body.code === 403 || exchangeRes.body.code === -403) {
-        ok++
-        tools.Log(this.nickname, '银瓜子兑换硬币', exchangeRes.body.msg)
-      }
-      else tools.Log(this.nickname, '银瓜子兑换硬币', '兑换失败', exchangeRes.body)
-      if (ok === 2) this._silver2coin = true
-    }
     const silver2coin = await tools.XHR<silver2coin>({
       method: 'POST',
       uri: `${apiLiveOrigin}/AppExchange/silver2coin?${AppClient.signQueryBase(this.tokenQuery)}`,
       json: true,
       headers: this.headers
     }, 'Android')
-    checkExchange(silver2coin)
-    await tools.Sleep(3000)
-    const silver2coinWeb = await tools.XHR<silver2coin>({
-      method: 'POST',
-      uri: `${apiLiveOrigin}/exchange/silver2coin`,
-      jar: this.jar,
-      json: true,
-      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
-    })
-    checkExchange(silver2coinWeb)
-  }
-  /**
-   * 硬币兑换银瓜子
-   *
-   * @memberof User
-   */
-  public async coin2silver() {
-    if (this._coin2silver || !this.userData.coin2silver) return
-    var avail_coin = 0
-    const coinstat = await tools.XHR<coin_status>({
-      uri: `https://api.live.bilibili.com/pay/v1/Exchange/getStatus?platform=pc`,
-      jar: this.jar,
-      json: true,
-      headers: this.headers
-    })
-    if (coinstat === undefined) return
-    if (coinstat.response.statusCode === 200 && coinstat.body.code === 0) {
-      avail_coin = coinstat.body.data.coin_2_silver_left
-      if (coinstat.body.data.vip === 0 && avail_coin > 10) avail_coin = 10
-      if (coinstat.body.data.vip === 1 && avail_coin > 20) avail_coin = 20
+    if (silver2coin === undefined || silver2coin.response.statusCode !== 200) return tools.Log(this.nickname, '银瓜子兑换硬币兑换失败')
+    if (silver2coin.body.code === 0) {
+      this._silver2coin = true
+      tools.Log(this.nickname, '银瓜子兑换硬币', '成功兑换 1 个硬币')
     }
-    const exchangeWeb = await tools.XHR<coin2silver>({
-      method: 'POST',
-      uri: `https://live.bilibili.com/exchange/coin2silver`,
-      body: `coin=${avail_coin}`,
-      jar: this.jar,
-      json: true,
-      headers: this.headers
-    })
-    if (exchangeWeb === undefined) return
-    if (exchangeWeb.response.statusCode === 200 && exchangeWeb.body.code === 0) {
-      tools.Log(this.nickname, '硬币兑换银瓜子','获得银瓜子', exchangeWeb.body.data.silver)
+    else if (silver2coin.body.code === 403) {
+      this._silver2coin = true
+      tools.Log(this.nickname, '银瓜子兑换硬币', silver2coin.body.msg)
     }
-    if (exchangeWeb.response.statusCode === 200 && exchangeWeb.body.code === -403) {
-      tools.Log(this.nickname, '硬币兑换银瓜子出错，可能已达上限')
-    }
+    else tools.Log(this.nickname, '银瓜子兑换硬币', '兑换失败', silver2coin.body)
   }
   /**
    * 自动送礼
@@ -453,7 +399,7 @@ class User extends Online {
     if (UserInfo.body.code === 'REPONSE_OK') {
       const InfoData = UserInfo.body.data
       tools.Log(this.nickname,`ID:${InfoData.uname}  LV${InfoData.user_level} EXP:${InfoData.user_intimacy}/${InfoData.user_next_intimacy} 排名:${InfoData.user_level_rank}`)
-      tools.Log(`金瓜子：${InfoData.gold} 银瓜子：${InfoData.silver} 硬币：${InfoData.billCoin}`);
+      tools.Log(`金瓜子：${InfoData.gold} 银瓜子：${InfoData.silver} 硬币：${InfoData.billCoin} 当前状态：${this.userData.ban}`);
     }
     else tools.Log(this.nickname,'获取个人信息失败')
     let MedalNum = 0

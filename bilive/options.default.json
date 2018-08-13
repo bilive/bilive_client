@@ -35,9 +35,9 @@
     "raffle": false,
     "appraffle": false,
     "raffleLimit": true,
+    "ban": "未封禁",
     "eventRoom": false,
     "silver2coin": false,
-    "coin2silver": false,
     "sendGift": false,
     "sendGiftRoom": 0,
     "autoSend": false,
@@ -139,6 +139,11 @@
       "tip": "抽奖限制，默认开启，头铁的可以关掉XD",
       "type": "boolean"
     },
+    "ban": {
+      "description": "封禁状态",
+      "tip": "目前的封禁状态，别动XD",
+      "type": "string"
+    },
     "eventRoom": {
       "description": "每日任务",
       "tip": "每日任务",
@@ -147,11 +152,6 @@
     "silver2coin": {
       "description": "银瓜子兑换硬币",
       "tip": "自动将银瓜子兑换成硬币, 每天两个",
-      "type": "boolean"
-    },
-    "coin2silver": {
-      "description": "硬币兑换银瓜子",
-      "tip": "自动将硬币兑换成银瓜子（上限）",
       "type": "boolean"
     },
     "sendGift": {

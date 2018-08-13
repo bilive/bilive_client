@@ -32,6 +32,7 @@ class BiLive {
     _user.forEach(user => user.getUserInfo())// 开始挂机时，获取用户信息
     _user.forEach(user => user.getGiftBag())// 开始挂机时，获取用户礼物包裹信息
     _user.forEach(user => user.daily())
+    _user.forEach(user => user.userData.ban = '未封禁')
     this.loop = setInterval(() => this._loop(), 55 * 1000)
     new Options().Start()
     this.Listener()

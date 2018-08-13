@@ -74,9 +74,21 @@ class Raffle {
         json: true,
         headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(this._options.roomID)}` }
       })
-      if (raffleJoin !== undefined && raffleJoin.response.statusCode === 200 && raffleJoin.body.code === 0) {
+      if (raffleJoin === undefined || raffleJoin.response.statusCode !== 200) return
+      if (raffleJoin.body.code === 0) {
+        if (this._options.user.userData.ban === '已封禁') {
+          tools.sendSCMSG(`${this._options.user.nickname} 已解除封禁`)
+          this._options.user.userData.ban = '未封禁'
+        }
         await tools.Sleep(this._options.time * 1000 + 15 * 1000)
         this._RaffleReward()
+      }
+      else if (raffleJoin.body.code === 400 && raffleJoin.body.msg === '访问被拒绝') {
+        tools.Log(`${this._options.user.nickname} v3抽奖失败，已被封禁`)
+        if (this._options.user.userData.ban === '未封禁') {
+          tools.sendSCMSG(`${this._options.user.nickname} 已被封禁`)
+          this._options.user.userData.ban = '已封禁'
+        }
       }
     }
     else this._RaffleAward()
@@ -102,12 +114,23 @@ class Raffle {
       this._RaffleAward()
     }
     else if (raffleAward.body.code === 0) {
+      if (this._options.user.userData.ban === '已封禁') {
+        tools.sendSCMSG(`${this._options.user.nickname} 已解除封禁`)
+        this._options.user.userData.ban = '未封禁'
+      }
       const gift = raffleAward.body.data
       if (gift.gift_num === 0) tools.Log(this._options.user.nickname, `抽奖 ${this._options.raffleId}`, raffleAward.body.msg)
       else {
         const msg = `${this._options.user.nickname} ${this._options.title} ${this._options.raffleId} 获得 ${gift.gift_num} 个${gift.gift_name}`
         tools.Log(msg)
         if (gift.gift_name.includes('小电视')) tools.sendSCMSG(msg)
+      }
+    }
+    else if (raffleAward.body.code === 400 && raffleAward.body.msg === '访问被拒绝') {
+      tools.Log(`${this._options.user.nickname} v4抽奖失败，已被封禁`)
+      if (this._options.user.userData.ban === '未封禁') {
+        tools.sendSCMSG(`${this._options.user.nickname} 已被封禁`)
+        this._options.user.userData.ban = '已封禁'
       }
     }
   }
