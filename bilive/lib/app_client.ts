@@ -260,7 +260,7 @@ class AppClient {
 &password=${passWord}&platform=${AppClient.platform}&ts=${AppClient.TS}&username=${encodeURIComponent(this.userName)}`
     const auth: request.Options = {
       method: 'POST',
-      uri: 'https://passport.bilibili.com/api/v3/oauth2/login',
+      uri: 'https://passport.bilibili.com/api/v2/oauth2/login',
       body: AppClient.signQuery(authQuery, false),
       jar: this.__jar,
       json: true,
