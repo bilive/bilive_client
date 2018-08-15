@@ -77,7 +77,7 @@ class Raffle {
       if (raffleJoin === undefined || raffleJoin.response.statusCode !== 200) return
       if (raffleJoin.body.code === 0) {
         if (this._options.user.userData.ban === '已封禁') {
-          tools.sendSCMSG(`${this._options.user.nickname} 已解除封禁`)
+          tools.sendSCMSG(`${new Date().toString().slice(4, 24)} : ${this._options.user.nickname} 已解除封禁`)
           this._options.user.userData.ban = '未封禁'
         }
         await tools.Sleep(this._options.time * 1000 + 15 * 1000)
@@ -86,8 +86,11 @@ class Raffle {
       else if (raffleJoin.body.code === 400 && raffleJoin.body.msg === '访问被拒绝') {
         tools.Log(`${this._options.user.nickname} v3抽奖失败，已被封禁`)
         if (this._options.user.userData.ban === '未封禁') {
-          tools.sendSCMSG(`${this._options.user.nickname} 已被封禁`)
+          tools.sendSCMSG(`${new Date().toString().slice(4, 24)} : ${this._options.user.nickname} 已被封禁`)
           this._options.user.userData.ban = '已封禁'
+          this._options.user.userData.raffle = false
+          await tools.Sleep(60 * 60 * 1000)
+          this._options.user.userData.raffle = true
         }
       }
     }
@@ -131,6 +134,9 @@ class Raffle {
       if (this._options.user.userData.ban === '未封禁') {
         tools.sendSCMSG(`${this._options.user.nickname} 已被封禁`)
         this._options.user.userData.ban = '已封禁'
+        this._options.user.userData.raffle = false
+        await tools.Sleep(60 * 60 * 1000)
+        this._options.user.userData.raffle = true
       }
     }
   }
