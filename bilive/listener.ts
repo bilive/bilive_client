@@ -129,7 +129,7 @@ class Listener extends EventEmitter {
    * @memberof Listener
    */
   private _SYSMSGHandler(dataJson: SYS_MSG) {
-    if (dataJson.real_roomid === undefined || dataJson.tv_id === undefined || this._MSGCache.has(dataJson.msg_text)) return
+    if (dataJson.real_roomid === undefined || this._MSGCache.has(dataJson.msg_text)) return
     this._MSGCache.add(dataJson.msg_text)
     const url = apiLiveOrigin + smallTVPathname
     const roomID = dataJson.real_roomid
@@ -143,7 +143,7 @@ class Listener extends EventEmitter {
    * @memberof Listener
    */
   private _SYSGiftHandler(dataJson: SYS_GIFT) {
-    if (dataJson.real_roomid === undefined || dataJson.giftId === undefined || this._MSGCache.has(dataJson.msg_text)) return
+    if (dataJson.real_roomid === undefined || this._MSGCache.has(dataJson.msg_text)) return
     this._MSGCache.add(dataJson.msg_text)
     const url = apiLiveOrigin + rafflePathname
     const roomID = dataJson.real_roomid
