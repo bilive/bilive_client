@@ -137,12 +137,12 @@ async function showLog() {
   const logDF = document.createDocumentFragment()
   logs.forEach(log => {
     const div = document.createElement('div')
-    div.innerText = log
+    div.innerHTML = log.replace(/房间 (\d+) /, '房间 <a href="https://live.bilibili.com/$1" target="_blank" rel="noreferrer">$1</a> ')
     logDF.appendChild(div)
   })
   options.onlog = data => {
     const div = document.createElement('div')
-    div.innerText = data
+    div.innerHTML = data.replace(/房间 (\d+) /, '房间 <a href="https://live.bilibili.com/$1" target="_blank" rel="noreferrer">$1</a> ')
     logDiv.appendChild(div)
     if (logDiv.scrollHeight - logDiv.clientHeight - logDiv.scrollTop < 2 * div.offsetHeight) logDiv.scrollTop = logDiv.scrollHeight
   }
