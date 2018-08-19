@@ -4,8 +4,8 @@
  *
  * @class Options
  */
-var Options = /** @class */ (function () {
-    function Options() {
+class Options {
+    constructor() {
         /**
          * 回调函数
          *
@@ -14,26 +14,22 @@ var Options = /** @class */ (function () {
          */
         this.__callback = {};
         // 关闭窗口时断开连接
-        window.onunload = function () { options.close(); };
+        window.onunload = () => { options.close(); };
     }
-    Object.defineProperty(Options.prototype, "_ts", {
-        /**
-         * 随机16进制数
-         *
-         * @readonly
-         * @protected
-         * @type {string}
-         * @memberof Options
-         */
-        get: function () {
-            var bufArray = window.crypto.getRandomValues(new Uint32Array(5));
-            var random = '';
-            bufArray.forEach(function (value) { random += value.toString(16); });
-            return random.slice(0, 32);
-        },
-        enumerable: true,
-        configurable: true
-    });
+    /**
+     * 随机16进制数
+     *
+     * @readonly
+     * @protected
+     * @type {string}
+     * @memberof Options
+     */
+    get _ts() {
+        const bufArray = window.crypto.getRandomValues(new Uint32Array(5));
+        let random = '';
+        bufArray.forEach(value => { random += value.toString(16); });
+        return random.slice(0, 32);
+    }
     /**
      * 连接到服务器
      *
@@ -42,23 +38,22 @@ var Options = /** @class */ (function () {
      * @returns {Promise<boolean>}
      * @memberof Options
      */
-    Options.prototype.connect = function (path, protocols) {
-        var _this = this;
-        return new Promise(function (resolve) {
+    connect(path, protocols) {
+        return new Promise(resolve => {
             try {
-                var ws_1 = new WebSocket(path, protocols);
-                var removeEvent_1 = function () {
-                    delete ws_1.onopen;
-                    delete ws_1.onerror;
+                const ws = new WebSocket(path, protocols);
+                const removeEvent = () => {
+                    delete ws.onopen;
+                    delete ws.onerror;
                 };
-                ws_1.onopen = function () {
-                    removeEvent_1();
-                    _this._ws = ws_1;
-                    _this._init();
+                ws.onopen = () => {
+                    removeEvent();
+                    this._ws = ws;
+                    this._init();
                     resolve(true);
                 };
-                ws_1.onerror = function (error) {
-                    removeEvent_1();
+                ws.onerror = error => {
+                    removeEvent();
                     console.error(error);
                     resolve(false);
                 };
@@ -68,45 +63,44 @@ var Options = /** @class */ (function () {
                 resolve(false);
             }
         });
-    };
+    }
     /**
      * 添加各种EventListener
      *
      * @protected
      * @memberof Options
      */
-    Options.prototype._init = function () {
-        var _this = this;
-        this._ws.onerror = function (data) {
-            _this.close();
-            if (typeof _this.onwserror === 'function')
-                _this.onwserror(data);
+    _init() {
+        this._ws.onerror = data => {
+            this.close();
+            if (typeof this.onwserror === 'function')
+                this.onwserror(data);
             else
                 console.error(data);
         };
-        this._ws.onclose = function (data) {
-            _this.close();
-            if (typeof _this.onwsclose === 'function')
-                _this.onwsclose(data);
+        this._ws.onclose = data => {
+            this.close();
+            if (typeof this.onwsclose === 'function')
+                this.onwsclose(data);
             else
                 console.error(data);
         };
-        this._ws.onmessage = function (data) {
-            var message = JSON.parse(data.data);
-            var ts = message.ts;
-            if (ts != null && typeof _this.__callback[ts] === 'function') {
+        this._ws.onmessage = data => {
+            const message = JSON.parse(data.data);
+            const ts = message.ts;
+            if (ts != null && typeof this.__callback[ts] === 'function') {
                 delete message.ts;
-                _this.__callback[ts](message);
-                delete _this.__callback[ts];
+                this.__callback[ts](message);
+                delete this.__callback[ts];
             }
-            else if (message.cmd === 'log' && typeof _this.onlog === 'function')
-                _this.onlog(message.msg);
-            else if (typeof _this.onerror === 'function')
-                _this.onerror(data);
+            else if (message.cmd === 'log' && typeof this.onlog === 'function')
+                this.onlog(message.msg);
+            else if (typeof this.onerror === 'function')
+                this.onerror(data);
             else
                 console.error(data);
         };
-    };
+    }
     /**
      * 向服务器发送消息
      *
@@ -116,54 +110,53 @@ var Options = /** @class */ (function () {
      * @returns {Promise<T>}
      * @memberof Options
      */
-    Options.prototype._send = function (message) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            var timeout = setTimeout(function () {
+    _send(message) {
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
                 reject('timeout');
             }, 30 * 1000); // 30秒
-            var ts = _this._ts;
+            const ts = this._ts;
             message.ts = ts;
-            _this.__callback[ts] = function (msg) {
+            this.__callback[ts] = (msg) => {
                 clearTimeout(timeout);
                 resolve(msg);
             };
-            var msg = JSON.stringify(message);
-            if (_this._ws.readyState === WebSocket.OPEN)
-                _this._ws.send(msg);
+            const msg = JSON.stringify(message);
+            if (this._ws.readyState === WebSocket.OPEN)
+                this._ws.send(msg);
             else
                 reject('closed');
         });
-    };
+    }
     /**
      * 关闭连接
      *
      * @memberof Options
      */
-    Options.prototype.close = function () {
+    close() {
         this._ws.close();
         this.__callback = {};
-    };
+    }
     /**
      * 获取Log
      *
      * @returns {Promise<logMSG>}
      * @memberof Options
      */
-    Options.prototype.getLog = function () {
-        var message = { cmd: 'getLog' };
+    getLog() {
+        const message = { cmd: 'getLog' };
         return this._send(message);
-    };
+    }
     /**
      * 获取设置
      *
      * @returns {Promise<configMSG>}
      * @memberof Options
      */
-    Options.prototype.getConfig = function () {
-        var message = { cmd: 'getConfig' };
+    getConfig() {
+        const message = { cmd: 'getConfig' };
         return this._send(message);
-    };
+    }
     /**
      * 保存设置
      *
@@ -171,30 +164,30 @@ var Options = /** @class */ (function () {
      * @returns {Promise<configMSG>}
      * @memberof Options
      */
-    Options.prototype.setConfig = function (data) {
-        var message = { cmd: 'setConfig', data: data };
+    setConfig(data) {
+        const message = { cmd: 'setConfig', data };
         return this._send(message);
-    };
+    }
     /**
      * 获取设置描述
      *
      * @returns {Promise<infoMSG>}
      * @memberof Options
      */
-    Options.prototype.getInfo = function () {
-        var message = { cmd: 'getInfo' };
+    getInfo() {
+        const message = { cmd: 'getInfo' };
         return this._send(message);
-    };
+    }
     /**
      * 获取uid
      *
      * @returns {Promise<userMSG>}
      * @memberof Options
      */
-    Options.prototype.getAllUID = function () {
-        var message = { cmd: 'getAllUID' };
+    getAllUID() {
+        const message = { cmd: 'getAllUID' };
         return this._send(message);
-    };
+    }
     /**
      * 获取用户设置
      *
@@ -202,10 +195,10 @@ var Options = /** @class */ (function () {
      * @returns {Promise<userDataMSG>}
      * @memberof Options
      */
-    Options.prototype.getUserData = function (uid) {
-        var message = { cmd: 'getUserData', uid: uid };
+    getUserData(uid) {
+        const message = { cmd: 'getUserData', uid };
         return this._send(message);
-    };
+    }
     /**
      * 保存用户设置
      *
@@ -215,12 +208,12 @@ var Options = /** @class */ (function () {
      * @returns {Promise<userDataMSG>}
      * @memberof Options
      */
-    Options.prototype.setUserData = function (uid, data, captcha) {
-        var message = { cmd: 'setUserData', uid: uid, data: data, captcha: captcha };
+    setUserData(uid, data, captcha) {
+        const message = { cmd: 'setUserData', uid, data, captcha };
         if (captcha != null)
             message.captcha = captcha;
         return this._send(message);
-    };
+    }
     /**
      * 删除用户
      *
@@ -228,19 +221,18 @@ var Options = /** @class */ (function () {
      * @returns {Promise<userDataMSG>}
      * @memberof Options
      */
-    Options.prototype.delUserData = function (uid) {
-        var message = { cmd: 'delUserData', uid: uid };
+    delUserData(uid) {
+        const message = { cmd: 'delUserData', uid };
         return this._send(message);
-    };
+    }
     /**
      * 设置新用户
      *
      * @returns {Promise<userDataMSG>}
      * @memberof Options
      */
-    Options.prototype.newUserData = function () {
-        var message = { cmd: 'newUserData' };
+    newUserData() {
+        const message = { cmd: 'newUserData' };
         return this._send(message);
-    };
-    return Options;
-}());
+    }
+}
