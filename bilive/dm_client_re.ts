@@ -1,5 +1,5 @@
 import tools from './lib/tools'
-import DMclient, { DMclientOptions } from './lib/dm_client'
+import DMclient from './lib/dm_client'
 /**
  * 弹幕客户端, 可自动重连
  * 因为之前重连逻辑写在一起实在太乱了, 所以独立出来

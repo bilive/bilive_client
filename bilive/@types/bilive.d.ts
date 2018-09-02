@@ -1,10 +1,12 @@
-// index
+/*******************
+ ****** index ******
+ *******************/
 /**
  * 应用设置
  * 
  * @interface options
  */
-interface _options {
+interface options {
   server: server
   config: config
   user: userCollection
@@ -100,7 +102,229 @@ interface giftHas {
 type giftList = Map<number, giftNameNum>
 type userGiftList = Map<string, userNickGift>
 type userGiftID = Map<number, giftHas>
-// bilive_client
+/*******************
+ ****** User ******
+ *******************/
+interface AppClient {
+  readonly actionKey: string
+  readonly platform: string
+  readonly appKey: string
+  readonly build: string
+  readonly device: string
+  readonly mobiApp: string
+  readonly TS: number
+  readonly RND: number
+  readonly DeviceID: string
+  readonly baseQuery: string
+  signQuery(params: string, ts?: boolean): string
+  signQueryBase(params?: string): string
+  readonly status: typeof status
+  captcha: string
+  userName: string
+  passWord: string
+  biliUID: number
+  accessToken: string
+  refreshToken: string
+  cookieString: string
+  headers: Headers
+  init(): Promise<void>
+  getCaptcha(): Promise<captchaResponse>
+  login(): Promise<loginResponse>
+  logout(): Promise<logoutResponse>
+  refresh(): Promise<loginResponse>
+}
+interface Online extends AppClient {
+  userData: userData
+  readonly nickname: string
+  jar: {
+    setCookie(cookieOrStr: string, uri: string): void
+  }
+  captchaJPEG: string
+  readonly tokenQuery: string
+  Start(): Promise<'captcha' | 'stop' | void>
+  Stop(): void
+  getOnlineInfo(roomID?: number): Promise<'captcha' | 'stop' | void>
+}
+interface Daily extends Online {
+  uid: string
+  Start(): Promise<'captcha' | 'stop' | void>
+  Stop(): void
+  nextDay(): Promise<void>
+  daily(): Promise<void>
+  sign(): Promise<void>
+  treasureBox(): Promise<void>
+  eventRoom(): Promise<void>
+  silver2coin(): Promise<void>
+  sendGift(): Promise<void>
+  checkBag(): Promise<XHRresponse<bagInfo> | undefined>
+  signGroup(): Promise<void>
+}
+type User = Daily
+/*******************
+ **** dm_client ****
+ *******************/
+declare enum dmErrorStatus {
+  'client' = 0,
+  'danmaku' = 1,
+  'timeout' = 2
+}
+interface DMclientOptions {
+  roomID?: number
+  userID?: number
+  protocol?: DMclientProtocol
+}
+type DMclientProtocol = 'socket' | 'flash' | 'ws' | 'wss'
+type DMerror = DMclientError | DMdanmakuError
+interface DMclientError {
+  status: dmErrorStatus.client | dmErrorStatus.timeout
+  error: Error
+}
+interface DMdanmakuError {
+  status: dmErrorStatus.danmaku
+  error: TypeError
+  data: Buffer
+}
+/*******************
+ *** app_client ****
+ *******************/
+declare enum appStatus {
+  'success' = 0,
+  'captcha' = 1,
+  'error' = 2,
+  'httpError' = 3
+}
+/**
+ * 公钥返回
+ * 
+ * @interface getKeyResponse
+ */
+interface getKeyResponse {
+  ts: number
+  code: number
+  data: getKeyResponseData
+}
+interface getKeyResponseData {
+  hash: string
+  key: string
+}
+/**
+ * 验证返回
+ * 
+ * @interface authResponse
+ */
+interface authResponse {
+  ts: number
+  code: number
+  data: authResponseData
+}
+interface authResponseData {
+  status: number
+  token_info: authResponseTokeninfo
+  cookie_info: authResponseCookieinfo
+  sso: string[]
+}
+interface authResponseCookieinfo {
+  cookies: authResponseCookieinfoCooky[]
+  domains: string[]
+}
+interface authResponseCookieinfoCooky {
+  name: string
+  value: string
+  http_only: number
+  expires: number
+}
+interface authResponseTokeninfo {
+  mid: number
+  access_token: string
+  refresh_token: string
+  expires_in: number
+}
+/**
+ * 注销返回
+ * 
+ * @interface revokeResponse
+ */
+interface revokeResponse {
+  message: string
+  ts: number
+  code: number
+}
+/**
+ * 登录返回信息
+ */
+type loginResponse = loginResponseSuccess | loginResponseCaptcha | loginResponseError | loginResponseHttp
+interface loginResponseSuccess {
+  status: appStatus.success
+  data: authResponse
+}
+interface loginResponseCaptcha {
+  status: appStatus.captcha
+  data: authResponse
+}
+interface loginResponseError {
+  status: appStatus.error
+  data: authResponse
+}
+interface loginResponseHttp {
+  status: appStatus.httpError
+  data: XHRresponse<getKeyResponse> | XHRresponse<authResponse> | undefined
+}
+/**
+ * 登出返回信息
+ */
+type logoutResponse = revokeResponseSuccess | revokeResponseError | revokeResponseHttp
+interface revokeResponseSuccess {
+  status: appStatus.success
+  data: revokeResponse
+}
+interface revokeResponseError {
+  status: appStatus.error
+  data: revokeResponse
+}
+interface revokeResponseHttp {
+  status: appStatus.httpError
+  data: XHRresponse<revokeResponse> | undefined
+}
+/**
+ * 验证码返回信息
+ */
+type captchaResponse = captchaResponseSuccess | captchaResponseError
+interface captchaResponseSuccess {
+  status: appStatus.success
+  data: Buffer
+}
+interface captchaResponseError {
+  status: appStatus.error
+  data: XHRresponse<Buffer> | undefined
+}
+/*******************
+ ****** tools ******
+ *******************/
+/**
+ * XHR返回
+ * 
+ * @interface response
+ * @template T 
+ */
+interface XHRresponse<T> {
+  response: {
+    statusCode: number
+  }
+  body: T
+}
+/**
+ * Server酱
+ * 
+ * @interface serverChan
+ */
+interface serverChan {
+  errno: number
+  errmsg: string
+  dataset: string
+}
+/*******************
+ ** bilive_client **
+ *******************/
 /**
  * 消息格式
  * 
@@ -114,7 +338,9 @@ interface message {
   title: string
   time: number
 }
-// listener
+/*******************
+ **** listener *****
+ *******************/
 /**
  * 抽奖raffle检查
  * 
@@ -259,7 +485,9 @@ interface getAllListDataRoomList {
   rec_type: number
   pk_id: number
 }
-// raffle
+/*******************
+ ***** raffle ******
+ *******************/
 /**
  * 抽奖设置
  * 
@@ -267,7 +495,7 @@ interface getAllListDataRoomList {
  */
 interface raffleOptions extends message {
   raffleId: number
-  user: any
+  user: User
 }
 /**
  * 参与抽奖信息
@@ -338,7 +566,21 @@ interface lotteryRewardDataAwardlist {
   type: number
   content: string
 }
-// online
+/*******************
+ ***** online ******
+ *******************/
+/**
+ * 在线心跳返回
+ * 
+ * @interface userOnlineHeart
+ */
+interface userOnlineHeart {
+  code: number
+  msg: string
+}
+/*******************
+ ***** daily *******
+ *******************/
 /**
  * 签到信息
  * 
@@ -357,15 +599,6 @@ interface signInfoData {
   newTask: number
   hadSignDays: number
   remindDays: number
-}
-/**
- * 在线心跳返回
- * 
- * @interface userOnlineHeart
- */
-interface userOnlineHeart {
-  code: number
-  msg: string
 }
 /**
  * 在线领瓜子宝箱
@@ -543,7 +776,7 @@ interface silver2coin {
   code: number
   msg: string
   message: string
-  data: silver2coinData;
+  data: silver2coinData
 }
 interface silver2coinData {
   silver: string
@@ -579,14 +812,4 @@ interface capsule {
 }
 interface capsuleData {
   capsule: SEND_GIFT_data_capsule
-}
-/**
- * Server酱
- * 
- * @interface serverChan
- */
-interface serverChan {
-  errno: number
-  errmsg: string
-  dataset: string
 }

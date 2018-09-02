@@ -1,7 +1,7 @@
 import request from 'request'
 import tools from './lib/tools'
 import AppClient from './lib/app_client'
-import { apiLiveOrigin, smallTVPathname, rafflePathname, lotteryPathname } from './index'
+import { apiLiveOrigin, smallTVPathname, rafflePathname, lotteryPathname } from './options'
 /**
  * 自动参与抽奖
  * 
@@ -15,6 +15,7 @@ class Raffle {
    */
   constructor(raffleOptions: raffleOptions) {
     this._options = raffleOptions
+    this._user = raffleOptions.user
   }
   /**
    * 抽奖设置
@@ -24,6 +25,14 @@ class Raffle {
    * @memberof Raffle
    */
   private _options: raffleOptions
+  /**
+   * 抽奖用户
+   *
+   * @private
+   * @type {User}
+   * @memberof Raffle
+   */
+  private _user: User
   /**
    * 抽奖地址
    * 
@@ -79,10 +88,10 @@ class Raffle {
     const reward: request.Options = {
       method: 'POST',
       uri: `${this._url}/getAward`,
-      body: AppClient.signQueryBase(`${this._options.user.tokenQuery}&raffleId=${this._options.raffleId}\
+      body: AppClient.signQueryBase(`${this._user.tokenQuery}&raffleId=${this._options.raffleId}\
 &roomid=${this._options.roomID}&type=${this._options.type}`),
       json: true,
-      headers: this._options.user.headers
+      headers: this._user.headers
     }
     const raffleAward = await tools.XHR<raffleAward>(reward, 'Android')
     if (raffleAward === undefined || raffleAward.response.statusCode !== 200) return
@@ -92,14 +101,14 @@ class Raffle {
     }
     else if (raffleAward.body.code === 0) {
       const gift = raffleAward.body.data
-      if (gift.gift_num === 0) tools.Log(this._options.user.nickname, this._options.title, this._options.raffleId, raffleAward.body.msg)
+      if (gift.gift_num === 0) tools.Log(this._user.nickname, this._options.title, this._options.raffleId, raffleAward.body.msg)
       else {
-        const msg = `${this._options.user.nickname} ${this._options.title} ${this._options.raffleId} 获得 ${gift.gift_num} 个${gift.gift_name}`
+        const msg = `${this._user.nickname} ${this._options.title} ${this._options.raffleId} 获得 ${gift.gift_num} 个${gift.gift_name}`
         tools.Log(msg)
         if (gift.gift_name.includes('小电视')) tools.sendSCMSG(msg)
       }
     }
-    else tools.Log(this._options.user.nickname, this._options.title, this._options.raffleId, raffleAward.body)
+    else tools.Log(this._user.nickname, this._options.title, this._options.raffleId, raffleAward.body)
   }
   /**
    * 抽奖Lottery
@@ -110,16 +119,16 @@ class Raffle {
     const reward: request.Options = {
       method: 'POST',
       uri: `${this._url}/join`,
-      body: AppClient.signQueryBase(`${this._options.user.tokenQuery}&id=${this._options.raffleId}\
+      body: AppClient.signQueryBase(`${this._user.tokenQuery}&id=${this._options.raffleId}\
 &roomid=${this._options.roomID}&type=${this._options.type}`),
       json: true,
-      headers: this._options.user.headers
+      headers: this._user.headers
     }
     const lotteryReward = await tools.XHR<lotteryReward>(reward, 'Android')
     if (lotteryReward !== undefined && lotteryReward.response.statusCode === 200) {
       if (lotteryReward.body.code === 0)
-        tools.Log(this._options.user.nickname, this._options.title, this._options.raffleId, lotteryReward.body.data.message)
-      else tools.Log(this._options.user.nickname, this._options.title, this._options.raffleId, lotteryReward.body)
+        tools.Log(this._user.nickname, this._options.title, this._options.raffleId, lotteryReward.body.data.message)
+      else tools.Log(this._user.nickname, this._options.title, this._options.raffleId, lotteryReward.body)
     }
   }
 }

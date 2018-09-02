@@ -1,13 +1,7 @@
-import fs from 'fs'
 import util from 'util'
 import crypto from 'crypto'
 import request from 'request'
-import { liveOrigin, apiVCOrigin, apiLiveOrigin, _options } from '../index'
-const FSmkdir = util.promisify(fs.mkdir)
-const FSexists = util.promisify(fs.exists)
-const FScopyFile = util.promisify(fs.copyFile)
-const FSreadFile = util.promisify(fs.readFile)
-const FSwriteFile = util.promisify(fs.writeFile)
+import Options, { liveOrigin, apiVCOrigin, apiLiveOrigin } from '../options'
 /**
  * 请求头
  * 
@@ -19,7 +13,7 @@ function getHeaders(platform: string): request.Headers {
     case 'Android':
       return {
         'Connection': 'Keep-Alive',
-        'User-Agent': 'Mozilla/5.0 BiliDroid/5.29.1 (bbcallen@gmail.com)'
+        'User-Agent': 'Mozilla/5.0 BiliDroid/5.30.0 (bbcallen@gmail.com)'
       }
     case 'WebView':
       return {
@@ -28,7 +22,7 @@ function getHeaders(platform: string): request.Headers {
         'Connection': 'keep-alive',
         'Cookie': 'l=v',
         'Origin': liveOrigin,
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 8.0.0; G8142 Build/47.1.A.8.49; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/68.0.3440.84 Mobile Safari/537.36 BiliApp/5291001',
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 8.0.0; G8142 Build/47.1.A.12.270; wv) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.91 Mobile Safari/537.36 BiliApp/5300000',
         'X-Requested-With': 'tv.danmaku.bili'
       }
     default:
@@ -39,7 +33,7 @@ function getHeaders(platform: string): request.Headers {
         'Cookie': 'l=v',
         'DNT': '1',
         'Origin': liveOrigin,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.91 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'
       }
   }
 }
@@ -97,8 +91,6 @@ async function testIP(apiIPs: string[]): Promise<number> {
   Log('可用ip数量为', num)
   return num
 }
-const shortRoomID = new Map<number, number>()
-const longRoomID = new Map<number, number>()
 /**
  * 获取短id
  * 
@@ -106,7 +98,7 @@ const longRoomID = new Map<number, number>()
  * @returns {number} 
  */
 function getShortRoomID(roomID: number): number {
-  return shortRoomID.get(roomID) || roomID
+  return Options.shortRoomID.get(roomID) || roomID
 }
 /**
  * 获取长id
@@ -115,7 +107,7 @@ function getShortRoomID(roomID: number): number {
  * @returns {number} 
  */
 function getLongRoomID(roomID: number): number {
-  return longRoomID.get(roomID) || roomID
+  return Options.longRoomID.get(roomID) || roomID
 }
 /**
  * 添加request头信息
@@ -125,9 +117,8 @@ function getLongRoomID(roomID: number): number {
  * @param {('PC' | 'Android' | 'WebView')} [platform='PC'] 
  * @returns {Promise<response<T> | undefined>} 
  */
-function XHR<T>(options: request.OptionsWithUri, platform: 'PC' | 'Android' | 'WebView' = 'PC')
-  : Promise<response<T> | undefined> {
-  return new Promise<response<T> | undefined>(resolve => {
+function XHR<T>(options: request.OptionsWithUri, platform: 'PC' | 'Android' | 'WebView' = 'PC'): Promise<XHRresponse<T> | undefined> {
+  return new Promise<XHRresponse<T> | undefined>(resolve => {
     options.gzip = true
     // 添加用户代理
     if (typeof options.uri === 'string' && (options.uri.startsWith(apiLiveOrigin) || options.uri.startsWith(apiVCOrigin))) {
@@ -152,49 +143,6 @@ function XHR<T>(options: request.OptionsWithUri, platform: 'PC' | 'Android' | 'W
         return resolve(undefined)
       }
     })
-  })
-}
-/**
- * 操作数据文件, 为了可以快速应用不使用数据库
- * 
- * @param {_options} [options]
- * @returns {Promise<options>}
- */
-function Options(options?: _options): Promise<_options> {
-  return new Promise(async resolve => {
-    // 根据npm start参数不同设置不同路径
-    const dirname = __dirname + (process.env.npm_package_scripts_start === 'node build/app.js' ? '/../../..' : '/../..')
-    // 检查是否有options目录
-    const hasDir = await FSexists(dirname + '/options/')
-    if (!hasDir) await FSmkdir(dirname + '/options/')
-    if (options === undefined) {
-      // 复制默认设置文件到用户设置文件
-      const hasFile = await FSexists(dirname + '/options/options.json')
-      if (!hasFile) await FScopyFile(dirname + '/bilive/options.default.json', dirname + '/options/options.json')
-      // 读取默认设置文件
-      const defaultOptionBuffer = await FSreadFile(dirname + '/bilive/options.default.json')
-      const defaultOption = await JSONparse<_options>(defaultOptionBuffer.toString())
-      // 读取用户设置文件
-      const userOptionBuffer = await FSreadFile(dirname + '/options/options.json')
-      const userOption = await JSONparse<_options>(userOptionBuffer.toString())
-      if (defaultOption === undefined || userOption === undefined) throw new TypeError('文件格式化失败')
-      defaultOption.server = Object.assign({}, defaultOption.server, userOption.server)
-      defaultOption.config = Object.assign({}, defaultOption.config, userOption.config)
-      for (const uid in userOption.user)
-        defaultOption.user[uid] = Object.assign({}, defaultOption.newUserData, userOption.user[uid])
-      defaultOption.roomList.forEach(([long, short]) => {
-        shortRoomID.set(long, short)
-        longRoomID.set(short, long)
-      })
-      return resolve(defaultOption)
-    }
-    else {
-      const blacklist = ['newUserData', 'info', 'apiIPs', 'roomList']
-      const error = await FSwriteFile(dirname + '/options/options.json'
-        , JSON.stringify(options, (key, value) => blacklist.includes(key) ? undefined : value, 2))
-      if (error !== undefined) ErrorLog(error)
-      resolve(options)
-    }
   })
 }
 /**
@@ -282,7 +230,7 @@ function ErrorLog(...message: any[]) {
  * @param {string} message 
  */
 function sendSCMSG(message: string) {
-  const adminServerChan = _options.config.adminServerChan
+  const adminServerChan = Options._.config.adminServerChan
   if (adminServerChan !== '') {
     const sendtoadmin: request.Options = {
       method: 'POST',
@@ -301,15 +249,4 @@ function sendSCMSG(message: string) {
 function Sleep(ms: number): Promise<'sleep'> {
   return new Promise<'sleep'>(resolve => setTimeout(() => resolve('sleep'), ms))
 }
-/**
- * XHR返回
- * 
- * @interface response
- * @template T 
- */
-interface response<T> {
-  response: request.RequestResponse
-  body: T
-}
-export default { testIP, XHR, setCookie, getCookie, Options, getShortRoomID, getLongRoomID, JSONparse, Hash, Log, logs, ErrorLog, sendSCMSG, Sleep }
-export { response }
+export default { testIP, XHR, setCookie, getCookie, getShortRoomID, getLongRoomID, JSONparse, Hash, Log, logs, ErrorLog, sendSCMSG, Sleep }

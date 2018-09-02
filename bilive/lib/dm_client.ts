@@ -9,7 +9,7 @@ import AppClient from './app_client'
  * 
  * @enum {number}
  */
-enum errorStatus {
+enum dmErrorStatus {
   'client',
   'danmaku',
   'timeout',
@@ -175,10 +175,10 @@ class DMclient extends EventEmitter {
    * 错误类型
    * 
    * @static
-   * @type {typeof errorStatus}
+   * @type {typeof dmErrorStatus}
    * @memberof DMclient
    */
-  public static readonly errorStatus: typeof errorStatus = errorStatus
+  public static readonly errorStatus: typeof dmErrorStatus = dmErrorStatus
   /**
    * 连接到指定服务器
    * 
@@ -267,7 +267,7 @@ class DMclient extends EventEmitter {
         .on('close', () => this.Close())
     }
     this._client.on('error', error => {
-      const errorInfo: DMclientError = { status: errorStatus.client, error: error }
+      const errorInfo: DMclientError = { status: dmErrorStatus.client, error: error }
       this._ClientErrorHandler(errorInfo)
     })
   }
@@ -312,7 +312,7 @@ class DMclient extends EventEmitter {
     else if (this._protocol === 'flash') data = ''
     else data = '[object Object]'
     this._timeout = setTimeout(() => {
-      const errorInfo: DMclientError = { status: errorStatus.timeout, error: new Error('心跳超时') }
+      const errorInfo: DMclientError = { status: dmErrorStatus.timeout, error: new Error('心跳超时') }
       this._ClientErrorHandler(errorInfo)
     }, 10 * 1000)
     this._Timer = setTimeout(() => this._ClientHeart(), 30 * 1000)
@@ -367,13 +367,13 @@ class DMclient extends EventEmitter {
     const dataLen = data.length
     if (dataLen < 16 || dataLen > 0x100000) {
       // 抛弃长度过短和过长的数据
-      const errorInfo: DMdanmakuError = { status: errorStatus.danmaku, error: new TypeError('数据长度异常'), data }
+      const errorInfo: DMdanmakuError = { status: dmErrorStatus.danmaku, error: new TypeError('数据长度异常'), data }
       return this._ClientErrorHandler(errorInfo)
     }
     const packageLen = data.readInt32BE(0)
     if (packageLen < 16 || packageLen > 0x100000) {
       // 抛弃包长度异常的数据
-      const errorInfo: DMdanmakuError = { status: errorStatus.danmaku, error: new TypeError('包长度异常'), data }
+      const errorInfo: DMdanmakuError = { status: dmErrorStatus.danmaku, error: new TypeError('包长度异常'), data }
       return this._ClientErrorHandler(errorInfo)
     }
     // 等待拼接数据
@@ -391,7 +391,7 @@ class DMclient extends EventEmitter {
         }
         else {
           // 直接抛弃解压失败的数据
-          const errorInfo: DMdanmakuError = { status: errorStatus.danmaku, error: new TypeError('解压数据失败'), data }
+          const errorInfo: DMdanmakuError = { status: dmErrorStatus.danmaku, error: new TypeError('解压数据失败'), data }
           return this._ClientErrorHandler(errorInfo)
         }
       }
@@ -418,7 +418,7 @@ class DMclient extends EventEmitter {
         if (dataJson !== undefined) this._ClientData(dataJson)
         else {
           // 格式化消息失败则跳过
-          const errorInfo: DMdanmakuError = { status: errorStatus.danmaku, error: new TypeError('意外的弹幕信息'), data }
+          const errorInfo: DMdanmakuError = { status: dmErrorStatus.danmaku, error: new TypeError('意外的弹幕信息'), data }
           this._ClientErrorHandler(errorInfo)
         }
       }
@@ -427,7 +427,7 @@ class DMclient extends EventEmitter {
         this.emit('connect')
         break
       default: {
-        const errorInfo: DMdanmakuError = { status: errorStatus.danmaku, error: new TypeError('未知的弹幕内容'), data }
+        const errorInfo: DMdanmakuError = { status: dmErrorStatus.danmaku, error: new TypeError('未知的弹幕内容'), data }
         this._ClientErrorHandler(errorInfo)
       }
         break
@@ -465,21 +465,4 @@ class DMclient extends EventEmitter {
     })
   }
 }
-interface DMclientOptions {
-  roomID?: number
-  userID?: number
-  protocol?: DMclientProtocol
-}
-type DMclientProtocol = 'socket' | 'flash' | 'ws' | 'wss'
-type DMerror = DMclientError | DMdanmakuError
-interface DMclientError {
-  status: errorStatus.client | errorStatus.timeout
-  error: Error
-}
-interface DMdanmakuError {
-  status: errorStatus.danmaku
-  error: TypeError
-  data: Buffer
-}
 export default DMclient
-export { DMclientOptions, DMclientProtocol, DMerror, DMclientError, DMdanmakuError }

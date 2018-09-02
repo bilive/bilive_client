@@ -1,8 +1,9 @@
 import tools from './lib/tools'
-import User from './user'
+import User from './daily'
 import Raffle from './raffle'
-import Options from './options'
+import WebAPI from './webapi'
 import Listener from './listener'
+import Options from './options'
 /**
  * 主程序
  * 
@@ -24,18 +25,16 @@ class BiLive {
    * @memberof BiLive
    */
   public async Start() {
-    const option = await tools.Options()
-    Object.assign(_options, option)
-    await tools.testIP(_options.apiIPs)
-    for (const uid in _options.user) {
-      if (!_options.user[uid].status) continue
-      const user = new User(uid, _options.user[uid])
+    await tools.testIP(Options._.apiIPs)
+    for (const uid in Options._.user) {
+      if (!Options._.user[uid].status) continue
+      const user = new User(uid, Options._.user[uid])
       const status = await user.Start()
       if (status !== undefined) user.Stop()
     }
-    _user.forEach(user => user.daily())
+    Options.user.forEach(user => user.daily())
     this.loop = setInterval(() => this._loop(), 50 * 1000)
-    new Options().Start()
+    new WebAPI().Start()
     this.Listener()
   }
   /**
@@ -53,13 +52,13 @@ class BiLive {
     const cstHour = cst.getUTCHours()
     const cstMin = cst.getUTCMinutes()
     // 每天00:10刷新任务
-    if (cstString === '00:10') _user.forEach(user => user.nextDay())
+    if (cstString === '00:10') Options.user.forEach(user => user.nextDay())
     // 每天13:55再次自动送礼, 因为一般活动14:00结束
-    else if (cstString === '13:55') _user.forEach(user => user.sendGift())
-    // 每天00:30, 08:30, 16:30做日常
-    if (cstMin === 30 && cstHour % 8 === 0) _user.forEach(user => user.daily())
+    else if (cstString === '13:55') Options.user.forEach(user => user.sendGift())
+    // 每天04:30, 12:30, 20:30做日常
+    if (cstMin === 30 && cstHour % 8 === 4) Options.user.forEach(user => user.daily())
     // 抽奖暂停
-    const rafflePause = _options.config.rafflePause
+    const rafflePause = Options._.config.rafflePause
     if (rafflePause.length > 1) {
       const start = rafflePause[0]
       const end = rafflePause[1]
@@ -68,7 +67,7 @@ class BiLive {
     }
     else this._raffle = true
     // 礼物总数统计
-    if (cstString === _options.config.calcGiftTime) this.calcGift()
+    if (cstString === Options._.config.calcGiftTime) this.calcGift()
     if (cstMin % 10 === 0) {
       // 更新监听房间
       this._SYSListener.updateAreaRoom()
@@ -96,11 +95,11 @@ class BiLive {
    */
   private async _Raffle(raffleMSG: message) {
     if (!this._raffle) return
-    const raffleDelay = _options.config.raffleDelay
+    const raffleDelay = Options._.config.raffleDelay
     if (raffleDelay !== 0) await tools.Sleep(raffleDelay)
-    _user.forEach(user => {
+    Options.user.forEach(user => {
       if (user.captchaJPEG !== '' || !user.userData.raffle) return
-      const droprate = _options.config.droprate
+      const droprate = Options._.config.droprate
       if (droprate !== 0 && Math.random() < droprate / 100)
         return tools.Log(user.nickname, '丢弃抽奖', raffleMSG.id)
       const raffleOptions: raffleOptions = { ...raffleMSG, raffleId: raffleMSG.id, user }
@@ -130,7 +129,7 @@ class BiLive {
     const giftList: giftList = new Map()
     // 缓存用户礼物数
     const userGiftList: userGiftList = new Map()
-    for (const [uid, user] of _user) {
+    for (const [uid, user] of Options.user) {
       const bagInfo = await user.checkBag()
       if (bagInfo === undefined || bagInfo.response.statusCode !== 200 || bagInfo.body.code !== 0 || bagInfo.body.data.length === 0)
         userGiftList.set(uid, { nickname: user.nickname, gift: new Map() })
@@ -182,14 +181,4 @@ class BiLive {
     tools.sendSCMSG(table)
   }
 }
-// 自定义一些常量
-const liveOrigin = 'https://live.bilibili.com'
-const apiVCOrigin = 'https://api.vc.bilibili.com'
-const apiLiveOrigin = 'https://api.live.bilibili.com'
-const smallTVPathname = '/gift/v4/smalltv'
-const rafflePathname = '/activity/v1/Raffle'
-const lotteryPathname = '/lottery/v1/lottery'
-const _user: Map<string, User> = new Map()
-const _options: _options = <_options>{}
 export default BiLive
-export { liveOrigin, apiVCOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, lotteryPathname, _user, _options }

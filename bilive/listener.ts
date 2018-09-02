@@ -3,7 +3,7 @@ import { EventEmitter } from 'events'
 import tools from './lib/tools'
 import AppClient from './lib/app_client'
 import DMclient from './dm_client_re'
-import { apiLiveOrigin, smallTVPathname, rafflePathname, _options } from './index'
+import Options, { apiLiveOrigin, smallTVPathname, rafflePathname } from './options'
 /**
  * 监听服务器消息
  * 
@@ -78,7 +78,7 @@ class Listener extends EventEmitter {
    * @memberof Listener
    */
   public async updateAreaRoom() {
-    const userID = _options.config.defaultUserID
+    const userID = Options._.config.defaultUserID
     // 获取直播列表
     const getAllList = await tools.XHR<getAllList>({
       uri: `${apiLiveOrigin}/room/v2/AppIndex/getAllList?${AppClient.baseQuery}`,

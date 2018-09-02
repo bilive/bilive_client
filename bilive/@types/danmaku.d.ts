@@ -554,7 +554,7 @@ interface NOTICE_MSG extends danmuJson {
 }
 interface NOTICE_MSG_style {
   head_icon: string
-  is_anim: number;
+  is_anim: number
   tail_icon: string
   background: string
   color: string
@@ -622,7 +622,6 @@ interface EVENT_CMD_data {
   /** 图片地址 */
   event_img: string
 }
-
 /**
  * 抽奖LOTTERY
  * {"cmd":"LOTTERY_START","data":{"id":216101,"roomid":5712065,"message":"290974992 在【5712065】购买了总督，请前往抽奖","type":"guard","link":"https://live.bilibili.com/5712065","lottery":{"id":216101,"sender":{"uid":290974992,"uname":"","face":""},"keyword":"guard","time":86400,"status":1,"mobile_display_mode":2,"mobile_static_asset":"","mobile_animation_asset":""}},"_roomid":5712065}
@@ -668,6 +667,13 @@ interface LOTTERY_START_data_lottery_sender {
   /* 头像地址 */
   face: string
 }
+/**
+ * 舰队抽奖
+ * {"cmd":"GUARD_LOTTERY_START","data":{"id":382934,"roomid":5096,"message":"千尘の可爱笋 在【5096】购买了舰长，请前往抽奖","type":"guard","privilege_type":3,"link":"https://live.bilibili.com/5096","lottery":{"id":382934,"sender":{"uid":281218616,"uname":"千尘の可爱笋","face":"http://i0.hdslb.com/bfs/face/939ea830a4ea3f3db6daba8fa900818e213ccc00.jpg"},"keyword":"guard","time":1200,"status":1,"mobile_display_mode":2,"mobile_static_asset":"","mobile_animation_asset":""}},"_roomid":5096}
+ *
+ * @interface GUARD_LOTTERY_START
+ */
+interface GUARD_LOTTERY_START extends LOTTERY_START { }
 /**
  * 快速抽奖
  * 
@@ -970,6 +976,49 @@ interface PK_MIC_Base extends danmuJson {
   pk_id: number
   /** PK状态 */
   pk_status: number
+}
+/**
+ * PK邀请
+ * {"cmd":"PK_INVITE_INIT","pk_invite_status":200,"invite_id":514,"face":"http://i2.hdslb.com/bfs/face/b50c99b0c989eb303e308b0574d509acab7b8012.jpg","uname":"不会编程的飞飞","area_name":"视频聊天","user_level":22,"master_level":16,"roomid":11420618,"_roomid":11420618}
+ *
+ * @interface PK_INVITE_INIT
+ * @extends {danmuJson}
+ */
+interface PK_INVITE_INIT extends danmuJson {
+  pk_invite_status: number
+  invite_id: number
+  face: string
+  uname: string
+  area_name: string
+  user_level: number
+  master_level: number
+}
+/**
+ * 拒绝PK邀请
+ * {"cmd":"PK_INVITE_REFUSE","pk_invite_status":1100,"invite_id":698,"roomid":"11741803","_roomid":11741803}
+ *
+ * @interface PK_INVITE_REFUSE
+ * @extends {danmuJson}
+ */
+interface PK_INVITE_REFUSE extends danmuJson {
+  pk_invite_status: number
+  invite_id: number
+}
+/**
+ * 取消PK邀请
+ * {"cmd":"PK_INVITE_CANCEL","pk_invite_status":1200,"invite_id":1023,"face":"http://i2.hdslb.com/bfs/face/e68d36b37038428fd1e32f894f8c2eee6388412d.jpg","uname":"纯情的黄老师","area_name":"视频聊天","user_level":10,"master_level":19,"roomid":"5375","_roomid":5375}
+ *
+ * @interface PK_INVITE_CANCEL
+ * @extends {danmuJson}
+ */
+interface PK_INVITE_CANCEL extends danmuJson {
+  pk_invite_status: number;
+  invite_id: number;
+  face: string;
+  uname: string;
+  area_name: string;
+  user_level: number;
+  master_level: number;
 }
 /**
  * PK匹配

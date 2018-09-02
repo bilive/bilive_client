@@ -2,19 +2,19 @@ import request from 'request'
 import tools from './lib/tools'
 import Online from './online'
 import AppClient from './lib/app_client'
-import { liveOrigin, apiVCOrigin, apiLiveOrigin, _options, _user } from './index'
+import Options, { liveOrigin, apiVCOrigin, apiLiveOrigin } from './options'
 /**
- * Creates an instance of User.
+ * Creates an instance of Daily.
  * 
- * @class User
+ * @class Daily
  * @extends {Online}
  */
-class User extends Online {
+class Daily extends Online {
   /**
-   * Creates an instance of User.
+   * Creates an instance of Daily.
    * @param {string} uid 
    * @param {userData} userData 
-   * @memberof User
+   * @memberof Daily
    */
   constructor(uid: string, userData: userData) {
     super(userData)
@@ -32,33 +32,34 @@ class User extends Online {
    * 'captcha'为登录需要验证码, 若无法处理需Stop()
    * 
    * @returns {(Promise<'captcha' | 'stop' | void>)} 
-   * @memberof User
+   * @memberof Daily
    */
   public Start(): Promise<'captcha' | 'stop' | void> {
-    if (!_user.has(this.uid)) _user.set(this.uid, this)
+    // @ts-ignore 继承属性
+    if (!Options.user.has(this.uid)) Options.user.set(this.uid, this)
     return super.Start()
   }
   /**
    * 停止挂机
    * 
-   * @memberof User
+   * @memberof Daily
    */
   public Stop() {
-    _user.delete(this.uid)
+    Options.user.delete(this.uid)
     return super.Stop()
   }
   /**
    * 零点重置
    * 为了少几个定时器, 统一由外部调用
    * 
-   * @memberof User
+   * @memberof Daily
    */
   public async nextDay() {
     // 每天刷新token和cookie
     const refresh = await this.refresh()
     if (refresh.status === AppClient.status.success) {
       this.jar = tools.setCookie(this.cookieString)
-      tools.Options(_options)
+      Options.save()
     }
     else if (refresh.status === AppClient.status.error) {
       const status = await this._tokenError()
@@ -72,7 +73,7 @@ class User extends Online {
   /**
    * 日常
    * 
-   * @memberof User
+   * @memberof Daily
    */
   public async daily() {
     await this.sign()
@@ -85,7 +86,7 @@ class User extends Online {
   /**
    * 每日签到
    * 
-   * @memberof User
+   * @memberof Daily
    */
   public async sign() {
     if (this._sign || !this.userData.doSign) return
@@ -117,7 +118,7 @@ class User extends Online {
   /**
    * 每日宝箱
    * 
-   * @memberof User
+   * @memberof Daily
    */
   public async treasureBox() {
     if (this._treasureBox || !this.userData.treasureBox) return
@@ -148,50 +149,29 @@ class User extends Online {
   /**
    * 每日任务
    * 
-   * @memberof User
+   * @memberof Daily
    */
   public async eventRoom() {
     if (this._eventRoom || !this.userData.eventRoom) return
-    const tasks = []
-    // 获取任务列表
-    const roomID = _options.config.eventRooms[0]
-    const taskInfo = await tools.XHR<taskInfo>({
-      uri: `${apiLiveOrigin}/i/api/taskInfo`,
+    // 做任务
+    const task: request.Options = {
+      method: 'POST',
+      uri: `${apiLiveOrigin}/activity/v1/task/receive_award`,
+      body: `task_id=double_watch_task`,
       jar: this.jar,
       json: true,
-      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
-    })
-    if (taskInfo === undefined || taskInfo.response.statusCode !== 200) return
-    if (taskInfo.body.code == 0) {
-      const taskData = taskInfo.body.data
-      for (const i in taskData) if (taskData[i].task_id !== undefined) tasks.push(taskData[i].task_id)
-      // 做任务
-      let ok = 0
-      for (const taskID of tasks) {
-        const task: request.Options = {
-          method: 'POST',
-          uri: `${apiLiveOrigin}/activity/v1/task/receive_award`,
-          body: `task_id=${taskID}`,
-          jar: this.jar,
-          json: true,
-          headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
-        }
-        const taskres = await tools.XHR(task)
-        if (taskres !== undefined && taskres.response.statusCode === 200
-          && (taskres.response.body.code === 0 || taskres.response.body.code === -400)) ok++
-        if (ok === tasks.length) {
-          this._eventRoom = true
-          tools.Log(this.nickname, '每日任务', '每日任务已完成')
-        }
-        await tools.Sleep(3000)
-      }
+      headers: { 'Referer': `${liveOrigin}/p/center/index` }
     }
-    else tools.Log(this.nickname, '每日任务', taskInfo.body.msg)
+    const doubleWatchTask = await tools.XHR<{ code: number }>(task)
+    if (doubleWatchTask === undefined || doubleWatchTask.response.statusCode !== 200) return
+    if (doubleWatchTask.body.code === 0 || doubleWatchTask.body.code === -400)
+      tools.Log(this.nickname, '每日任务', '每日任务已完成')
+    else tools.Log(this.nickname, '每日任务', doubleWatchTask.body)
   }
   /**
    * 银瓜子兑换硬币
    * 
-   * @memberof User
+   * @memberof Daily
    */
   public async silver2coin() {
     if (this._silver2coin || !this.userData.silver2coin) return
@@ -216,7 +196,7 @@ class User extends Online {
   /**
    * 自动送礼
    * 
-   * @memberof User
+   * @memberof Daily
    */
   public async sendGift() {
     if (!this.userData.sendGift || this.userData.sendGiftRoom === 0) return
@@ -268,7 +248,7 @@ class User extends Online {
    * 获取包裹信息
    * 
    * @returns {(Promise<response<bagInfo> | undefined>)} 
-   * @memberof User
+   * @memberof Daily
    */
   public checkBag() {
     const bag: request.Options = {
@@ -281,7 +261,7 @@ class User extends Online {
   /**
    * 应援团签到
    * 
-   * @memberof User
+   * @memberof Daily
    */
   public async signGroup() {
     if (!this.userData.signGroup) return
@@ -315,4 +295,4 @@ class User extends Online {
     else tools.Log(this.nickname, '应援团签到', '获取应援团列表失败', linkGroup.body)
   }
 }
-export default User
+export default Daily
