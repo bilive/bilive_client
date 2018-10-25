@@ -393,7 +393,7 @@ class AppClient {
     }
     const refreshResponse = await tools.XHR<authResponse>(refresh, 'Android')
     if (refreshResponse !== undefined && refreshResponse.response.statusCode === 200) {
-      if (refreshResponse.body.code === 0) {
+      if (refreshResponse.body !== undefined && refreshResponse.body.code === 0) {
         this._update(refreshResponse.body.data)
         return { status: appStatus.success, data: refreshResponse.body }
       }
