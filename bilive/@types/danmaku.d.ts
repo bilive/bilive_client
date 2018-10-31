@@ -1012,13 +1012,32 @@ interface PK_INVITE_REFUSE extends danmuJson {
  * @extends {danmuJson}
  */
 interface PK_INVITE_CANCEL extends danmuJson {
-  pk_invite_status: number;
-  invite_id: number;
-  face: string;
-  uname: string;
-  area_name: string;
-  user_level: number;
-  master_level: number;
+  pk_invite_status: number
+  invite_id: number
+  face: string
+  uname: string
+  area_name: string
+  user_level: number
+  master_level: number
+}
+/**
+ * PK邀请相关(不明)
+ * {"cmd":"PK_INVITE_SWITCH_CLOSE","roomid":60050,"_roomid":60050}
+ *
+ * @interface RootObject
+ * @extends {danmuJson}
+ */
+interface RootObject extends danmuJson { }
+/**
+ * PK邀请失败
+ * {"cmd":"PK_INVITE_FAIL","pk_invite_status":1100,"invite_id":7529,"roomid":"10817769","_roomid":10817769}
+ *
+ * @interface PK_INVITE_FAIL
+ * @extends {danmuJson}
+ */
+interface PK_INVITE_FAIL extends danmuJson {
+  pk_invite_status: number
+  invite_id: number
 }
 /**
  * PK匹配
@@ -1236,7 +1255,7 @@ interface PK_CLICK_AGAIN extends PK_MIC_Base { }
  * @extends {PK_MIC_Base}
  */
 interface PK_AGAIN extends PK_MIC_Base {
-  data: PK_AGAIN_Data;
+  data: PK_AGAIN_Data
 }
 interface PK_AGAIN_Data extends PK_MATCH_Data {
   /** 新PK编号 */
@@ -1260,6 +1279,33 @@ interface PK_MIC_END_Data {
   type: number
   /** 异常?编号 */
   exception_id?: number
+}
+/**
+ * 用户头衔(存疑)
+ * {"cmd":"USER_TITLE_GET","data":{"title_id":"may-pillow","source":"2016 五月病","name":"被窝","description":"赠送 25 个被窝","colorful":0,"create_time":"2018-10-31 20:17:15","expire_time":"永久","url":"/may","mobile_pic_url":"http://s1.hdslb.com/bfs/static/blive/live-assets/mobile/titles/title/3/may-pillow.png?20180726173300","web_pic_url":"http://s1.hdslb.com/bfs/static/blive/live-assets/mobile/titles/title/3/may-pillow.png?20180726173300","num":1,"score":0,"level":1},"uid":301606770,"_roomid":9950825}
+ * {"cmd":"USER_TITLE_GET","data":{"title_id":"title-174-1","source":"2018 BLS年终盛典 ","name":"幻影","description":"通过普通扭蛋机有几率获得 ","colorful":0,"create_time":"2018-10-31 20:19:26","expire_time":"永久","url":"http://live.bilibili.com/blackboard/bls-2018-web.html","mobile_pic_url":"http://s1.hdslb.com/bfs/vc/a61f2913f8a86b03ef432a286fd5e9e3e22e17bd.png?20180726173300","web_pic_url":"http://s1.hdslb.com/bfs/vc/a61f2913f8a86b03ef432a286fd5e9e3e22e17bd.png?20180726173300","num":1,"score":0,"level":1},"uid":66822870,"_roomid":2776645}
+ *
+ * @interface USER_TITLE_GET
+ * @extends {danmuJson}
+ */
+interface USER_TITLE_GET extends danmuJson {
+  data: USER_TITLE_GET_Data
+  uid: number
+}
+interface USER_TITLE_GET_Data {
+  title_id: string
+  source: string
+  name: string
+  description: string
+  colorful: number
+  create_time: string
+  expire_time: string
+  url: string
+  mobile_pic_url: string
+  web_pic_url: string
+  num: number
+  score: number
+  level: number
 }
 /**
  * 画板活动
