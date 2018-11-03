@@ -1,7 +1,7 @@
-import request from 'request'
+import { Options as requestOptions } from 'request'
 import tools from './lib/tools'
 import AppClient from './lib/app_client'
-import { apiLiveOrigin, smallTVPathname, rafflePathname, lotteryPathname } from './options'
+import Options, { apiLiveOrigin, smallTVPathname, rafflePathname, lotteryPathname } from './options'
 /**
  * 自动参与抽奖
  * 
@@ -10,21 +10,22 @@ import { apiLiveOrigin, smallTVPathname, rafflePathname, lotteryPathname } from 
 class Raffle {
   /**
    * 创建一个 Raffle 实例
-   * @param {raffleOptions} raffleOptions
+   * @param {message} message
    * @memberof Raffle
    */
-  constructor(raffleOptions: raffleOptions) {
-    this._options = raffleOptions
-    this._user = raffleOptions.user
+  constructor(message: message, user: User) {
+    this._message = message
+    this._user = user
+    this._resend = user.userData.raffleResend + 1
   }
   /**
    * 抽奖设置
    *
    * @private
-   * @type {raffleOptions}
+   * @type {message}
    * @memberof Raffle
    */
-  private _options: raffleOptions
+  private _message: message
   /**
    * 抽奖用户
    *
@@ -33,6 +34,53 @@ class Raffle {
    * @memberof Raffle
    */
   private _user: User
+  /**
+   * 抽奖超时
+   *
+   * @private
+   * @type {boolean}
+   * @memberof Raffle
+   */
+  private _timeout: boolean = false
+  /**
+   * 抽奖完成
+   *
+   * @private
+   * @type {boolean}
+   * @memberof Raffle
+   */
+  private _done: boolean = false
+  /**
+   * 计时器
+   *
+   * @private
+   * @type {NodeJS.Timer}
+   * @memberof Raffle
+   */
+  private _timer!: NodeJS.Timer
+  /**
+   * 延迟抽奖
+   *
+   * @private
+   * @memberof Raffle
+   */
+  private _raffleDelay = Options._.config.raffleDelay
+  /**
+   * 每次抽奖延时
+   *
+   * @private
+   * @type {number}
+   * @memberof Raffle
+   */
+  private _delay: number = 50
+  /**
+   * 重发包次数
+   *
+   * @private
+   * @type {number}
+   * @memberof Raffle
+   */
+  private _resend: number = 1
   /**
    * 抽奖地址
    * 
@@ -64,8 +112,13 @@ class Raffle {
    * 
    * @memberof Raffle
    */
-  public Lottery() {
+  public async Lottery() {
     this._url = apiLiveOrigin + lotteryPathname
+    const time = this._message.time
+    this._timer = setTimeout(() => { this._timeout = true }, time * 1000)
+    const delay = Math.floor((time * 1000 - this._raffleDelay) / this._resend)
+    this._delay = delay < 50 ? 50 : delay
+    if (this._raffleDelay !== 0) await tools.Sleep(this._raffleDelay)
     this._Lottery()
   }
   /**
@@ -75,7 +128,14 @@ class Raffle {
    * @memberof Raffle
    */
   private async _Raffle() {
-    await tools.Sleep(this._options.time * 1000)
+    this._timer = setTimeout(() => { this._timeout = true }, this._message.time * 1000)
+    const max_time = (<raffleMessage>this._message).max_time
+    const time_wait = (<raffleMessage>this._message).time_wait
+    const time = max_time - time_wait
+    await tools.Sleep(time_wait * 1000)
+    const delay = Math.floor((time * 1000 - this._raffleDelay) / this._resend)
+    this._delay = delay < 50 ? 50 : delay
+    if (this._raffleDelay !== 0) await tools.Sleep(this._raffleDelay)
     this._RaffleAward()
   }
   /**
@@ -85,30 +145,32 @@ class Raffle {
    * @memberof Raffle
    */
   private async _RaffleAward() {
-    const reward: request.Options = {
-      method: 'POST',
-      uri: `${this._url}/getAward`,
-      body: AppClient.signQueryBase(`${this._user.tokenQuery}&raffleId=${this._options.raffleId}\
-&roomid=${this._options.roomID}&type=${this._options.type}`),
-      json: true,
-      headers: this._user.headers
-    }
-    const raffleAward = await tools.XHR<raffleAward>(reward, 'Android')
-    if (raffleAward === undefined || raffleAward.response.statusCode !== 200) return
-    if (raffleAward.body.code === -401) {
-      await tools.Sleep(5 * 1000)
-      this._RaffleAward()
-    }
-    else if (raffleAward.body.code === 0) {
-      const gift = raffleAward.body.data
-      if (gift.gift_num === 0) tools.Log(this._user.nickname, this._options.title, this._options.raffleId, raffleAward.body.msg)
-      else {
-        const msg = `${this._user.nickname} ${this._options.title} ${this._options.raffleId} 获得 ${gift.gift_num} 个${gift.gift_name}`
-        tools.Log(msg)
-        if (gift.gift_name.includes('小电视')) tools.sendSCMSG(msg)
+    for (let i = 0; i < this._resend; i++) {
+      if (this._timeout || this._done) return
+      const reward: requestOptions = {
+        method: 'POST',
+        uri: `${this._url}/getAward`,
+        body: AppClient.signQueryBase(`${this._user.tokenQuery}&raffleId=${this._message.id}\
+&roomid=${this._message.roomID}&type=${this._message.type}`),
+        json: true,
+        headers: this._user.headers
       }
+      tools.XHR<raffleAward>(reward, 'Android').then(raffleAward => {
+        if (raffleAward !== undefined && raffleAward.response.statusCode === 200 && raffleAward.body.code === 0) {
+          // 抽奖完成
+          this._done = true
+          clearTimeout(this._timer)
+          const gift = raffleAward.body.data
+          if (gift.gift_num === 0) tools.Log(this._user.nickname, this._message.title, this._message.id, raffleAward.body.msg)
+          else {
+            const msg = `${this._user.nickname} ${this._message.title} ${this._message.id} 获得 ${gift.gift_num} 个${gift.gift_name}`
+            tools.Log(msg)
+            if (gift.gift_name.includes('小电视')) tools.sendSCMSG(msg)
+          }
+        }
+      })
+      await tools.Sleep(this._delay)
     }
-    else tools.Log(this._user.nickname, this._options.title, this._options.raffleId, raffleAward.body)
   }
   /**
    * 抽奖Lottery
@@ -116,19 +178,25 @@ class Raffle {
    * @memberof Raffle
    */
   public async _Lottery() {
-    const reward: request.Options = {
-      method: 'POST',
-      uri: `${this._url}/join`,
-      body: AppClient.signQueryBase(`${this._user.tokenQuery}&id=${this._options.raffleId}\
-&roomid=${this._options.roomID}&type=${this._options.type}`),
-      json: true,
-      headers: this._user.headers
-    }
-    const lotteryReward = await tools.XHR<lotteryReward>(reward, 'Android')
-    if (lotteryReward !== undefined && lotteryReward.response.statusCode === 200) {
-      if (lotteryReward.body.code === 0)
-        tools.Log(this._user.nickname, this._options.title, this._options.raffleId, lotteryReward.body.data.message)
-      else tools.Log(this._user.nickname, this._options.title, this._options.raffleId, lotteryReward.body)
+    for (let i = 0; i < this._resend; i++) {
+      if (this._timeout || this._done) return
+      const reward: requestOptions = {
+        method: 'POST',
+        uri: `${this._url}/join`,
+        body: AppClient.signQueryBase(`${this._user.tokenQuery}&id=${this._message.id}\
+&roomid=${this._message.roomID}&type=${this._message.type}`),
+        json: true,
+        headers: this._user.headers
+      }
+      tools.XHR<lotteryReward>(reward, 'Android').then(lotteryReward => {
+        if (lotteryReward !== undefined && lotteryReward.response.statusCode === 200 && lotteryReward.body.code === 0) {
+          // 抽奖完成
+          this._done = true
+          clearTimeout(this._timer)
+          tools.Log(this._user.nickname, this._message.title, this._message.id, lotteryReward.body.data.message)
+        }
+      })
+      await tools.Sleep(this._delay)
     }
   }
 }

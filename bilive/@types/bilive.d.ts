@@ -49,9 +49,11 @@ interface userData {
   eventRoom: boolean
   silver2coin: boolean
   raffle: boolean
+  raffleResend: number
   sendGift: boolean
   sendGiftRoom: number
   signGroup: boolean
+  beatStorm: boolean
 }
 interface optionsInfo {
   [index: string]: configInfoData
@@ -75,9 +77,11 @@ interface optionsInfo {
   eventRoom: configInfoData
   silver2coin: configInfoData
   raffle: configInfoData
+  raffleResend: configInfoData
   sendGift: configInfoData
   sendGiftRoom: configInfoData
   signGroup: configInfoData
+  beatStorm: configInfoData
 }
 interface configInfoData {
   description: string
@@ -328,16 +332,45 @@ interface serverChan {
 /**
  * 消息格式
  * 
- * @interface message
+ * @interface raffleMessage
  */
-interface message {
-  cmd: 'smallTV' | 'raffle' | 'lottery'
+interface raffleMessage {
+  cmd: 'smallTV' | 'raffle'
+  roomID: number
+  id: number
+  type: string
+  title: string
+  time: number
+  max_time: number
+  time_wait: number
+}
+/**
+ * 消息格式
+ * 
+ * @interface lotteryMessage
+ */
+interface lotteryMessage {
+  cmd: 'lottery'
   roomID: number
   id: number
   type: string
   title: string
   time: number
 }
+/**
+ * 消息格式
+ * 
+ * @interface beatStormMessage
+ */
+interface beatStormMessage {
+  cmd: 'beatStorm'
+  roomID: number
+  id: number
+  type: string
+  title: string
+  time: number
+}
+type message = raffleMessage | lotteryMessage | beatStormMessage
 /*******************
  **** listener *****
  *******************/
@@ -488,15 +521,6 @@ interface getAllListDataRoomList {
 /*******************
  ***** raffle ******
  *******************/
-/**
- * 抽奖设置
- * 
- * @interface raffleOptions
- */
-interface raffleOptions extends message {
-  raffleId: number
-  user: User
-}
 /**
  * 参与抽奖信息
  * 

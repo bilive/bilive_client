@@ -34,6 +34,7 @@
     "eventRoom": false,
     "silver2coin": false,
     "raffle": false,
+    "raffleResend": 0,
     "sendGift": false,
     "sendGiftRoom": 0,
     "signGroup": false
@@ -66,7 +67,7 @@
     },
     "droprate": {
       "description": "丢弃概率",
-      "tip": "就是每个用户多少概率漏掉1个奖啦, 范围0~100",
+      "tip": "就是每个用户多少概率漏掉1个奖啦，范围0~100",
       "type": "number"
     },
     "calcGiftTime": {
@@ -128,6 +129,11 @@
       "description": "抽奖",
       "tip": "参与抽奖",
       "type": "boolean"
+    },
+    "raffleResend": {
+      "description": "暴力抽奖",
+      "tip": "抽奖暴力发包次数",
+      "type": "number"
     },
     "sendGift": {
       "description": "自动送礼",

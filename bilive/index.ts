@@ -95,23 +95,20 @@ class BiLive {
    */
   private async _Raffle(raffleMSG: message) {
     if (!this._raffle) return
-    const raffleDelay = Options._.config.raffleDelay
-    if (raffleDelay !== 0) await tools.Sleep(raffleDelay)
     Options.user.forEach(user => {
       if (user.captchaJPEG !== '' || !user.userData.raffle) return
       const droprate = Options._.config.droprate
       if (droprate !== 0 && Math.random() < droprate / 100)
         return tools.Log(user.nickname, '丢弃抽奖', raffleMSG.id)
-      const raffleOptions: raffleOptions = { ...raffleMSG, raffleId: raffleMSG.id, user }
       switch (raffleMSG.cmd) {
         case 'smallTV':
-          new Raffle(raffleOptions).SmallTV()
+          new Raffle(raffleMSG, user).SmallTV()
           break
         case 'raffle':
-          new Raffle(raffleOptions).Raffle()
+          new Raffle(raffleMSG, user).Raffle()
           break
         case 'lottery':
-          new Raffle(raffleOptions).Lottery()
+          new Raffle(raffleMSG, user).Lottery()
           break
         default:
           break
