@@ -1,4 +1,4 @@
-import request from 'request'
+import { Options as requestOptions } from 'request'
 import { EventEmitter } from 'events'
 import tools from './lib/tools'
 import AppClient from './lib/app_client'
@@ -161,7 +161,7 @@ class Listener extends EventEmitter {
   private async _RaffleCheck(url: string, roomID: number, raffle: 'smallTV' | 'raffle') {
     // 等待3s, 防止土豪刷屏
     await tools.Sleep(3000)
-    const check: request.Options = {
+    const check: requestOptions = {
       uri: `${url}/check?${AppClient.signQueryBase(`roomid=${roomID}`)}`,
       json: true
     }
@@ -175,7 +175,9 @@ class Listener extends EventEmitter {
           id: +data.raffleId,
           type: data.type,
           title: data.title,
-          time: +data.time_wait
+          time: +data.time_wait,
+          max_time: +data.max_time,
+          time_wait: +data.time_wait
         }
         this._RaffleHandler(message)
       })
@@ -191,7 +193,7 @@ class Listener extends EventEmitter {
    */
   // @ts-ignore 暂时无用
   private async _LotteryCheck(url: string, roomID: number) {
-    const check: request.Options = {
+    const check: requestOptions = {
       uri: `${url}/check?${AppClient.signQueryBase(`roomid=${roomID}`)}`,
       json: true
     }
@@ -204,7 +206,7 @@ class Listener extends EventEmitter {
           roomID,
           id: +data.id,
           type: data.keyword,
-          title: '总督抽奖',
+          title: '舰队抽奖',
           time: 0
         }
         this._RaffleHandler(message)

@@ -1021,13 +1021,21 @@ interface PK_INVITE_CANCEL extends danmuJson {
   master_level: number
 }
 /**
- * PK邀请相关(不明)
- * {"cmd":"PK_INVITE_SWITCH_CLOSE","roomid":60050,"_roomid":60050}
+ * 启用PK邀请
+ * {"cmd":"PK_INVITE_SWITCH_OPEN","roomid":5923408,"_roomid":5923408}
  *
- * @interface RootObject
+ * @interface PK_INVITE_SWITCH_OPEN
  * @extends {danmuJson}
  */
-interface RootObject extends danmuJson { }
+interface PK_INVITE_SWITCH_OPEN extends danmuJson { }
+/**
+ * 禁用PK邀请
+ * {"cmd":"PK_INVITE_SWITCH_CLOSE","roomid":5923408,"_roomid":5923408}
+ *
+ * @interface PK_INVITE_SWITCH_CLOSE
+ * @extends {danmuJson}
+ */
+interface PK_INVITE_SWITCH_CLOSE extends danmuJson { }
 /**
  * PK邀请失败
  * {"cmd":"PK_INVITE_FAIL","pk_invite_status":1100,"invite_id":7529,"roomid":"10817769","_roomid":10817769}
@@ -1255,7 +1263,7 @@ interface PK_CLICK_AGAIN extends PK_MIC_Base { }
  * @extends {PK_MIC_Base}
  */
 interface PK_AGAIN extends PK_MIC_Base {
-  data: PK_AGAIN_Data
+  data: PK_AGAIN_Data;
 }
 interface PK_AGAIN_Data extends PK_MATCH_Data {
   /** 新PK编号 */

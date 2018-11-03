@@ -1,8 +1,8 @@
-import request from 'request'
 import tools from './lib/tools'
 import Online from './online'
 import AppClient from './lib/app_client'
 import Options, { liveOrigin, apiVCOrigin, apiLiveOrigin } from './options'
+import { Options as requestOptions } from 'request'
 /**
  * Creates an instance of Daily.
  * 
@@ -92,7 +92,7 @@ class Daily extends Online {
     if (this._sign || !this.userData.doSign) return
     let ok = 0
     // 签到
-    const sign: request.Options = {
+    const sign: requestOptions = {
       uri: `${apiLiveOrigin}/AppUser/getSignInfo?${AppClient.signQueryBase(this.tokenQuery)}`,
       json: true,
       headers: this.headers
@@ -103,7 +103,7 @@ class Daily extends Online {
       tools.Log(this.nickname, '每日签到', '已签到')
     }
     // 道具包裹
-    const getBag: request.Options = {
+    const getBag: requestOptions = {
       uri: `${apiLiveOrigin}/AppBag/getSendGift?${AppClient.signQueryBase(this.tokenQuery)}`,
       json: true,
       headers: this.headers
@@ -123,7 +123,7 @@ class Daily extends Online {
   public async treasureBox() {
     if (this._treasureBox || !this.userData.treasureBox) return
     // 获取宝箱状态,换房间会重新冷却
-    const current: request.Options = {
+    const current: requestOptions = {
       uri: `${apiLiveOrigin}/mobile/freeSilverCurrentTask?${AppClient.signQueryBase(this.tokenQuery)}`,
       json: true,
       headers: this.headers
@@ -132,7 +132,7 @@ class Daily extends Online {
     if (currentTask !== undefined && currentTask.response.statusCode === 200) {
       if (currentTask.body.code === 0) {
         await tools.Sleep(currentTask.body.data.minute * 6e4)
-        const award: request.Options = {
+        const award: requestOptions = {
           uri: `${apiLiveOrigin}/mobile/freeSilverAward?${AppClient.signQueryBase(this.tokenQuery)}`,
           json: true,
           headers: this.headers
@@ -154,7 +154,7 @@ class Daily extends Online {
   public async eventRoom() {
     if (this._eventRoom || !this.userData.eventRoom) return
     // 做任务
-    const task: request.Options = {
+    const task: requestOptions = {
       method: 'POST',
       uri: `${apiLiveOrigin}/activity/v1/task/receive_award`,
       body: `task_id=double_watch_task`,
@@ -175,7 +175,7 @@ class Daily extends Online {
    */
   public async silver2coin() {
     if (this._silver2coin || !this.userData.silver2coin) return
-    const exchange: request.Options = {
+    const exchange: requestOptions = {
       method: 'POST',
       uri: `${apiLiveOrigin}/AppExchange/silver2coin?${AppClient.signQueryBase(this.tokenQuery)}`,
       json: true,
@@ -202,7 +202,7 @@ class Daily extends Online {
     if (!this.userData.sendGift || this.userData.sendGiftRoom === 0) return
     const roomID = this.userData.sendGiftRoom
     // 获取房间信息
-    const room: request.Options = {
+    const room: requestOptions = {
       uri: `${apiLiveOrigin}/room/v1/Room/mobileRoomInit?id=${roomID}}`,
       json: true
     }
@@ -220,7 +220,7 @@ class Daily extends Online {
           for (const giftData of bagInfo.body.data) {
             if (giftData.expireat > 0 && giftData.expireat < 24 * 60 * 60) {
               // expireat单位为分钟, 永久礼物值为0
-              const send: request.Options = {
+              const send: requestOptions = {
                 method: 'POST',
                 uri: `${apiLiveOrigin}/gift/v2/live/bag_send?${AppClient.signQueryBase(this.tokenQuery)}`,
                 body: `uid=${giftData.uid}&ruid=${mid}&gift_id=${giftData.gift_id}&gift_num=${giftData.gift_num}&bag_id=${giftData.id}\
@@ -251,7 +251,7 @@ class Daily extends Online {
    * @memberof Daily
    */
   public checkBag() {
-    const bag: request.Options = {
+    const bag: requestOptions = {
       uri: `${apiLiveOrigin}/gift/v2/gift/m_bag_list?${AppClient.signQueryBase(this.tokenQuery)}`,
       json: true,
       headers: this.headers
@@ -266,7 +266,7 @@ class Daily extends Online {
   public async signGroup() {
     if (!this.userData.signGroup) return
     // 获取已加入应援团列表
-    const group: request.Options = {
+    const group: requestOptions = {
       uri: `${apiVCOrigin}/link_group/v1/member/my_groups?${AppClient.signQueryBase(this.tokenQuery)}`,
       json: true,
       headers: this.headers
@@ -276,7 +276,7 @@ class Daily extends Online {
     if (linkGroup.body.code === 0) {
       if (linkGroup.body.data.list.length > 0) {
         for (const groupInfo of linkGroup.body.data.list) {
-          const sign: request.Options = {
+          const sign: requestOptions = {
             uri: `${apiVCOrigin}/link_setting/v1/link_setting/sign_in?${AppClient.signQueryBase(`${this.tokenQuery}&group_id=${groupInfo.group_id}\
 &owner_id=${groupInfo.owner_uid}`)}`,
             json: true,

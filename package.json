@@ -19,12 +19,12 @@
   "devDependencies": {
     "@types/bootstrap": "^4.1.2",
     "@types/jquery": "^3.3.22",
-    "@types/node": "^10.12.0",
-    "@types/request": "^2.47.1",
+    "@types/node": "^10.12.2",
+    "@types/request": "^2.48.0",
     "@types/ws": "^5.1.2",
     "npm-run-posix-or-windows": "^2.0.2",
     "rimraf": "^2.6.2",
-    "typescript": "^3.1.3"
+    "typescript": "^3.1.6"
   },
   "dependencies": {
     "request": "^2.88.0",

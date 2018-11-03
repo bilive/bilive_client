@@ -1,7 +1,7 @@
-import request from 'request'
+import { Options as requestOptions, CookieJar as requestCookieJar } from 'request'
 import tools from './lib/tools'
 import AppClient from './lib/app_client'
-import Options,{ apiLiveOrigin, liveOrigin } from './options'
+import Options, { apiLiveOrigin, liveOrigin } from './options'
 /**
  * Creates an instance of Online.
  * 
@@ -33,7 +33,7 @@ class Online extends AppClient {
   public set refreshToken(refreshToken: string) { this.userData.refreshToken = refreshToken }
   public get cookieString(): string { return this.userData.cookie }
   public set cookieString(cookieString: string) { this.userData.cookie = cookieString }
-  public jar!: request.CookieJar
+  public jar!: requestCookieJar
   /**
    * 验证码 DataURL
    * 
@@ -126,7 +126,7 @@ class Online extends AppClient {
    */
   protected async _onlineHeart(): Promise<'cookieError' | 'tokenError' | void> {
     const roomID = Options._.config.eventRooms[0]
-    const online: request.Options = {
+    const online: requestOptions = {
       method: 'POST',
       uri: `${apiLiveOrigin}/User/userOnlineHeart`,
       jar: this.jar,
@@ -136,7 +136,7 @@ class Online extends AppClient {
     const heartPC = await tools.XHR<userOnlineHeart>(online)
     if (heartPC !== undefined && heartPC.response.statusCode === 200 && heartPC.body.code === 3) return 'cookieError'
     // 客户端
-    const heartbeat: request.Options = {
+    const heartbeat: requestOptions = {
       method: 'POST',
       uri: `${apiLiveOrigin}/mobile/userOnlineHeart?${AppClient.signQueryBase(this.tokenQuery)}`,
       body: `room_id=${tools.getLongRoomID(roomID)}&scale=xxhdpi`,
