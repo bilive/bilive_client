@@ -68,11 +68,10 @@ class WebAPI extends EventEmitter {
   private _WebSocketServer(server: http.Server) {
     const WSserver = new ws.Server({
       server,
-      handleProtocols: (protocols: string[]) => {
-        // 子协议处理的并不好, 所以不要把protocol当密码用
-        // 虽然我确实是这么用的
-        const protocol = Options._.server.protocol
-        if (protocol === protocols[0]) return protocols[1] || protocol
+      verifyClient: (info: { origin: string, req: http.IncomingMessage, secure: boolean }) => {
+        const protocol = info.req.headers['sec-websocket-protocol']
+        const adminProtocol = Options._.server.protocol
+        if (protocol === adminProtocol) return true
         else return false
       }
     })

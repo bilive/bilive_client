@@ -135,12 +135,12 @@ function XHR<T>(options: request.OptionsWithUri, platform: 'PC' | 'Android' | 'W
       options.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
     // 返回异步request
     request(options, (error, response, body) => {
-      if (error === null) return resolve({ response, body })
+      if (error === null) resolve({ response, body })
       else {
         const ip = error.address
         if (ip !== undefined && api.IPs.has(ip)) api.IPs.delete(ip)
         ErrorLog(options.uri, error)
-        return resolve(undefined)
+        resolve()
       }
     })
   })
