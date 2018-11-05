@@ -106,12 +106,10 @@ class WebAPI extends EventEmitter {
             else this._Send({ cmd: 'error', ts: 'error', msg: '消息格式错误' })
           })
         // 一般推荐客户端发送心跳, 不过放在服务端的话可以有一些限制 (目前没有)
-        if (client.protocol === 'keep') {
-          const ping = setInterval(() => {
-            if (client.readyState === ws.OPEN) client.ping()
-            else clearInterval(ping)
-          }, 50 * 1000) // 60s为Nginx默认的超时时间
-        }
+        const ping = setInterval(() => {
+          if (client.readyState === ws.OPEN) client.ping()
+          else clearInterval(ping)
+        }, 60 * 1000) // 60s为Nginx默认的超时时间
         this._wsClient = client
         // 日志
         tools.logs.onLog = data => this._Send({ cmd: 'log', ts: 'log', msg: data })
