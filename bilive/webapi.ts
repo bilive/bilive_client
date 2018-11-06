@@ -8,7 +8,7 @@ import Daily from './daily'
 import Options from './options'
 /**
  * 程序设置
- * 
+ *
  * @class WebAPI
  * @extends {EventEmitter}
  */
@@ -19,7 +19,7 @@ class WebAPI extends EventEmitter {
   private _wsClient!: ws
   /**
    * 启动HTTP以及WebSocket服务
-   * 
+   *
    * @memberof WebAPI
    */
   public Start() {
@@ -27,7 +27,7 @@ class WebAPI extends EventEmitter {
   }
   /**
    * HTTP服务
-   * 
+   *
    * @private
    * @memberof WebAPI
    */
@@ -60,9 +60,9 @@ class WebAPI extends EventEmitter {
   }
   /**
    * WebSocket服务
-   * 
+   *
    * @private
-   * @param {http.Server} server 
+   * @param {http.Server} server
    * @memberof WebAPI
    */
   private _WebSocketServer(server: http.Server) {
@@ -117,9 +117,9 @@ class WebAPI extends EventEmitter {
   }
   /**
    * 监听客户端发来的消息, CMD为关键字
-   * 
+   *
    * @private
-   * @param {message} message 
+   * @param {message} message
    * @memberof WebAPI
    */
   private async _onCMD(message: message) {
@@ -141,6 +141,7 @@ class WebAPI extends EventEmitter {
       // 保存设置
       case 'setConfig': {
         const config = Options._.config
+        const serverURL = config.serverURL
         const setConfig = <config>message.data || {}
         let msg = ''
         for (const i in config) {
@@ -155,6 +156,7 @@ class WebAPI extends EventEmitter {
           for (const i in config) config[i] = setConfig[i]
           Options.save()
           this._Send({ cmd, ts, data: config })
+          if (serverURL !== config.serverURL) Options.emit('clientClose')
         }
         else this._Send({ cmd, ts, msg, data: config })
       }
@@ -257,9 +259,9 @@ class WebAPI extends EventEmitter {
   }
   /**
    * 向客户端发送消息
-   * 
+   *
    * @private
-   * @param {message} message 
+   * @param {message} message
    * @memberof WebAPI
    */
   private _Send(message: message) {

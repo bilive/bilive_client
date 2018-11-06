@@ -7,6 +7,7 @@
   },
   "config": {
     "defaultUserID": 0,
+    "serverURL": "",
     "eventRooms": [
       3
     ],
@@ -44,6 +45,11 @@
       "description": "默认监听UID",
       "tip": "用来监听系统消息的用户ID, 默认为0",
       "type": "number"
+    },
+    "serverURL": {
+      "description": "监听服务器",
+      "tip": "用来监听房间抽奖消息, 格式为server#protocol",
+      "type": "string"
     },
     "eventRooms": {
       "description": "挂机活动房间以\",\"分隔",
