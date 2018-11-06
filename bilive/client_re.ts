@@ -26,6 +26,23 @@ class ClientRE extends Client {
    * @memberof ClientRE
    */
   public reConnectTime: number = 0
+  private _update: boolean = false
+  /**
+   * 更新服务器地址
+   *
+   * @memberof ClientRE
+   */
+  public Update() {
+    this._update = true
+    const { 0: server, 1: protocol } = Options._.config.serverURL.split('#')
+    if (protocol !== undefined && protocol !== '') {
+      this._server = server
+      this._protocol = protocol
+      this.Close()
+      this.Connect()
+    }
+    else this.Close()
+  }
   /**
    * 重新连接
    *
@@ -33,21 +50,19 @@ class ClientRE extends Client {
    * @memberof ClientRE
    */
   private _ClientReConnect() {
-    setTimeout(() => {
-      if (this.reConnectTime >= 5) {
-        this.reConnectTime = 0
-        this._DelayReConnect()
-      }
-      else {
-        this.reConnectTime++
-        const { 0: server, 1: protocol } = Options._.config.serverURL.split('#')
-        if (protocol !== undefined && protocol !== '') {
-          this._server = server
-          this._protocol = protocol
+    if (this._update) this._update = false
+    else {
+      setTimeout(() => {
+        if (this.reConnectTime >= 5) {
+          this.reConnectTime = 0
+          this._DelayReConnect()
+        }
+        else {
+          this.reConnectTime++
           this.Connect()
         }
-      }
-    }, 10 * 1000)
+      }, 10 * 1000)
+    }
   }
   /**
    * 5分钟后重新连接

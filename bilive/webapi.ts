@@ -156,7 +156,7 @@ class WebAPI extends EventEmitter {
           for (const i in config) config[i] = setConfig[i]
           Options.save()
           this._Send({ cmd, ts, data: config })
-          if (serverURL !== config.serverURL) Options.emit('clientClose')
+          if (serverURL !== config.serverURL) Options.emit('clientUpdate')
         }
         else this._Send({ cmd, ts, msg, data: config })
       }

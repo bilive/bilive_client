@@ -150,7 +150,7 @@ class Listener extends EventEmitter {
       .on('beatStorm', (beatStormMessage: beatStormMessage) => this._RaffleHandler(beatStormMessage))
       .on('sysmsg', (systemMessage: systemMessage) => tools.Log('服务器消息: ', systemMessage.msg))
       .Connect()
-    Options.on('clientClose', () => client.Close())
+    Options.on('clientUpdate', () => client.Update())
   }
   /**
    * 监听弹幕系统消息
