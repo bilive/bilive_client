@@ -47,8 +47,7 @@
     4. 命令行 `npm run build`
     5. 命令行 `npm start`
 
-[点此进行设置](http://github.halaal.win/bilive_client/#path=ws://localhost:10080&protocol=admin)\
-[国内设置地址](http://lzoczr.gitee.io/bilive_client_view/#path=ws://localhost:10080&protocol=admin)
+[点此进行设置](http://github.halaal.win/bilive_client/#path=ws://localhost:10080&protocol=admin)
 ```TypeScript
 const 支付宝红包码 = `
 █▀▀▀▀▀█ ▄▄█   ▄█  ▀▀▄ █▀▀▀▀▀█
@@ -84,6 +83,5 @@ const 支付宝付款码 = `
 ▀▀▀▀▀▀▀ ▀  ▀▀▀ ▀▀ ▀▀▀  ▀▀▀   `
 ```
 
-因为B站对弹幕服务器进行了限制, 一般方法已无法监听到节奏相关内容\
-所以之前提供的监听服务器已经关闭, 并且开源, 有兴趣的可以自己研究\
+此为客户端, 更多功能需配合服务端使用
 [服务端](https://github.com/lzghzr/bilive_server)
