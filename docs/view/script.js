@@ -278,11 +278,15 @@ function getConfigTemplate(config) {
                 break;
             case 'numberArray':
                 inputInput.value = configValue.join(',');
-                inputInput.oninput = () => config[key] = inputInput.value.split(',').map(value => { return parseInt(value); });
+                inputInput.oninput = () => config[key] = inputInput.value.split(',').map(value => parseInt(value));
                 break;
             case 'string':
                 inputInput.value = configValue;
                 inputInput.oninput = () => config[key] = inputInput.value;
+                break;
+            case 'stringArray':
+                inputInput.value = configValue.join(',');
+                inputInput.oninput = () => config[key] = inputInput.value.split(',');
                 break;
             case 'boolean':
                 checkboxInput.checked = configValue;
