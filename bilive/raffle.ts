@@ -4,17 +4,17 @@ import AppClient from './lib/app_client'
 import Options, { apiLiveOrigin, smallTVPathname, rafflePathname, lotteryPathname } from './options'
 /**
  * 自动参与抽奖
- * 
+ *
  * @class Raffle
  */
 class Raffle {
   /**
    * 创建一个 Raffle 实例
-   * @param {message} message
+   * @param {raffleMessage | lotteryMessage | beatStormMessage} raffleMessage
    * @memberof Raffle
    */
-  constructor(message: message, user: User) {
-    this._message = message
+  constructor(raffleMessage: raffleMessage | lotteryMessage | beatStormMessage, user: User) {
+    this._raffleMessage = raffleMessage
     this._user = user
     this._resend = user.userData.raffleResend + 1
   }
@@ -22,10 +22,10 @@ class Raffle {
    * 抽奖设置
    *
    * @private
-   * @type {message}
+   * @type {raffleMessage | lotteryMessage}
    * @memberof Raffle
    */
-  private _message: message
+  private _raffleMessage: raffleMessage | lotteryMessage | beatStormMessage
   /**
    * 抽奖用户
    *
@@ -83,7 +83,7 @@ class Raffle {
   private _resend: number = 1
   /**
    * 抽奖地址
-   * 
+   *
    * @private
    * @type {string}
    * @memberof Raffle
@@ -91,7 +91,7 @@ class Raffle {
   private _url!: string
   /**
    * 参与小电视抽奖
-   * 
+   *
    * @memberof Raffle
    */
   public SmallTV() {
@@ -100,7 +100,7 @@ class Raffle {
   }
   /**
    * 参与抽奖Raffle
-   * 
+   *
    * @memberof Raffle
    */
   public Raffle() {
@@ -109,12 +109,12 @@ class Raffle {
   }
   /**
    * 参与抽奖Lottery
-   * 
+   *
    * @memberof Raffle
    */
   public async Lottery() {
     this._url = apiLiveOrigin + lotteryPathname
-    const time = this._message.time
+    const time = this._raffleMessage.time
     this._timer = setTimeout(() => { this._timeout = true }, time * 1000)
     const delay = Math.floor((time * 1000 - this._raffleDelay) / this._resend)
     this._delay = delay < 50 ? 50 : delay
@@ -122,15 +122,26 @@ class Raffle {
     this._Lottery()
   }
   /**
+   * 参与节奏风暴
+   *
+   * @memberof Raffle
+   */
+  public async BeatStorm() {
+    this._timer = setTimeout(() => { this._timeout = true }, 20 * 1000)
+    const delay = Math.floor((20 * 1000 - this._raffleDelay) / this._resend)
+    this._delay = delay < 50 ? 50 : delay
+    if (this._raffleDelay !== 0) await tools.Sleep(this._raffleDelay)
+    this._BeatStorm()
+  }
+  /**
    * 抽奖Raffle
-   * 
+   *
    * @private
    * @memberof Raffle
    */
   private async _Raffle() {
-    this._timer = setTimeout(() => { this._timeout = true }, this._message.time * 1000)
-    const max_time = (<raffleMessage>this._message).max_time
-    const time_wait = (<raffleMessage>this._message).time_wait
+    this._timer = setTimeout(() => { this._timeout = true }, this._raffleMessage.time * 1000)
+    const { max_time, time_wait } = (<raffleMessage>this._raffleMessage)
     const time = max_time - time_wait
     await tools.Sleep(time_wait * 1000)
     const delay = Math.floor((time * 1000 - this._raffleDelay) / this._resend)
@@ -140,33 +151,36 @@ class Raffle {
   }
   /**
    * 获取抽奖结果
-   * 
+   *
    * @private
    * @memberof Raffle
    */
   private async _RaffleAward() {
+    const { id, roomID, title, type } = this._raffleMessage
     for (let i = 0; i < this._resend; i++) {
       if (this._timeout || this._done) return
       const reward: requestOptions = {
         method: 'POST',
         uri: `${this._url}/getAward`,
-        body: AppClient.signQueryBase(`${this._user.tokenQuery}&raffleId=${this._message.id}\
-&roomid=${this._message.roomID}&type=${this._message.type}`),
+        body: AppClient.signQueryBase(`${this._user.tokenQuery}&raffleId=${id}&roomid=${roomID}&type=${type}`),
         json: true,
         headers: this._user.headers
       }
       tools.XHR<raffleAward>(reward, 'Android').then(raffleAward => {
-        if (raffleAward !== undefined && raffleAward.response.statusCode === 200 && raffleAward.body.code === 0) {
-          // 抽奖完成
-          this._done = true
-          clearTimeout(this._timer)
-          const gift = raffleAward.body.data
-          if (gift.gift_num === 0) tools.Log(this._user.nickname, this._message.title, this._message.id, raffleAward.body.msg)
-          else {
-            const msg = `${this._user.nickname} ${this._message.title} ${this._message.id} 获得 ${gift.gift_num} 个${gift.gift_name}`
-            tools.Log(msg)
-            if (gift.gift_name.includes('小电视')) tools.sendSCMSG(msg)
+        if (raffleAward !== undefined && raffleAward.response.statusCode === 200) {
+          if (raffleAward.body.code === 0) {
+            // 抽奖完成
+            this._done = true
+            clearTimeout(this._timer)
+            const gift = raffleAward.body.data
+            if (gift.gift_num === 0) tools.Log(this._user.nickname, title, id, raffleAward.body.msg)
+            else {
+              const msg = `${this._user.nickname} ${title} ${id} 获得 ${gift.gift_num} 个${gift.gift_name}`
+              tools.Log(msg)
+              if (gift.gift_name.includes('小电视')) tools.sendSCMSG(msg)
+            }
           }
+          else if (this._resend === 1) tools.Log(this._user.nickname, title, id, raffleAward.body)
         }
       })
       await tools.Sleep(this._delay)
@@ -174,26 +188,59 @@ class Raffle {
   }
   /**
    * 抽奖Lottery
-   * 
+   * @private
    * @memberof Raffle
    */
-  public async _Lottery() {
+  private async _Lottery() {
+    const { id, roomID, title, type } = this._raffleMessage
     for (let i = 0; i < this._resend; i++) {
       if (this._timeout || this._done) return
       const reward: requestOptions = {
         method: 'POST',
         uri: `${this._url}/join`,
-        body: AppClient.signQueryBase(`${this._user.tokenQuery}&id=${this._message.id}\
-&roomid=${this._message.roomID}&type=${this._message.type}`),
+        body: AppClient.signQueryBase(`${this._user.tokenQuery}&id=${id}&roomid=${roomID}&type=${type}`),
         json: true,
         headers: this._user.headers
       }
       tools.XHR<lotteryReward>(reward, 'Android').then(lotteryReward => {
-        if (lotteryReward !== undefined && lotteryReward.response.statusCode === 200 && lotteryReward.body.code === 0) {
-          // 抽奖完成
-          this._done = true
-          clearTimeout(this._timer)
-          tools.Log(this._user.nickname, this._message.title, this._message.id, lotteryReward.body.data.message)
+        if (lotteryReward !== undefined && lotteryReward.response.statusCode === 200) {
+          if (lotteryReward.body.code === 0) {
+            // 抽奖完成
+            this._done = true
+            clearTimeout(this._timer)
+            tools.Log(this._user.nickname, title, id, lotteryReward.body.data.message)
+          }
+          else if (this._resend === 1) tools.Log(this._user.nickname, title, id, lotteryReward.body)
+        }
+      })
+      await tools.Sleep(this._delay)
+    }
+  }
+  /**
+   * 节奏风暴
+   *
+   * @private
+   * @memberof Raffle
+   */
+  private async _BeatStorm() {
+    const { id, title } = this._raffleMessage
+    for (let i = 0; i < this._resend; i++) {
+      if (this._timeout || this._done) return
+      const join: requestOptions = {
+        method: 'POST',
+        uri: `${apiLiveOrigin}/lottery/v1/Storm/join`,
+        body: AppClient.signQuery(`${this._user.tokenQuery}&${AppClient.baseQuery}&id=${id}`),
+        json: true,
+        headers: this._user.headers
+      }
+      tools.XHR<joinStorm>(join, 'Android').then(joinStorm => {
+        if (joinStorm !== undefined && joinStorm.response.statusCode === 200 && joinStorm.body !== undefined) {
+          const content = joinStorm.body.data
+          if (content !== undefined && content.gift_num > 0) {
+            this._done = true
+            tools.Log(this._user.nickname, title, id, `${content.mobile_content} 获得 ${content.gift_num} 个${content.gift_name}`)
+          }
+          else if (this._resend === 1) tools.Log(this._user.nickname, title, id, joinStorm.body)
         }
       })
       await tools.Sleep(this._delay)

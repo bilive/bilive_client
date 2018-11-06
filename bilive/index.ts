@@ -6,14 +6,14 @@ import Listener from './listener'
 import Options from './options'
 /**
  * 主程序
- * 
+ *
  * @class BiLive
  */
 class BiLive {
   constructor() {
   }
   // 系统消息监听
-  private _SYSListener!: Listener
+  private _Listener!: Listener
   // 是否开启抽奖
   private _raffle = false
   // 全局计时器
@@ -21,7 +21,7 @@ class BiLive {
   public loop!: NodeJS.Timer
   /**
    * 开始主程序
-   * 
+   *
    * @memberof BiLive
    */
   public async Start() {
@@ -39,7 +39,7 @@ class BiLive {
   }
   /**
    * 计时器
-   * 
+   *
    * @private
    * @memberof BiLive
    */
@@ -70,45 +70,51 @@ class BiLive {
     if (cstString === Options._.config.calcGiftTime) this.calcGift()
     if (cstMin % 10 === 0) {
       // 更新监听房间
-      this._SYSListener.updateAreaRoom()
+      this._Listener.updateAreaRoom()
       // 清空ID缓存
-      this._SYSListener.clearAllID()
+      this._Listener.clearAllID()
     }
   }
   /**
    * 监听
-   * 
+   *
    * @memberof BiLive
    */
   public Listener() {
-    this._SYSListener = new Listener()
-    this._SYSListener
-      .on('raffle', raffleMSG => this._Raffle(raffleMSG))
+    this._Listener = new Listener()
+    this._Listener
+      .on('smallTV', (raffleMessage: raffleMessage) => this._Raffle(raffleMessage))
+      .on('raffle', (raffleMessage: raffleMessage) => this._Raffle(raffleMessage))
+      .on('lottery', (lotteryMessage: lotteryMessage) => this._Raffle(lotteryMessage))
+      .on('beatStorm', (beatStormMessage: beatStormMessage) => this._Raffle(beatStormMessage))
       .Start()
   }
   /**
    * 参与抽奖
-   * 
+   *
    * @private
-   * @param {message} raffleMSG 
+   * @param {raffleMessage | lotteryMessage | beatStormMessage} raffleMessage
    * @memberof BiLive
    */
-  private async _Raffle(raffleMSG: message) {
+  private async _Raffle(raffleMessage: raffleMessage | lotteryMessage | beatStormMessage) {
     if (!this._raffle) return
     Options.user.forEach(user => {
       if (user.captchaJPEG !== '' || !user.userData.raffle) return
       const droprate = Options._.config.droprate
       if (droprate !== 0 && Math.random() < droprate / 100)
-        return tools.Log(user.nickname, '丢弃抽奖', raffleMSG.id)
-      switch (raffleMSG.cmd) {
+        return tools.Log(user.nickname, '丢弃抽奖', raffleMessage.id)
+      switch (raffleMessage.cmd) {
         case 'smallTV':
-          new Raffle(raffleMSG, user).SmallTV()
+          new Raffle(raffleMessage, user).SmallTV()
           break
         case 'raffle':
-          new Raffle(raffleMSG, user).Raffle()
+          new Raffle(raffleMessage, user).Raffle()
           break
         case 'lottery':
-          new Raffle(raffleMSG, user).Lottery()
+          new Raffle(raffleMessage, user).Lottery()
+          break
+        case 'beatStorm':
+          new Raffle(raffleMessage, user).BeatStorm()
           break
         default:
           break
@@ -117,7 +123,7 @@ class BiLive {
   }
   /**
    * 礼物总数统计
-   * 
+   *
    * @private
    * @memberof BiLive
    */
