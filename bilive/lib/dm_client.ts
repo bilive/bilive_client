@@ -6,7 +6,7 @@ import tools from './tools'
 import AppClient from './app_client'
 /**
  * 错误类型
- * 
+ *
  * @enum {number}
  */
 enum dmErrorStatus {
@@ -16,14 +16,14 @@ enum dmErrorStatus {
 }
 /**
  * 弹幕客户端, 用于连接弹幕服务器和发送弹幕事件
- * 
+ *
  * @class DMclient
  * @extends {EventEmitter}
  */
 class DMclient extends EventEmitter {
   /**
    * Creates an instance of DMclient.
-   * @param {Options} [{ roomID = 23058, userID = 0, protocol = 'flash' }={}] 
+   * @param {Options} [{ roomID = 23058, userID = 0, protocol = 'flash' }={}]
    * @memberof DMclient
    */
   constructor({ roomID = 23058, userID = 0, protocol = 'flash' }: DMclientOptions = {}) {
@@ -34,14 +34,14 @@ class DMclient extends EventEmitter {
   }
   /**
    * 用户UID
-   * 
+   *
    * @type {number}
    * @memberof DMclient
    */
   public userID: number
   /**
    * 房间号, 注意不要短号
-   * 
+   *
    * @type {number}
    * @memberof DMclient
    */
@@ -49,7 +49,7 @@ class DMclient extends EventEmitter {
   /**
    * 连接弹幕服务器使用的协议
    * 为了避免不必要的麻烦, 禁止外部修改
-   * 
+   *
    * @protected
    * @type {DMclientProtocol}
    * @memberof DMclient
@@ -57,7 +57,7 @@ class DMclient extends EventEmitter {
   protected _protocol: DMclientProtocol
   /**
    * 连接弹幕服务器使用的协议
-   * 
+   *
    * @readonly
    * @type {DMclientProtocol}
    * @memberof DMclient
@@ -68,7 +68,7 @@ class DMclient extends EventEmitter {
   /**
    * 当前连接的弹幕服务器
    * 为了避免不必要的麻烦, 禁止外部修改
-   * 
+   *
    * @protected
    * @type {string}
    * @memberof DMclient
@@ -76,7 +76,7 @@ class DMclient extends EventEmitter {
   protected _server!: string
   /**
    * 当前连接的弹幕服务器
-   * 
+   *
    * @readonly
    * @type {string}
    * @memberof DMclient
@@ -87,7 +87,7 @@ class DMclient extends EventEmitter {
   /**
    * 当前连接的弹幕服务器端口
    * 为了避免不必要的麻烦, 禁止外部修改
-   * 
+   *
    * @protected
    * @type {number}
    * @memberof DMclient
@@ -95,7 +95,7 @@ class DMclient extends EventEmitter {
   protected _port!: number
   /**
    * 当前连接的弹幕服务器端口
-   * 
+   *
    * @readonly
    * @type {number}
    * @memberof DMclient
@@ -106,7 +106,7 @@ class DMclient extends EventEmitter {
   /**
    * 是否已经连接到服务器
    * 为了避免不必要的麻烦, 禁止外部修改
-   * 
+   *
    * @protected
    * @type {boolean}
    * @memberof DMclient
@@ -114,7 +114,7 @@ class DMclient extends EventEmitter {
   protected _connected: boolean = false
   /**
    * 是否已经连接到服务器
-   * 
+   *
    * @readonly
    * @type {boolean}
    * @memberof DMclient
@@ -124,14 +124,14 @@ class DMclient extends EventEmitter {
   }
   /**
    * 客户端版本, 目前为1
-   * 
+   *
    * @type {number}
    * @memberof DMclient
    */
   public version: number = 1
   /**
    * 猜测为客户端设备
-   * 
+   *
    * @readonly
    * @type {(0 | 1)}
    * @memberof DMclient
@@ -141,7 +141,7 @@ class DMclient extends EventEmitter {
   }
   /**
    * 全局计时器, 负责除心跳超时的其他任务, 便于停止
-   * 
+   *
    * @protected
    * @type {NodeJS.Timer}
    * @memberof DMclient
@@ -149,7 +149,7 @@ class DMclient extends EventEmitter {
   protected _Timer!: NodeJS.Timer
   /**
    * 心跳超时
-   * 
+   *
    * @protected
    * @type {NodeJS.Timer}
    * @memberof DMclient
@@ -157,7 +157,7 @@ class DMclient extends EventEmitter {
   protected _timeout!: NodeJS.Timer
   /**
    * 模仿客户端与服务器进行通讯
-   * 
+   *
    * @protected
    * @type {(Socket | ws)}
    * @memberof DMclient
@@ -165,7 +165,7 @@ class DMclient extends EventEmitter {
   protected _client!: Socket | ws
   /**
    * 缓存数据
-   * 
+   *
    * @private
    * @type {Buffer}
    * @memberof DMclient
@@ -173,7 +173,7 @@ class DMclient extends EventEmitter {
   private __data!: Buffer
   /**
    * 错误类型
-   * 
+   *
    * @static
    * @type {typeof dmErrorStatus}
    * @memberof DMclient
@@ -181,8 +181,8 @@ class DMclient extends EventEmitter {
   public static readonly errorStatus: typeof dmErrorStatus = dmErrorStatus
   /**
    * 连接到指定服务器
-   * 
-   * @param {{ server: string, port: number }} [options] 
+   *
+   * @param {{ server: string, port: number }} [options]
    * @memberof DMclient
    */
   public async Connect(options?: { server: string, port: number }) {
@@ -227,11 +227,11 @@ class DMclient extends EventEmitter {
   }
   /**
    * 断开与服务器的连接
-   * 
+   *
    * @memberof DMclient
    */
   public Close() {
-    if (this._client === undefined) return
+    if (!this._connected) return
     this._connected = false
     clearTimeout(this._Timer)
     clearTimeout(this._timeout)
@@ -249,7 +249,7 @@ class DMclient extends EventEmitter {
   }
   /**
    * 客户端连接
-   * 
+   *
    * @protected
    * @memberof DMclient
    */
@@ -273,7 +273,7 @@ class DMclient extends EventEmitter {
   }
   /**
    * 客户端错误
-   * 
+   *
    * @protected
    * @param {DMerror} errorInfo
    * @memberof DMclient
@@ -285,7 +285,7 @@ class DMclient extends EventEmitter {
   }
   /**
    * 向服务器发送自定义握手数据
-   * 
+   *
    * @protected
    * @memberof DMclient
    */
@@ -301,7 +301,7 @@ class DMclient extends EventEmitter {
   }
   /**
    * 心跳包
-   * 
+   *
    * @protected
    * @memberof DMclient
    */
@@ -320,7 +320,7 @@ class DMclient extends EventEmitter {
   }
   /**
    * 向服务器发送数据
-   * 
+   *
    * @protected
    * @param {number} totalLen 总长度
    * @param {number} [headLen=16] 头部长度
@@ -339,13 +339,13 @@ class DMclient extends EventEmitter {
     bufferData.writeInt32BE(type, 8)
     bufferData.writeInt32BE(driver, 12)
     if (data) bufferData.write(data, headLen)
-    if (this._protocol === 'socket' || this._protocol === 'flash') (<Socket>this._client).write(bufferData, )
+    if (this._protocol === 'socket' || this._protocol === 'flash') (<Socket>this._client).write(bufferData)
     else (<ws>this._client).send(bufferData)
   }
   /**
    * 解析从服务器接收的数据
    * 抛弃循环, 使用递归
-   * 
+   *
    * @protected
    * @param {Buffer} data
    * @memberof DMclient
@@ -401,7 +401,7 @@ class DMclient extends EventEmitter {
   }
   /**
    * 解析消息
-   * 
+   *
    * @protected
    * @param {Buffer} data
    * @memberof DMclient
@@ -435,7 +435,7 @@ class DMclient extends EventEmitter {
   }
   /**
    * 发送消息事件
-   * 
+   *
    * @protected
    * @param {danmuJson} dataJson
    * @memberof DMclient
@@ -447,10 +447,10 @@ class DMclient extends EventEmitter {
   }
   /**
    * 解压数据
-   * 
+   *
    * @protected
-   * @param {Buffer} data 
-   * @returns {Promise<Buffer | undefined>} 
+   * @param {Buffer} data
+   * @returns {Promise<Buffer | undefined>}
    * @memberof DMclient
    */
   protected _Uncompress(data: Buffer): Promise<Buffer | undefined> {
@@ -459,7 +459,7 @@ class DMclient extends EventEmitter {
         if (error === null) return resolve(result)
         else {
           tools.ErrorLog(data, error)
-          return resolve(undefined)
+          return resolve()
         }
       })
     })

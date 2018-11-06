@@ -3,7 +3,7 @@
  *******************/
 /**
  * 应用设置
- * 
+ *
  * @interface options
  */
 interface options {
@@ -24,6 +24,7 @@ interface server {
 interface config {
   [index: string]: number | string | number[]
   defaultUserID: number
+  serverURL: string
   eventRooms: number[]
   adminServerChan: string
   raffleDelay: number
@@ -58,6 +59,7 @@ interface userData {
 interface optionsInfo {
   [index: string]: configInfoData
   defaultUserID: configInfoData
+  serverURL: configInfoData
   eventRooms: configInfoData
   adminServerChan: configInfoData
   raffleDelay: configInfoData
@@ -199,7 +201,7 @@ declare enum appStatus {
 }
 /**
  * 公钥返回
- * 
+ *
  * @interface getKeyResponse
  */
 interface getKeyResponse {
@@ -213,7 +215,7 @@ interface getKeyResponseData {
 }
 /**
  * 验证返回
- * 
+ *
  * @interface authResponse
  */
 interface authResponse {
@@ -245,7 +247,7 @@ interface authResponseTokeninfo {
 }
 /**
  * 注销返回
- * 
+ *
  * @interface revokeResponse
  */
 interface revokeResponse {
@@ -306,9 +308,9 @@ interface captchaResponseError {
  *******************/
 /**
  * XHR返回
- * 
+ *
  * @interface response
- * @template T 
+ * @template T
  */
 interface XHRresponse<T> {
   response: {
@@ -318,7 +320,7 @@ interface XHRresponse<T> {
 }
 /**
  * Server酱
- * 
+ *
  * @interface serverChan
  */
 interface serverChan {
@@ -331,7 +333,7 @@ interface serverChan {
  *******************/
 /**
  * 消息格式
- * 
+ *
  * @interface raffleMessage
  */
 interface raffleMessage {
@@ -346,7 +348,7 @@ interface raffleMessage {
 }
 /**
  * 消息格式
- * 
+ *
  * @interface lotteryMessage
  */
 interface lotteryMessage {
@@ -359,7 +361,7 @@ interface lotteryMessage {
 }
 /**
  * 消息格式
- * 
+ *
  * @interface beatStormMessage
  */
 interface beatStormMessage {
@@ -370,13 +372,22 @@ interface beatStormMessage {
   title: string
   time: number
 }
-type message = raffleMessage | lotteryMessage | beatStormMessage
+/**
+ * 消息格式
+ *
+ * @interface systemMessage
+ */
+interface systemMessage {
+  cmd: 'sysmsg'
+  msg: string
+}
+type message = raffleMessage | lotteryMessage | beatStormMessage | systemMessage
 /*******************
  **** listener *****
  *******************/
 /**
  * 抽奖raffle检查
- * 
+ *
  * @interface raffleCheck
  */
 interface raffleCheck {
@@ -411,7 +422,7 @@ interface raffleCheckDataListFromuser {
 }
 /**
  * 抽奖lottery检查
- * 
+ *
  * @interface lotteryCheck
  */
 interface lotteryCheck {
@@ -456,7 +467,7 @@ interface lotteryCheckDataSender {
 }
 /**
  * 获取直播列表
- * 
+ *
  * @interface getAllList
  */
 interface getAllList {
@@ -523,7 +534,7 @@ interface getAllListDataRoomList {
  *******************/
 /**
  * 参与抽奖信息
- * 
+ *
  * @interface raffleJoin
  */
 interface raffleJoin {
@@ -543,7 +554,7 @@ interface raffleJoinData {
 }
 /**
  * 抽奖结果信息
- * 
+ *
  * @interface raffleReward
  */
 interface raffleReward {
@@ -566,7 +577,7 @@ interface raffleRewardData {
 type raffleAward = raffleReward
 /**
  * 抽奖lottery
- * 
+ *
  * @interface lotteryReward
  */
 interface lotteryReward {
@@ -590,12 +601,32 @@ interface lotteryRewardDataAwardlist {
   type: number
   content: string
 }
+/**
+ * 节奏跟风返回值
+ *
+ * @interface joinStorm
+ */
+interface joinStorm {
+  code: number
+  message: string
+  msg: string
+  data: joinStormData
+}
+interface joinStormData {
+  gift_id: number
+  title: string
+  content: string
+  mobile_content: string
+  gift_img: string
+  gift_num: number
+  gift_name: string
+}
 /*******************
  ***** online ******
  *******************/
 /**
  * 在线心跳返回
- * 
+ *
  * @interface userOnlineHeart
  */
 interface userOnlineHeart {
@@ -607,7 +638,7 @@ interface userOnlineHeart {
  *******************/
 /**
  * 签到信息
- * 
+ *
  * @interface signInfo
  */
 interface signInfo {
@@ -626,7 +657,7 @@ interface signInfoData {
 }
 /**
  * 在线领瓜子宝箱
- * 
+ *
  * @interface currentTask
  */
 interface currentTask {
@@ -642,7 +673,7 @@ interface currentTaskData {
 }
 /**
  * 领瓜子答案提交返回
- * 
+ *
  * @interface award
  */
 interface award {
@@ -657,7 +688,7 @@ interface awardData {
 }
 /**
  * 房间信息
- * 
+ *
  * @interface roomInit
  */
 interface roomInit {
@@ -682,7 +713,7 @@ interface roomInitDataData {
 }
 /**
  * 分享房间返回
- * 
+ *
  * @interface shareCallback
  */
 interface shareCallback {
@@ -692,7 +723,7 @@ interface shareCallback {
 }
 /**
  * 每日包裹
- * 
+ *
  * @interface getBagGift
  */
 interface getBagGift {
@@ -700,7 +731,7 @@ interface getBagGift {
 }
 /**
  * 包裹信息
- * 
+ *
  * @interface bagInfo
  */
 interface bagInfo {
@@ -725,7 +756,7 @@ interface bagInfoData {
 }
 /**
  * 赠送包裹礼物
- * 
+ *
  * @interface sendBag
  */
 interface sendBag {
@@ -753,7 +784,7 @@ interface sendBagData {
 }
 /**
  * 应援团
- * 
+ *
  * @interface linkGroup
  */
 interface linkGroup {
@@ -778,7 +809,7 @@ interface linkGroupInfo {
 }
 /**
  * 应援团签到返回
- * 
+ *
  * @interface signGroup
  */
 interface signGroup {
@@ -793,7 +824,7 @@ interface signGroupData {
 }
 /**
  * 银瓜子兑换硬币返回
- * 
+ *
  * @interface silver2coin
  */
 interface silver2coin {
@@ -810,7 +841,7 @@ interface silver2coinData {
 }
 /**
  * 每日任务
- * 
+ *
  * @interface taskInfo
  */
 interface taskInfo {
@@ -826,7 +857,7 @@ interface taskInfoDoublewatchinfo {
 }
 /**
  * 兑换扭蛋币
- * 
+ *
  * @interface capsule
  */
 interface capsule {

@@ -3,7 +3,7 @@ import request from 'request'
 import tools from './tools'
 /**
  * 登录状态
- * 
+ *
  * @enum {number}
  */
 enum appStatus {
@@ -15,7 +15,7 @@ enum appStatus {
 /**
  * Creates an instance of AppClient.
  * 创建实例后务必init()
- * 
+ *
  * @class AppClient
  */
 class AppClient {
@@ -56,7 +56,7 @@ class AppClient {
   // public static readonly mobiApp: string = 'biliLink'
   /**
    * 谜一样的TS
-   * 
+   *
    * @readonly
    * @static
    * @type {number}
@@ -67,7 +67,7 @@ class AppClient {
   }
   /**
    * 谜一样的RND
-   * 
+   *
    * @readonly
    * @static
    * @type {number}
@@ -78,7 +78,7 @@ class AppClient {
   }
   /**
    * 谜一样的DeviceID
-   * 
+   *
    * @readonly
    * @static
    * @type {string}
@@ -92,7 +92,7 @@ class AppClient {
   }
   /**
    * 基本请求参数
-   * 
+   *
    * @readonly
    * @static
    * @type {string}
@@ -104,11 +104,11 @@ class AppClient {
   }
   /**
    * 对参数签名
-   * 
+   *
    * @static
-   * @param {string} params 
-   * @param {boolean} [ts=true] 
-   * @returns {string} 
+   * @param {string} params
+   * @param {boolean} [ts=true]
+   * @returns {string}
    * @memberof AppClient
    */
   public static signQuery(params: string, ts = true): string {
@@ -119,10 +119,10 @@ class AppClient {
   }
   /**
    * 对参数加参后签名
-   * 
+   *
    * @static
-   * @param {string} [params] 
-   * @returns {string} 
+   * @param {string} [params]
+   * @returns {string}
    * @memberof AppClient
    */
   public static signQueryBase(params?: string): string {
@@ -131,7 +131,7 @@ class AppClient {
   }
   /**
    * 登录状态
-   * 
+   *
    * @static
    * @type {typeof appStatus}
    * @memberof AppClient
@@ -139,14 +139,14 @@ class AppClient {
   public static readonly status: typeof appStatus = appStatus
   /**
    * 验证码, 登录时会自动清空
-   * 
+   *
    * @type {string}
    * @memberof AppClient
    */
   public captcha: string = ''
   /**
    * 用户名, 推荐邮箱或电话号
-   * 
+   *
    * @abstract
    * @type {string}
    * @memberof AppClient
@@ -154,7 +154,7 @@ class AppClient {
   public userName!: string
   /**
    * 密码
-   * 
+   *
    * @abstract
    * @type {string}
    * @memberof AppClient
@@ -162,7 +162,7 @@ class AppClient {
   public passWord!: string
   /**
    * 登录后获取的B站UID
-   * 
+   *
    * @abstract
    * @type {number}
    * @memberof AppClient
@@ -170,7 +170,7 @@ class AppClient {
   public biliUID!: number
   /**
    * 登录后获取的access_token
-   * 
+   *
    * @abstract
    * @type {string}
    * @memberof AppClient
@@ -178,7 +178,7 @@ class AppClient {
   public accessToken!: string
   /**
    * 登录后获取的refresh_token
-   * 
+   *
    * @abstract
    * @type {string}
    * @memberof AppClient
@@ -186,7 +186,7 @@ class AppClient {
   public refreshToken!: string
   /**
    * 登录后获取的cookieString
-   * 
+   *
    * @abstract
    * @type {string}
    * @memberof AppClient
@@ -194,7 +194,7 @@ class AppClient {
   public cookieString!: string
   /**
    * 请求头
-   * 
+   *
    * @type {request.Headers}
    * @memberof AppClient
    */
@@ -204,7 +204,7 @@ class AppClient {
   }
   /**
    * cookieJar
-   * 
+   *
    * @private
    * @type {request.CookieJar}
    * @memberof AppClient
@@ -212,10 +212,10 @@ class AppClient {
   private __jar: request.CookieJar = request.jar()
   /**
    * 对密码进行加密
-   * 
+   *
    * @protected
-   * @param {getKeyResponseData} publicKey 
-   * @returns {string} 
+   * @param {getKeyResponseData} publicKey
+   * @returns {string}
    * @memberof AppClient
    */
   protected _RSAPassWord(publicKey: getKeyResponseData): string {
@@ -230,9 +230,9 @@ class AppClient {
   }
   /**
    * 获取公钥
-   * 
+   *
    * @protected
-   * @returns {(Promise<response<getKeyResponse> | undefined>)} 
+   * @returns {(Promise<response<getKeyResponse> | undefined>)}
    * @memberof AppClient
    */
   protected _getKey(): Promise<XHRresponse<getKeyResponse> | undefined> {
@@ -248,10 +248,10 @@ class AppClient {
   }
   /**
    * 验证登录信息
-   * 
+   *
    * @protected
-   * @param {getKeyResponseData} publicKey 
-   * @returns {Promise<response<authResponse> | undefined>)} 
+   * @param {getKeyResponseData} publicKey
+   * @returns {Promise<response<authResponse> | undefined>)}
    * @memberof AppClient
    */
   protected _auth(publicKey: getKeyResponseData): Promise<XHRresponse<authResponse> | undefined> {
@@ -272,9 +272,9 @@ class AppClient {
   }
   /**
    * 更新用户凭证
-   * 
+   *
    * @protected
-   * @param {authResponseData} authResponseData 
+   * @param {authResponseData} authResponseData
    * @memberof AppClient
    */
   protected _update(authResponseData: authResponseData) {
@@ -290,7 +290,7 @@ class AppClient {
   }
   /**
    * 初始化获取Buvid
-   * 
+   *
    * @memberof AppClient
    */
   public async init() {
@@ -315,8 +315,8 @@ class AppClient {
   }
   /**
    * 获取验证码
-   * 
-   * @returns {Promise<captchaResponse>} 
+   *
+   * @returns {Promise<captchaResponse>}
    * @memberof AppClient
    */
   public async getCaptcha(): Promise<captchaResponse> {
@@ -333,8 +333,8 @@ class AppClient {
   }
   /**
    * 客户端登录
-   * 
-   * @returns {Promise<loginResponse>} 
+   *
+   * @returns {Promise<loginResponse>}
    * @memberof AppClient
    */
   public async login(): Promise<loginResponse> {
@@ -355,8 +355,8 @@ class AppClient {
   }
   /**
    * 客户端登出
-   * 
-   * @returns {Promise<logoutResponse>} 
+   *
+   * @returns {Promise<logoutResponse>}
    * @memberof AppClient
    */
   public async logout(): Promise<logoutResponse> {
@@ -377,8 +377,8 @@ class AppClient {
   }
   /**
    * 更新access_token
-   * 
-   * @returns {Promise<loginResponse>} 
+   *
+   * @returns {Promise<loginResponse>}
    * @memberof AppClient
    */
   public async refresh(): Promise<loginResponse> {

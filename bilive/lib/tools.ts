@@ -4,9 +4,9 @@ import request from 'request'
 import Options, { liveOrigin, apiVCOrigin, apiLiveOrigin } from '../options'
 /**
  * 请求头
- * 
- * @param {string} platform 
- * @returns {request.Headers} 
+ *
+ * @param {string} platform
+ * @returns {request.Headers}
  */
 function getHeaders(platform: string): request.Headers {
   switch (platform) {
@@ -39,7 +39,7 @@ function getHeaders(platform: string): request.Headers {
 }
 /**
  * 获取api的ip
- * 
+ *
  * @class IP
  */
 class IP {
@@ -60,9 +60,9 @@ class IP {
 const api = new IP()
 /**
  * 测试可用ip
- * 
- * @param {string[]} apiIPs 
- * @returns {Promise<number>} 
+ *
+ * @param {string[]} apiIPs
+ * @returns {Promise<number>}
  */
 async function testIP(apiIPs: string[]): Promise<number> {
   const test: Promise<undefined>[] = []
@@ -81,7 +81,7 @@ async function testIP(apiIPs: string[]): Promise<number> {
       request(options, (error, response, body) => {
         if (error === null && response.statusCode === 200 && body.code === 0)
           api.IPs.add(ip)
-        return resolve(undefined)
+        return resolve()
       })
     }))
   })
@@ -93,29 +93,29 @@ async function testIP(apiIPs: string[]): Promise<number> {
 }
 /**
  * 获取短id
- * 
- * @param {number} roomID 
- * @returns {number} 
+ *
+ * @param {number} roomID
+ * @returns {number}
  */
 function getShortRoomID(roomID: number): number {
   return Options.shortRoomID.get(roomID) || roomID
 }
 /**
  * 获取长id
- * 
- * @param {number} roomID 
- * @returns {number} 
+ *
+ * @param {number} roomID
+ * @returns {number}
  */
 function getLongRoomID(roomID: number): number {
   return Options.longRoomID.get(roomID) || roomID
 }
 /**
  * 添加request头信息
- * 
- * @template T 
- * @param {request.OptionsWithUri} options 
- * @param {('PC' | 'Android' | 'WebView')} [platform='PC'] 
- * @returns {Promise<response<T> | undefined>} 
+ *
+ * @template T
+ * @param {request.OptionsWithUri} options
+ * @param {('PC' | 'Android' | 'WebView')} [platform='PC']
+ * @returns {Promise<response<T> | undefined>}
  */
 function XHR<T>(options: request.OptionsWithUri, platform: 'PC' | 'Android' | 'WebView' = 'PC'): Promise<XHRresponse<T> | undefined> {
   return new Promise<XHRresponse<T> | undefined>(resolve => {
@@ -147,7 +147,7 @@ function XHR<T>(options: request.OptionsWithUri, platform: 'PC' | 'Android' | 'W
 }
 /**
  * 设置cookie
- * 
+ *
  * @param {string} cookieString
  * @returns {request.CookieJar}
  */
@@ -160,11 +160,11 @@ function setCookie(cookieString: string): request.CookieJar {
 }
 /**
  * 获取cookie值
- * 
- * @param {request.CookieJar} jar 
- * @param {string} key 
- * @param {string} [url=apiLiveOrigin] 
- * @returns {string} 
+ *
+ * @param {request.CookieJar} jar
+ * @param {string} key
+ * @param {string} [url=apiLiveOrigin]
+ * @returns {string}
  */
 function getCookie(jar: request.CookieJar, key: string, url = apiLiveOrigin): string {
   const cookies = jar.getCookies(url)
@@ -173,11 +173,11 @@ function getCookie(jar: request.CookieJar, key: string, url = apiLiveOrigin): st
 }
 /**
  * 格式化JSON
- * 
- * @template T 
- * @param {string} text 
- * @param {((key: any, value: any) => any)} [reviver] 
- * @returns {Promise<T | undefined>} 
+ *
+ * @template T
+ * @param {string} text
+ * @param {((key: any, value: any) => any)} [reviver]
+ * @returns {Promise<T | undefined>}
  */
 function JSONparse<T>(text: string, reviver?: ((key: any, value: any) => any)): Promise<T | undefined> {
   return new Promise<T | undefined>(resolve => {
@@ -187,24 +187,24 @@ function JSONparse<T>(text: string, reviver?: ((key: any, value: any) => any)): 
     }
     catch (error) {
       ErrorLog('JSONparse', error)
-      return resolve(undefined)
+      return resolve()
     }
   })
 }
 /**
  * Hash
- * 
- * @param {string} algorithm 
- * @param {(string | Buffer)} data 
- * @returns {string} 
+ *
+ * @param {string} algorithm
+ * @param {(string | Buffer)} data
+ * @returns {string}
  */
 function Hash(algorithm: string, data: string | Buffer): string {
   return crypto.createHash(algorithm).update(data).digest('hex')
 }
 /**
  * 格式化输出, 配合PM2凑合用
- * 
- * @param {...any[]} message 
+ *
+ * @param {...any[]} message
  */
 function Log(...message: any[]) {
   const log = util.format(`${new Date().toString().slice(4, 24)} :`, ...message)
@@ -218,16 +218,16 @@ const logs: { data: string[], onLog?: (data: string) => void } = {
 }
 /**
  * 格式化输出, 配合PM2凑合用
- * 
- * @param {...any[]} message 
+ *
+ * @param {...any[]} message
  */
 function ErrorLog(...message: any[]) {
   console.error(`${new Date().toString().slice(4, 24)} :`, ...message)
 }
 /**
  * 发送Server酱消息
- * 
- * @param {string} message 
+ *
+ * @param {string} message
  */
 function sendSCMSG(message: string) {
   const adminServerChan = Options._.config.adminServerChan
@@ -242,7 +242,7 @@ function sendSCMSG(message: string) {
 }
 /**
  * sleep
- * 
+ *
  * @param {number} ms
  * @returns {Promise<'sleep'>}
  */

@@ -5,15 +5,15 @@ import Options, { liveOrigin, apiVCOrigin, apiLiveOrigin } from './options'
 import { Options as requestOptions } from 'request'
 /**
  * Creates an instance of Daily.
- * 
+ *
  * @class Daily
  * @extends {Online}
  */
 class Daily extends Online {
   /**
    * Creates an instance of Daily.
-   * @param {string} uid 
-   * @param {userData} userData 
+   * @param {string} uid
+   * @param {userData} userData
    * @memberof Daily
    */
   constructor(uid: string, userData: userData) {
@@ -30,8 +30,8 @@ class Daily extends Online {
   /**
    * 当账号出现异常时, 会返回'captcha'或'stop'
    * 'captcha'为登录需要验证码, 若无法处理需Stop()
-   * 
-   * @returns {(Promise<'captcha' | 'stop' | void>)} 
+   *
+   * @returns {(Promise<'captcha' | 'stop' | void>)}
    * @memberof Daily
    */
   public Start(): Promise<'captcha' | 'stop' | void> {
@@ -41,7 +41,7 @@ class Daily extends Online {
   }
   /**
    * 停止挂机
-   * 
+   *
    * @memberof Daily
    */
   public Stop() {
@@ -51,7 +51,7 @@ class Daily extends Online {
   /**
    * 零点重置
    * 为了少几个定时器, 统一由外部调用
-   * 
+   *
    * @memberof Daily
    */
   public async nextDay() {
@@ -72,7 +72,7 @@ class Daily extends Online {
   }
   /**
    * 日常
-   * 
+   *
    * @memberof Daily
    */
   public async daily() {
@@ -85,7 +85,7 @@ class Daily extends Online {
   }
   /**
    * 每日签到
-   * 
+   *
    * @memberof Daily
    */
   public async sign() {
@@ -117,7 +117,7 @@ class Daily extends Online {
   }
   /**
    * 每日宝箱
-   * 
+   *
    * @memberof Daily
    */
   public async treasureBox() {
@@ -148,7 +148,7 @@ class Daily extends Online {
   }
   /**
    * 每日任务
-   * 
+   *
    * @memberof Daily
    */
   public async eventRoom() {
@@ -170,7 +170,7 @@ class Daily extends Online {
   }
   /**
    * 银瓜子兑换硬币
-   * 
+   *
    * @memberof Daily
    */
   public async silver2coin() {
@@ -195,7 +195,7 @@ class Daily extends Online {
   }
   /**
    * 自动送礼
-   * 
+   *
    * @memberof Daily
    */
   public async sendGift() {
@@ -246,8 +246,8 @@ class Daily extends Online {
   }
   /**
    * 获取包裹信息
-   * 
-   * @returns {(Promise<response<bagInfo> | undefined>)} 
+   *
+   * @returns {(Promise<response<bagInfo> | undefined>)}
    * @memberof Daily
    */
   public checkBag() {
@@ -260,7 +260,7 @@ class Daily extends Online {
   }
   /**
    * 应援团签到
-   * 
+   *
    * @memberof Daily
    */
   public async signGroup() {
