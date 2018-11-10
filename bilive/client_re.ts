@@ -52,7 +52,7 @@ class ClientRE extends Client {
   private _ClientReConnect() {
     if (this._update) this._update = false
     else {
-      setTimeout(() => {
+      this._Timer = setTimeout(() => {
         if (this.reConnectTime >= 5) {
           this.reConnectTime = 0
           this._DelayReConnect()
@@ -71,7 +71,7 @@ class ClientRE extends Client {
    * @memberof ClientRE
    */
   private _DelayReConnect() {
-    setTimeout(() => this.Connect(), 5 * 60 * 1000)
+    this._Timer = setTimeout(() => this.Connect(), 5 * 60 * 1000)
     tools.ErrorLog('尝试重连服务器失败，五分钟后再次重新连接')
   }
 }

@@ -44,17 +44,44 @@ class Client extends EventEmitter {
    */
   protected _wsClient!: ws
   /**
+   * 是否已经连接到服务器
+   *
+   * @protected
+   * @type {boolean}
+   * @memberof Client
+   */
+  protected _connected: boolean = false
+  /**
+   * 全局计时器, 负责除心跳超时的其他任务, 便于停止
+   *
+   * @protected
+   * @type {NodeJS.Timer}
+   * @memberof Client
+   */
+  protected _Timer!: NodeJS.Timer
+  /**
+   * 心跳超时
+   *
+   * @protected
+   * @type {NodeJS.Timer}
+   * @memberof Client
+   */
+  protected _timeout!: NodeJS.Timer
+  /**
    * 连接到指定服务器
    *
    * @memberof Client
    */
   public Connect() {
-    if (this._wsClient !== undefined && this._wsClient.readyState === ws.OPEN) return
+    if (this._connected) return
+    this._connected = true
     this._wsClient = new ws(this._server, [this._protocol])
     this._wsClient
       .on('error', error => this._ClientErrorHandler(error))
       .on('close', () => this.Close())
       .on('message', (data: string) => this._MessageHandler(data))
+      .on('ping', () => this._PingHandler())
+    this._PingHandler()
   }
   /**
    * 断开与服务器的连接
@@ -62,7 +89,9 @@ class Client extends EventEmitter {
    * @memberof Client
    */
   public Close() {
-    if (this._wsClient === undefined || this._wsClient.readyState !== ws.OPEN) return
+    if (!this._connected) return
+    this._connected = false
+    clearTimeout(this._timeout)
     this._wsClient.close()
     this._wsClient.terminate()
     this._wsClient.removeAllListeners()
@@ -79,6 +108,18 @@ class Client extends EventEmitter {
   protected _ClientErrorHandler(error: Error) {
     this.emit('clientError', error)
     this.Close()
+  }
+  /**
+   * ping/pong
+   *
+   * @protected
+   * @memberof Client
+   */
+  protected _PingHandler() {
+    clearTimeout(this._timeout)
+    this._timeout = setTimeout(() => {
+      this._ClientErrorHandler(Error('timeout'))
+    }, 2 * 60 * 1000)
   }
   /**
    * 解析消息
