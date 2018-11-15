@@ -246,6 +246,7 @@ class WebAPI extends EventEmitter {
         // 虽然不能保证唯一性, 但是这都能重复的话可以去买彩票
         const uid = randomBytes(16).toString('hex')
         const data = Object.assign({}, Options._.newUserData)
+        Options.whiteList.add(uid)
         Options._.user[uid] = data
         Options.save()
         this._Send({ cmd, ts, uid, data })

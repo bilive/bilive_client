@@ -1,7 +1,7 @@
 import util from 'util'
 import crypto from 'crypto'
 import request from 'request'
-import Options, { liveOrigin, apiVCOrigin, apiLiveOrigin } from '../options'
+import Options, { liveOrigin, apiLiveOrigin } from '../options'
 /**
  * 请求头
  *
@@ -38,60 +38,6 @@ function getHeaders(platform: string): request.Headers {
   }
 }
 /**
- * 获取api的ip
- *
- * @class IP
- */
-class IP {
-  constructor() {
-  }
-  public IPs: Set<string> = new Set()
-  private __IPiterator: IterableIterator<string> = this.IPs.values()
-  public get ip(): string {
-    if (this.IPs.size === 0) return ''
-    const ip = this.__IPiterator.next()
-    if (ip.done) {
-      this.__IPiterator = this.IPs.values()
-      return this.ip
-    }
-    return ip.value
-  }
-}
-const api = new IP()
-/**
- * 测试可用ip
- *
- * @param {string[]} apiIPs
- * @returns {Promise<number>}
- */
-async function testIP(apiIPs: string[]): Promise<number> {
-  const test: Promise<undefined>[] = []
-  apiIPs.forEach(ip => {
-    const headers = getHeaders('PC')
-    const options = {
-      uri: `${apiLiveOrigin}/ip_service/v1/ip_service/get_ip_addr`,
-      proxy: `http://${ip}/`,
-      tunnel: false,
-      method: 'GET',
-      timeout: 2000,
-      json: true,
-      headers
-    }
-    test.push(new Promise<undefined>(resolve => {
-      request(options, (error, response, body) => {
-        if (error === null && response.statusCode === 200 && body.code === 0)
-          api.IPs.add(ip)
-        return resolve()
-      })
-    }))
-  })
-  Log('正在测试可用ip')
-  await Promise.all(test)
-  const num = api.IPs.size
-  Log('可用ip数量为', num)
-  return num
-}
-/**
  * 获取短id
  *
  * @param {number} roomID
@@ -120,14 +66,6 @@ function getLongRoomID(roomID: number): number {
 function XHR<T>(options: request.OptionsWithUri, platform: 'PC' | 'Android' | 'WebView' = 'PC'): Promise<XHRresponse<T> | undefined> {
   return new Promise<XHRresponse<T> | undefined>(resolve => {
     options.gzip = true
-    // 添加用户代理
-    if (typeof options.uri === 'string' && (options.uri.startsWith(apiLiveOrigin) || options.uri.startsWith(apiVCOrigin))) {
-      const ip = api.ip
-      if (ip !== '') {
-        options.proxy = `http://${ip}/`
-        options.tunnel = false
-      }
-    }
     // 添加头信息
     const headers = getHeaders(platform)
     options.headers = options.headers === undefined ? headers : Object.assign(headers, options.headers)
@@ -137,8 +75,6 @@ function XHR<T>(options: request.OptionsWithUri, platform: 'PC' | 'Android' | 'W
     request(options, (error, response, body) => {
       if (error === null) resolve({ response, body })
       else {
-        const ip = error.address
-        if (ip !== undefined && api.IPs.has(ip)) api.IPs.delete(ip)
         ErrorLog(options.uri, error)
         resolve()
       }
@@ -249,4 +185,4 @@ function sendSCMSG(message: string) {
 function Sleep(ms: number): Promise<'sleep'> {
   return new Promise<'sleep'>(resolve => setTimeout(() => resolve('sleep'), ms))
 }
-export default { testIP, XHR, setCookie, getCookie, getShortRoomID, getLongRoomID, JSONparse, Hash, Log, logs, ErrorLog, sendSCMSG, Sleep }
+export default { XHR, setCookie, getCookie, getShortRoomID, getLongRoomID, JSONparse, Hash, Log, logs, ErrorLog, sendSCMSG, Sleep }

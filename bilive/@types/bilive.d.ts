@@ -27,10 +27,6 @@ interface config {
   serverURL: string
   eventRooms: number[]
   adminServerChan: string
-  raffleDelay: number
-  rafflePause: number[]
-  droprate: number
-  calcGiftTime: string
 }
 interface userCollection {
   [index: string]: userData
@@ -49,12 +45,9 @@ interface userData {
   treasureBox: boolean
   eventRoom: boolean
   silver2coin: boolean
-  raffle: boolean
-  raffleResend: number
   sendGift: boolean
   sendGiftRoom: number
   signGroup: boolean
-  beatStorm: boolean
 }
 interface optionsInfo {
   [index: string]: configInfoData
@@ -62,10 +55,6 @@ interface optionsInfo {
   serverURL: configInfoData
   eventRooms: configInfoData
   adminServerChan: configInfoData
-  raffleDelay: configInfoData
-  rafflePause: configInfoData
-  droprate: configInfoData
-  calcGiftTime: configInfoData
   nickname: configInfoData
   userName: configInfoData
   passWord: configInfoData
@@ -78,12 +67,9 @@ interface optionsInfo {
   treasureBox: configInfoData
   eventRoom: configInfoData
   silver2coin: configInfoData
-  raffle: configInfoData
-  raffleResend: configInfoData
   sendGift: configInfoData
   sendGiftRoom: configInfoData
   signGroup: configInfoData
-  beatStorm: configInfoData
 }
 interface configInfoData {
   description: string
@@ -91,23 +77,6 @@ interface configInfoData {
   type: string
   cognate?: string
 }
-// 礼物统计相关
-interface giftNameNum {
-  name: string
-  number: giftHas
-}
-interface userNickGift {
-  nickname: string
-  gift: userGiftID
-}
-interface giftHas {
-  all: number
-  twoDay: number
-  oneDay: number
-}
-type giftList = Map<number, giftNameNum>
-type userGiftList = Map<string, userNickGift>
-type userGiftID = Map<number, giftHas>
 /*******************
  ****** User ******
  *******************/
@@ -530,98 +499,6 @@ interface getAllListDataRoomList {
   pk_id: number
 }
 /*******************
- ***** raffle ******
- *******************/
-/**
- * 参与抽奖信息
- *
- * @interface raffleJoin
- */
-interface raffleJoin {
-  code: number
-  msg: string
-  message: string
-  data: raffleJoinData
-}
-interface raffleJoinData {
-  face?: string
-  from: string
-  type: 'small_tv' | string
-  roomid?: string
-  raffleId: number | string
-  time: number
-  status: number
-}
-/**
- * 抽奖结果信息
- *
- * @interface raffleReward
- */
-interface raffleReward {
-  code: number
-  msg: string
-  message: string
-  data: raffleRewardData
-}
-interface raffleRewardData {
-  raffleId: number
-  type: string
-  gift_id: number
-  gift_name: string
-  gift_num: number
-  gift_from: string
-  gift_type: number
-  gift_content: string
-  status?: number
-}
-type raffleAward = raffleReward
-/**
- * 抽奖lottery
- *
- * @interface lotteryReward
- */
-interface lotteryReward {
-  code: number
-  msg: string
-  message: string
-  data: lotteryRewardData
-}
-interface lotteryRewardData {
-  id: number
-  type: string
-  award_type: number
-  time: number
-  message: string
-  from: string
-  award_list: lotteryRewardDataAwardlist[]
-}
-interface lotteryRewardDataAwardlist {
-  name: string
-  img: string
-  type: number
-  content: string
-}
-/**
- * 节奏跟风返回值
- *
- * @interface joinStorm
- */
-interface joinStorm {
-  code: number
-  message: string
-  msg: string
-  data: joinStormData
-}
-interface joinStormData {
-  gift_id: number
-  title: string
-  content: string
-  mobile_content: string
-  gift_img: string
-  gift_num: number
-  gift_name: string
-}
-/*******************
  ***** online ******
  *******************/
 /**
@@ -867,4 +744,28 @@ interface capsule {
 }
 interface capsuleData {
   capsule: SEND_GIFT_data_capsule
+}
+/*******************
+ ***** options *****
+ *******************/
+interface Options {
+  _: options
+  user: Map<string, User>
+  whiteList: Set<string>
+  shortRoomID: Map<number, number>
+  longRoomID: Map<number, number>
+  init: () => void
+  save: () => Promise<options>
+}
+/*******************
+ ****** plugin *****
+ *******************/
+interface IPlugin {
+  name: string
+  description: string
+  version: string
+  author: string
+  start({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }): Promise<void>
+  loop({ cst, cstMin, cstHour, cstString, options, users }: { cst: Date, cstMin: number, cstHour: number, cstString: string, options: options, users: Map<string, User> }): Promise<void>
+  msg({ message, options, users }: { message: raffleMessage | lotteryMessage | beatStormMessage, options: options, users: Map<string, User> }): Promise<void>
 }
