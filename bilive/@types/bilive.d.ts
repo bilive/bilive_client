@@ -765,7 +765,9 @@ interface IPlugin {
   description: string
   version: string
   author: string
-  start({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }): Promise<void>
-  loop({ cst, cstMin, cstHour, cstString, options, users }: { cst: Date, cstMin: number, cstHour: number, cstString: string, options: options, users: Map<string, User> }): Promise<void>
-  msg({ message, options, users }: { message: raffleMessage | lotteryMessage | beatStormMessage, options: options, users: Map<string, User> }): Promise<void>
+  loaded: boolean
+  start?({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }): Promise<void>
+  once?({ options, users }: { options: options, users: Map<string, User> }): Promise<void>
+  loop?({ cst, cstMin, cstHour, cstString, options, users }: { cst: Date, cstMin: number, cstHour: number, cstString: string, options: options, users: Map<string, User> }): Promise<void>
+  msg?({ message, options, users }: { message: raffleMessage | lotteryMessage | beatStormMessage, options: options, users: Map<string, User> }): Promise<void>
 }

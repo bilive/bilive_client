@@ -43,6 +43,11 @@ class BiLive {
       if (status !== undefined) user.Stop()
     }
     Options.user.forEach(user => user.daily())
+    // 插件运行
+    this._pluginList.forEach(plugin => {
+      if (plugin.once !== undefined)
+        plugin.once({ options: Options._, users: Options.user })
+    })
     this.loop = setInterval(() => this._loop(), 50 * 1000)
     new WebAPI().Start()
     this.Listener()
@@ -74,7 +79,10 @@ class BiLive {
       this._Listener.clearAllID()
     }
     // 插件运行
-    this._pluginList.forEach(plugin => plugin.loop({ cst, cstMin, cstHour, cstString, options: Options._, users: Options.user }))
+    this._pluginList.forEach(plugin => {
+      if (plugin.loop !== undefined)
+        plugin.loop({ cst, cstMin, cstHour, cstString, options: Options._, users: Options.user })
+    })
   }
   /**
    * 加载插件
@@ -87,10 +95,12 @@ class BiLive {
     const plugins = await FSreadDir(pluginsPath)
     for (const pluginName of plugins) {
       const { default: plugin }: { default: IPlugin } = await import(`${pluginsPath}/${pluginName}/index.js`)
-      await plugin.start({ defaultOptions: Options._, whiteList: Options.whiteList })
-      const { name, description, version, author } = plugin
-      tools.Log(`已加载: ${name}, 用于: ${description}, 版本: ${version}, 作者: ${author}`)
-      this._pluginList.set(pluginName, plugin)
+      if (plugin.start !== undefined) await plugin.start({ defaultOptions: Options._, whiteList: Options.whiteList })
+      if (plugin.loaded) {
+        const { name, description, version, author } = plugin
+        tools.Log(`已加载: ${name}, 用于: ${description}, 版本: ${version}, 作者: ${author}`)
+        this._pluginList.set(pluginName, plugin)
+      }
     }
   }
   /**
@@ -116,7 +126,10 @@ class BiLive {
    */
   private async _Message(raffleMessage: raffleMessage | lotteryMessage | beatStormMessage) {
     // 插件运行
-    this._pluginList.forEach(plugin => plugin.msg({ message: raffleMessage, options: Options._, users: Options.user }))
+    this._pluginList.forEach(plugin => {
+      if (plugin.msg !== undefined)
+        plugin.msg({ message: raffleMessage, options: Options._, users: Options.user })
+    })
   }
 }
 export default BiLive

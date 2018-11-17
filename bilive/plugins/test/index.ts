@@ -3,8 +3,12 @@ class Test implements IPlugin {
   public description = '这是用来测试的'
   public version = '0.0.1'
   public author = 'lzghzr'
+  public loaded = false
   public async start({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }) {
     !{ defaultOptions, whiteList }
+  }
+  public async once({ options, users }: { options: options, users: Map<string, User> }) {
+    !{ options, users }
   }
   public async loop({ cst, cstMin, cstHour, cstString, options, users }: { cst: Date, cstMin: number, cstHour: number, cstString: string, options: options, users: Map<string, User> }) {
     !{ cst, cstMin, cstHour, cstString, options, users }

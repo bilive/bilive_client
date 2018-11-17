@@ -1,11 +1,13 @@
 import { Options as requestOptions } from 'request'
 import tools from '../../lib/tools'
+import AppClient from '../../lib/app_client'
 
 class CalcGift implements IPlugin {
   public name = '礼物统计插件'
   public description = '固定时间统计礼物, 并发送到指定位置'
   public version = '0.0.1'
   public author = 'lzghzr'
+  public loaded = false
   public async start({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }) {
     defaultOptions.config['calcGiftTime'] = ''
     defaultOptions.info['calcGiftTime'] = {
@@ -14,6 +16,7 @@ class CalcGift implements IPlugin {
       type: 'string'
     }
     whiteList.add('calcGiftTime')
+    this.loaded = true
   }
   public async loop({ cstString, options, users }: { cstString: string, options: options, users: Map<string, User> }) {
     if (cstString === options.config.calcGiftTime) {
@@ -23,7 +26,7 @@ class CalcGift implements IPlugin {
       const userGiftList: userGiftList = new Map()
       for (const [uid, user] of users) {
         const bag: requestOptions = {
-          uri: `https://api.live.bilibili.com/gift/v2/gift/m_bag_list?${user.signQueryBase(user.tokenQuery)}`,
+          uri: `https://api.live.bilibili.com/gift/v2/gift/m_bag_list?${AppClient.signQueryBase(user.tokenQuery)}`,
           json: true,
           headers: user.headers
         }

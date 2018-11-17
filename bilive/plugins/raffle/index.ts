@@ -6,6 +6,7 @@ class Raffle implements IPlugin {
   public description = '自动参与抽奖'
   public version = '0.0.1'
   public author = 'lzghzr'
+  public loaded = false
   // 是否开启抽奖
   private _raffle = false
   public async start({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }) {
@@ -65,6 +66,7 @@ class Raffle implements IPlugin {
       type: 'boolean'
     }
     whiteList.add('beatStorm')
+    this.loaded = true
   }
   public async loop({ cstHour, options }: { cstHour: number, options: options }) {
     // 抽奖暂停
