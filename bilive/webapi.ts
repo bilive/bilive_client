@@ -4,7 +4,7 @@ import http from 'http'
 import { randomBytes } from 'crypto'
 import { EventEmitter } from 'events'
 import tools from './lib/tools'
-import Daily from './daily'
+import User from './online'
 import Options from './options'
 /**
  * 程序设置
@@ -200,11 +200,11 @@ class WebAPI extends EventEmitter {
             for (const i in userData) userData[i] = setUserData[i]
             if (userData.status && !Options.user.has(setUID)) {
               // 因为使用了Map保存已激活的用户, 所以需要添加一次
-              const newUser = new Daily(setUID, userData)
+              const newUser = new User(setUID, userData)
               const status = await newUser.Start()
               // 账号会尝试登录, 如果需要验证码status会返回'captcha', 并且验证码会以DataUrl形式保存在captchaJPEG
               if (status === 'captcha') captcha = newUser.captchaJPEG
-              else if (Options.user.has(setUID)) newUser.daily()
+              else if (Options.user.has(setUID)) Options.emit('newUser', newUser)
             }
             else if (userData.status && Options.user.has(setUID)) {
               // 对于已经存在的用户, 可能处在验证码待输入阶段
@@ -214,7 +214,7 @@ class WebAPI extends EventEmitter {
                 captchaUser.captcha = message.captcha
                 const status = await captchaUser.Start()
                 if (status === 'captcha') captcha = captchaUser.captchaJPEG
-                else if (Options.user.has(setUID)) captchaUser.daily()
+                else if (Options.user.has(setUID)) Options.emit('newUser', captchaUser)
               }
             }
             else if (!userData.status && Options.user.has(setUID)) (<User>Options.user.get(setUID)).Stop()

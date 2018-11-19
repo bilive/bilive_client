@@ -22,14 +22,7 @@
     "accessToken": "",
     "refreshToken": "",
     "cookie": "",
-    "status": false,
-    "doSign": false,
-    "treasureBox": false,
-    "eventRoom": false,
-    "silver2coin": false,
-    "sendGift": false,
-    "sendGiftRoom": 0,
-    "signGroup": false
+    "status": false
   },
   "info": {
     "defaultUserID": {
@@ -80,41 +73,6 @@
     "status": {
       "description": "开关",
       "tip": "用户设置的总开关, 关闭时以下设置全部失效",
-      "type": "boolean"
-    },
-    "doSign": {
-      "description": "签到",
-      "tip": "每日签到",
-      "type": "boolean"
-    },
-    "treasureBox": {
-      "description": "宝箱",
-      "tip": "宝箱领瓜子",
-      "type": "boolean"
-    },
-    "eventRoom": {
-      "description": "每日任务",
-      "tip": "每日任务",
-      "type": "boolean"
-    },
-    "silver2coin": {
-      "description": "银瓜子兑换硬币",
-      "tip": "自动将银瓜子兑换成硬币, 每天两个",
-      "type": "boolean"
-    },
-    "sendGift": {
-      "description": "自动送礼",
-      "tip": "自动送出剩余时间不足24小时的礼物",
-      "type": "boolean"
-    },
-    "sendGiftRoom": {
-      "description": "自动送礼房间",
-      "tip": "要自动送出礼物的房间号",
-      "type": "number"
-    },
-    "signGroup": {
-      "description": "应援团签到",
-      "tip": "自动签到所有已加入的应援团",
       "type": "boolean"
     }
   },

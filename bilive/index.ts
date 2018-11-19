@@ -1,7 +1,7 @@
 import fs from 'fs'
 import util from 'util'
 import tools from './lib/tools'
-import User from './daily'
+import User from './online'
 import WebAPI from './webapi'
 import Listener from './listener'
 import Options from './options'
@@ -35,18 +35,24 @@ class BiLive {
   public async Start() {
     // 加载插件
     await this._loadPlugin()
+    // 初始化设置
     Options.init()
+    // 新用户
+    Options.on('newUser', (user: User) => {
+      // 运行插件
+      this._pluginList.forEach(plugin => {
+        if (plugin.start !== undefined) plugin.start({ options: Options._, users: new Map([[user.uid, user]]) })
+      })
+    })
     for (const uid in Options._.user) {
       if (!Options._.user[uid].status) continue
       const user = new User(uid, Options._.user[uid])
       const status = await user.Start()
       if (status !== undefined) user.Stop()
     }
-    Options.user.forEach(user => user.daily())
-    // 插件运行
+    // 运行插件
     this._pluginList.forEach(plugin => {
-      if (plugin.once !== undefined)
-        plugin.once({ options: Options._, users: Options.user })
+      if (plugin.start !== undefined) plugin.start({ options: Options._, users: Options.user })
     })
     this.loop = setInterval(() => this._loop(), 50 * 1000)
     new WebAPI().Start()
@@ -66,19 +72,13 @@ class BiLive {
     this._lastTime = cstString
     const cstHour = cst.getUTCHours()
     const cstMin = cst.getUTCMinutes()
-    // 每天00:10刷新任务
-    if (cstString === '00:10') Options.user.forEach(user => user.nextDay())
-    // 每天13:55再次自动送礼, 因为一般活动14:00结束
-    else if (cstString === '13:55') Options.user.forEach(user => user.sendGift())
-    // 每天04:30, 12:30, 20:30做日常
-    if (cstMin === 30 && cstHour % 8 === 4) Options.user.forEach(user => user.daily())
     if (cstMin % 10 === 0) {
       // 更新监听房间
       this._Listener.updateAreaRoom()
       // 清空ID缓存
       this._Listener.clearAllID()
     }
-    // 插件运行
+    // 运行插件
     this._pluginList.forEach(plugin => {
       if (plugin.loop !== undefined)
         plugin.loop({ cst, cstMin, cstHour, cstString, options: Options._, users: Options.user })
@@ -95,7 +95,7 @@ class BiLive {
     const plugins = await FSreadDir(pluginsPath)
     for (const pluginName of plugins) {
       const { default: plugin }: { default: IPlugin } = await import(`${pluginsPath}/${pluginName}/index.js`)
-      if (plugin.start !== undefined) await plugin.start({ defaultOptions: Options._, whiteList: Options.whiteList })
+      if (plugin.load !== undefined) await plugin.load({ defaultOptions: Options._, whiteList: Options.whiteList })
       if (plugin.loaded) {
         const { name, description, version, author } = plugin
         tools.Log(`已加载: ${name}, 用于: ${description}, 版本: ${version}, 作者: ${author}`)
@@ -125,7 +125,7 @@ class BiLive {
    * @memberof BiLive
    */
   private async _Message(raffleMessage: raffleMessage | lotteryMessage | beatStormMessage) {
-    // 插件运行
+    // 运行插件
     this._pluginList.forEach(plugin => {
       if (plugin.msg !== undefined)
         plugin.msg({ message: raffleMessage, options: Options._, users: Options.user })

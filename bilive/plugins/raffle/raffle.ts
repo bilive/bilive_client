@@ -1,6 +1,5 @@
 import { Options as requestOptions } from 'request'
-import tools from '../../lib/tools'
-import AppClient from '../../lib/app_client'
+import { tools, AppClient } from '../../plugin'
 /**
  * 自动参与抽奖
  *

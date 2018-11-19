@@ -1,15 +1,17 @@
 import Lottery from './raffle'
-import tools from '../../lib/tools'
+import Plugin, { tools } from '../../plugin'
 
-class Raffle implements IPlugin {
+class Raffle extends Plugin {
+  constructor() {
+    super()
+  }
   public name = '抽奖插件'
   public description = '自动参与抽奖'
   public version = '0.0.1'
   public author = 'lzghzr'
-  public loaded = false
   // 是否开启抽奖
   private _raffle = false
-  public async start({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }) {
+  public async load({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }) {
     // 抽奖延时
     defaultOptions.config['raffleDelay'] = 0
     defaultOptions.info['raffleDelay'] = {

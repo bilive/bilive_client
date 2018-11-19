@@ -1,14 +1,15 @@
 import { Options as requestOptions } from 'request'
-import tools from '../../lib/tools'
-import AppClient from '../../lib/app_client'
+import Plugin, { tools } from '../../plugin'
 
-class CalcGift implements IPlugin {
-  public name = '礼物统计插件'
-  public description = '固定时间统计礼物, 并发送到指定位置'
+class CalcGift extends Plugin {
+  constructor() {
+    super()
+  }
+  public name = '礼物统计'
+  public description = '指定时间统计礼物, 并发送到指定位置'
   public version = '0.0.1'
   public author = 'lzghzr'
-  public loaded = false
-  public async start({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }) {
+  public async load({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }) {
     defaultOptions.config['calcGiftTime'] = ''
     defaultOptions.info['calcGiftTime'] = {
       description: '汇报礼物时间',
@@ -81,7 +82,6 @@ class CalcGift implements IPlugin {
       tools.sendSCMSG(table)
     }
   }
-  public async msg() { }
 }
 
 /**

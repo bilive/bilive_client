@@ -10,15 +10,18 @@ import Options, { apiLiveOrigin, liveOrigin } from './options'
  */
 class Online extends AppClient {
   /**
-   * Creates an instance of Online.
+   *Creates an instance of Online.
+   * @param {string} uid
    * @param {userData} userData
    * @memberof Online
    */
-  constructor(userData: userData) {
+  constructor(uid: string, userData: userData) {
     super()
+    this.uid = uid
     this.userData = userData
   }
   // 存储用户信息
+  public uid: string
   public userData: userData
   public get nickname(): string { return this.userData.nickname }
   public get userName(): string { return this.userData.userName }
@@ -66,6 +69,7 @@ class Online extends AppClient {
    */
   public async Start(): Promise<'captcha' | 'stop' | void> {
     clearTimeout(this._heartTimer)
+    if (!Options.user.has(this.uid)) Options.user.set(this.uid, this)
     if (this.jar === undefined) {
       await this.init()
       this.jar = tools.setCookie(this.cookieString)
@@ -81,6 +85,7 @@ class Online extends AppClient {
    */
   public Stop() {
     clearTimeout(this._heartTimer)
+    Options.user.delete(this.uid)
     this.userData.status = false
     Options.save()
     tools.sendSCMSG(`${this.nickname} 已停止挂机`)
