@@ -22,7 +22,7 @@ interface server {
   protocol: string
 }
 interface config {
-  [index: string]: number | string | number[]
+  [index: string]: string | boolean | number | number[]
   defaultUserID: number
   serverURL: string
   eventRooms: number[]

@@ -7,8 +7,9 @@ import { tools, AppClient } from '../../plugin'
  */
 class Raffle {
   /**
-   * 创建一个 Raffle 实例
-   * @param {raffleMessage | lotteryMessage | beatStormMessage} raffleMessage
+   * Creates an instance of Raffle.
+   * @param {(raffleMessage | lotteryMessage | beatStormMessage)} raffleMessage
+   * @param {User} user
    * @memberof Raffle
    */
   constructor(raffleMessage: raffleMessage | lotteryMessage | beatStormMessage, user: User) {
@@ -40,13 +41,37 @@ class Raffle {
    */
   private _url!: string
   /**
+   * 开始抽奖
+   *
+   * @returns
+   * @memberof Raffle
+   */
+  public async Start() {
+    let raffleBan: string | void
+    switch (this._raffleMessage.cmd) {
+      case 'smallTV':
+        raffleBan = await this.SmallTV()
+        break
+      case 'raffle':
+        raffleBan = await this.Raffle()
+        break
+      case 'lottery':
+        raffleBan = await this.Lottery()
+        break
+      case 'beatStorm':
+        raffleBan = await this.BeatStorm()
+        break
+    }
+    return raffleBan
+  }
+  /**
    * 参与小电视抽奖
    *
    * @memberof Raffle
    */
   public SmallTV() {
     this._url = 'https://api.live.bilibili.com/gift/v4/smalltv'
-    this._Raffle()
+    return this._Raffle()
   }
   /**
    * 参与Raffle类抽奖
@@ -55,7 +80,7 @@ class Raffle {
    */
   public Raffle() {
     this._url = 'https://api.live.bilibili.com/gift/v4/smalltv'
-    this._Raffle()
+    return this._Raffle()
   }
   /**
    * 参与Lottery类抽奖
@@ -64,16 +89,16 @@ class Raffle {
    */
   public Lottery() {
     this._url = 'https://api.live.bilibili.com/lottery/v1/lottery'
-    this._Lottery()
+    return this._Lottery()
   }
   /**
    * 参与节奏风暴
    *
    * @memberof Raffle
    */
-  public async BeatStorm() {
+  public BeatStorm() {
     this._url = 'https://api.live.bilibili.com/lottery/v1/Storm'
-    this._BeatStorm()
+    return this._BeatStorm()
   }
   /**
    * Raffle类抽奖
@@ -82,8 +107,8 @@ class Raffle {
    * @memberof Raffle
    */
   private async _Raffle() {
-    await tools.Sleep((<raffleMessage>this._raffleMessage).time_wait * 1000)
-    this._RaffleAward()
+    // 因为app抽奖并没有join步骤, 所以此项暂时留空
+    return this._RaffleAward()
   }
   /**
    * 获取抽奖结果
@@ -91,7 +116,7 @@ class Raffle {
    * @private
    * @memberof Raffle
    */
-  private async _RaffleAward() {
+  private async _RaffleAward(): Promise<'raffleBan' | void> {
     const { id, roomID, title, type } = this._raffleMessage
     const reward: requestOptions = {
       method: 'POST',
@@ -100,20 +125,22 @@ class Raffle {
       json: true,
       headers: this._user.headers
     }
-    tools.XHR<raffleAward>(reward, 'Android').then(raffleAward => {
-      if (raffleAward !== undefined && raffleAward.response.statusCode === 200) {
-        if (raffleAward.body.code === 0) {
-          const gift = raffleAward.body.data
-          if (gift.gift_num === 0) tools.Log(this._user.nickname, title, id, raffleAward.body.msg)
-          else {
-            const msg = `${this._user.nickname} ${title} ${id} 获得 ${gift.gift_num} 个${gift.gift_name}`
-            tools.Log(msg)
-            if (gift.gift_name.includes('小电视')) tools.sendSCMSG(msg)
-          }
+    const raffleAward = await tools.XHR<raffleAward>(reward, 'Android')
+    if (raffleAward !== undefined && raffleAward.response.statusCode === 200) {
+      if (raffleAward.body.code === 0) {
+        const gift = raffleAward.body.data
+        if (gift.gift_num === 0) tools.Log(this._user.nickname, title, id, raffleAward.body.msg)
+        else {
+          const msg = `${this._user.nickname} ${title} ${id} 获得 ${gift.gift_num} 个${gift.gift_name}`
+          tools.Log(msg)
+          if (gift.gift_name.includes('小电视')) tools.sendSCMSG(msg)
         }
-        else tools.Log(this._user.nickname, title, id, raffleAward.body)
       }
-    })
+      else {
+        tools.Log(this._user.nickname, title, id, raffleAward.body)
+        if (raffleAward.body.code === 400) return 'raffleBan'
+      }
+    }
   }
   /**
    * Lottery类抽奖
@@ -121,7 +148,7 @@ class Raffle {
    * @private
    * @memberof Raffle
    */
-  private async _Lottery() {
+  private async _Lottery(): Promise<'raffleBan' | void> {
     const { id, roomID, title, type } = this._raffleMessage
     const reward: requestOptions = {
       method: 'POST',
@@ -130,14 +157,14 @@ class Raffle {
       json: true,
       headers: this._user.headers
     }
-    tools.XHR<lotteryReward>(reward, 'Android').then(lotteryReward => {
-      if (lotteryReward !== undefined && lotteryReward.response.statusCode === 200) {
-        if (lotteryReward.body.code === 0) {
-          tools.Log(this._user.nickname, title, id, lotteryReward.body.data.message)
-        }
-        else tools.Log(this._user.nickname, title, id, lotteryReward.body)
+    const lotteryReward = await tools.XHR<lotteryReward>(reward, 'Android')
+    if (lotteryReward !== undefined && lotteryReward.response.statusCode === 200) {
+      if (lotteryReward.body.code === 0) tools.Log(this._user.nickname, title, id, lotteryReward.body.data.message)
+      else {
+        tools.Log(this._user.nickname, title, id, lotteryReward.body)
+        if (lotteryReward.body.code === 400) return 'raffleBan'
       }
-    })
+    }
   }
   /**
    * 节奏风暴
@@ -154,14 +181,13 @@ class Raffle {
       json: true,
       headers: this._user.headers
     }
-    tools.XHR<joinStorm>(join, 'Android').then(joinStorm => {
-      if (joinStorm !== undefined && joinStorm.response.statusCode === 200 && joinStorm.body !== undefined) {
-        const content = joinStorm.body.data
-        if (content !== undefined && content.gift_num > 0)
-          tools.Log(this._user.nickname, title, id, `${content.mobile_content} 获得 ${content.gift_num} 个${content.gift_name}`)
-        else tools.Log(this._user.nickname, title, id, joinStorm.body)
-      }
-    })
+    const joinStorm = await tools.XHR<joinStorm>(join, 'Android')
+    if (joinStorm !== undefined && joinStorm.response.statusCode === 200 && joinStorm.body !== undefined) {
+      const content = joinStorm.body.data
+      if (content !== undefined && content.gift_num > 0)
+        tools.Log(this._user.nickname, title, id, `${content.mobile_content} 获得 ${content.gift_num} 个${content.gift_name}`)
+      else tools.Log(this._user.nickname, title, id, joinStorm.body)
+    }
   }
 }
 

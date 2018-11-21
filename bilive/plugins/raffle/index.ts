@@ -9,8 +9,21 @@ class Raffle extends Plugin {
   public description = '自动参与抽奖'
   public version = '0.0.1'
   public author = 'lzghzr'
-  // 是否开启抽奖
+  /**
+   * 是否开启抽奖
+   *
+   * @private
+   * @memberof Raffle
+   */
   private _raffle = false
+  /**
+   * 被封关闭抽奖
+   *
+   * @private
+   * @type {Map<string,boolean>}
+   * @memberof Raffle
+   */
+  private _raffleBanList: Map<string, boolean> = new Map()
   public async load({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }) {
     // 抽奖延时
     defaultOptions.config['raffleDelay'] = 0
@@ -35,7 +48,14 @@ class Raffle extends Plugin {
       tip: '就是每个用户多少概率漏掉1个奖啦，范围0~100',
       type: 'number'
     }
-    whiteList.add('droprate')
+    // 被封停止
+    defaultOptions.config['raffleBan'] = false
+    defaultOptions.info['raffleBan'] = {
+      description: '被封停止',
+      tip: '检测到被封以后停止抽奖',
+      type: 'boolean'
+    }
+    whiteList.add('raffleBan')
     // 小电视抽奖
     defaultOptions.newUserData['smallTV'] = false
     defaultOptions.info['smallTV'] = {
@@ -70,45 +90,56 @@ class Raffle extends Plugin {
     whiteList.add('beatStorm')
     this.loaded = true
   }
-  public async loop({ cstHour, options }: { cstHour: number, options: options }) {
+  public async start({ options }: { options: options }) {
+    const csttime = Date.now() + 8 * 60 * 60 * 1000
+    const cst = new Date(csttime)
+    const cstHour = cst.getUTCHours()
     // 抽奖暂停
     const rafflePause = <number[]>options.config['rafflePause']
+    this._raffle = this._isRafflePause(cstHour, rafflePause)
+  }
+  public async loop({ cstMin, cstHour, options }: { cstMin: number, cstHour: number, options: options }) {
+    // 每天00:00, 10:00, 20:00刷新
+    if (cstMin === 0 && cstHour % 10 === 0) this._raffleBanList.clear()
+    // 抽奖暂停
+    const rafflePause = <number[]>options.config['rafflePause']
+    this._raffle = this._isRafflePause(cstHour, rafflePause)
+  }
+  public async msg({ message, options, users }: { message: raffleMessage | lotteryMessage | beatStormMessage, options: options, users: Map<string, User> }) {
+    if (!this._raffle) return
+    users.forEach(async (user, uid) => {
+      if (user.captchaJPEG !== '' || !user.userData[message.cmd] || (options.config['raffleBan'] && this._raffleBanList.get(uid))) return
+      const droprate = <number>options.config['droprate']
+      if (droprate !== 0 && Math.random() < droprate / 100) tools.Log(user.nickname, '丢弃抽奖', message.id)
+      else {
+        const raffleDelay = <number>options.config['raffleDelay']
+        if (raffleDelay !== 0) await tools.Sleep(raffleDelay)
+        // @ts-ignore
+        if (message.time_wait !== undefined) await tools.Sleep(message.time_wait * 1000)
+        if (options.config['raffleBan'] && this._raffleBanList.get(uid)) return
+        const raffleBan = await new Lottery(message, user).Start()
+        if (raffleBan === 'raffleBan') this._raffleBanList.set(uid, true)
+      }
+    })
+  }
+  /**
+   * 是否暂停抽奖
+   *
+   * @private
+   * @param {number} cstHour
+   * @param {number[]} rafflePause
+   * @returns {boolean}
+   * @memberof Raffle
+   */
+  private _isRafflePause(cstHour: number, rafflePause: number[]): boolean {
     if (rafflePause.length > 1) {
       const start = rafflePause[0]
       const end = rafflePause[1]
-      if (start > end && (cstHour >= start || cstHour < end) || (cstHour >= start && cstHour < end)) this._raffle = false
-      else this._raffle = true
+      if (start > end && (cstHour >= start || cstHour < end) || (cstHour >= start && cstHour < end))
+        return false
+      return true
     }
-    else this._raffle = true
-  }
-  public async msg({ message, options, users }: { message: raffleMessage | lotteryMessage | beatStormMessage, options: options, users: Map<string, User> }) {
-    if (this._raffle) {
-      users.forEach(async user => {
-        if (user.captchaJPEG === '' && user.userData[message.cmd]) {
-          const droprate = <number>options.config['droprate']
-          if (droprate !== 0 && Math.random() < droprate / 100)
-            tools.Log(user.nickname, '丢弃抽奖', message.id)
-          else {
-            const raffleDelay = <number>options.config['raffleDelay']
-            if (raffleDelay !== 0) await tools.Sleep(raffleDelay)
-            switch (message.cmd) {
-              case 'smallTV':
-                new Lottery(message, user).SmallTV()
-                break
-              case 'raffle':
-                new Lottery(message, user).Raffle()
-                break
-              case 'lottery':
-                new Lottery(message, user).Lottery()
-                break
-              case 'beatStorm':
-                new Lottery(message, user).BeatStorm()
-                break
-            }
-          }
-        }
-      })
-    }
+    return true
   }
 }
 
