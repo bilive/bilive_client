@@ -88,7 +88,7 @@ class Raffle {
    * @memberof Raffle
    */
   public Lottery() {
-    this._url = 'https://api.live.bilibili.com/lottery/v1/lottery'
+    this._url = 'https://api.live.bilibili.com/lottery/v2/Lottery'
     return this._Lottery()
   }
   /**

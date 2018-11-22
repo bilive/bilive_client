@@ -41,7 +41,7 @@ class BiLive {
     Options.on('newUser', (user: User) => {
       // 运行插件
       this._pluginList.forEach(plugin => {
-        if (plugin.start !== undefined) plugin.start({ options: Options._, users: new Map([[user.uid, user]]) })
+        if (typeof plugin.start === 'function') plugin.start({ options: Options._, users: new Map([[user.uid, user]]) })
       })
     })
     for (const uid in Options._.user) {
@@ -52,7 +52,7 @@ class BiLive {
     }
     // 运行插件
     this._pluginList.forEach(plugin => {
-      if (plugin.start !== undefined) plugin.start({ options: Options._, users: Options.user })
+      if (typeof plugin.start === 'function') plugin.start({ options: Options._, users: Options.user })
     })
     this.loop = setInterval(() => this._loop(), 50 * 1000)
     new WebAPI().Start()
@@ -80,7 +80,7 @@ class BiLive {
     }
     // 运行插件
     this._pluginList.forEach(plugin => {
-      if (plugin.loop !== undefined)
+      if (typeof plugin.loop === 'function')
         plugin.loop({ cst, cstMin, cstHour, cstString, options: Options._, users: Options.user })
     })
   }
@@ -95,7 +95,7 @@ class BiLive {
     const plugins = await FSreadDir(pluginsPath)
     for (const pluginName of plugins) {
       const { default: plugin }: { default: IPlugin } = await import(`${pluginsPath}/${pluginName}/index.js`)
-      if (plugin.load !== undefined) await plugin.load({ defaultOptions: Options._, whiteList: Options.whiteList })
+      if (typeof plugin.load === 'function') await plugin.load({ defaultOptions: Options._, whiteList: Options.whiteList })
       if (plugin.loaded) {
         const { name, description, version, author } = plugin
         tools.Log(`已加载: ${name}, 用于: ${description}, 版本: ${version}, 作者: ${author}`)
@@ -127,7 +127,7 @@ class BiLive {
   private async _Message(raffleMessage: raffleMessage | lotteryMessage | beatStormMessage) {
     // 运行插件
     this._pluginList.forEach(plugin => {
-      if (plugin.msg !== undefined)
+      if (typeof plugin.msg === 'function')
         plugin.msg({ message: raffleMessage, options: Options._, users: Options.user })
     })
   }
