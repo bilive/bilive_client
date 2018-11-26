@@ -48,6 +48,13 @@
     5. 命令行 `npm start`
 
 [点此进行设置](http://github.halaal.win/bilive_client/#path=ws://localhost:10080&protocol=admin)
+
+值得推荐的分支
+* [Vector000/bilive_client](https://github.com/Vector000/bilive_client)
+
+此为客户端, 更多功能需配合服务端使用
+[服务端](https://github.com/lzghzr/bilive_server)
+
 ```TypeScript
 const 支付宝红包码 = `
 █▀▀▀▀▀█ ▄▄█  ▄▀█  ▀▀▄ █▀▀▀▀▀█
@@ -98,6 +105,3 @@ const 微信收钱码 = `
 █ ▀▀▀ █ ▄▄▄█▀█▀▀██▄▀██▀█▄▄▀██
 ▀▀▀▀▀▀▀ ▀   ▀▀  ▀▀  ▀▀▀▀▀▀ ▀ `
 ```
-
-此为客户端, 更多功能需配合服务端使用
-[服务端](https://github.com/lzghzr/bilive_server)

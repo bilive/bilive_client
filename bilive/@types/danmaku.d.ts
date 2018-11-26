@@ -1316,6 +1316,36 @@ interface USER_TITLE_GET_Data {
   level: number
 }
 /**
+ * 貌似是入场特效
+ * {"cmd":"USER_TOAST_MSG","data":{"op_type":1,"uid":95518573,"username":"卢噜噜噜噜噜","guard_level":3,"is_show":0},"_roomid":515838}
+ *
+ * @interface USER_TOAST_MSG
+ * @extends {danmuJson}
+ */
+interface USER_TOAST_MSG extends danmuJson {
+  data: USER_TOAST_MSG_Data
+}
+interface USER_TOAST_MSG_Data {
+  op_type: number
+  uid: number
+  username: string
+  guard_level: number
+  is_show: number
+}
+/**
+ * 勋章亲密度上限
+ * {"cmd":"LITTLE_TIPS","data":{"msg":"你的粉丝勋章【仙女淼】已达今日亲密度上限"},"_roomid":7191684}
+ *
+ * @interface LITTLE_TIPS
+ * @extends {danmuJson}
+ */
+interface LITTLE_TIPS extends danmuJson {
+  data: LITTLE_TIPS_Data
+}
+interface LITTLE_TIPS_Data {
+  msg: string
+}
+/**
  * 画板活动
  *
  * @interface DRAW_UPDATE

@@ -32,7 +32,7 @@ interface userCollection {
   [index: string]: userData
 }
 interface userData {
-  [index: string]: string | boolean | number
+  [index: string]: string | boolean | number | number[]
   nickname: string
   userName: string
   passWord: string
@@ -101,9 +101,7 @@ declare class Online extends AppClient {
   uid: string
   userData: userData
   readonly nickname: string
-  jar: {
-    setCookie(cookieOrStr: string, uri: string): void
-  }
+  jar: any
   captchaJPEG: string
   readonly tokenQuery: string
   Start(): Promise<'captcha' | 'stop' | void>
