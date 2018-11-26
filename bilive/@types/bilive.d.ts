@@ -101,7 +101,7 @@ declare class Online extends AppClient {
   uid: string
   userData: userData
   readonly nickname: string
-  jar: any
+  jar: import('request').CookieJar
   captchaJPEG: string
   readonly tokenQuery: string
   Start(): Promise<'captcha' | 'stop' | void>
