@@ -66,49 +66,7 @@ interface configInfoData {
 /*******************
  ****** User ******
  *******************/
-interface requestHeaders {
-  [index: string]: string
-}
-declare class AppClient {
-  static actionKey: string
-  static platform: string
-  static appKey: string
-  static build: string
-  static device: string
-  static mobiApp: string
-  static TS: number
-  static RND: number
-  static DeviceID: string
-  static baseQuery: string
-  static signQuery(params: string, ts?: boolean): string
-  static signQueryBase(params?: string): string
-  static status: typeof status
-  captcha: string
-  userName: string
-  passWord: string
-  biliUID: number
-  accessToken: string
-  refreshToken: string
-  cookieString: string
-  headers: requestHeaders
-  init(): Promise<void>
-  getCaptcha(): Promise<captchaResponse>
-  login(): Promise<loginResponse>
-  logout(): Promise<logoutResponse>
-  refresh(): Promise<loginResponse>
-}
-declare class Online extends AppClient {
-  uid: string
-  userData: userData
-  readonly nickname: string
-  jar: import('request').CookieJar
-  captchaJPEG: string
-  readonly tokenQuery: string
-  Start(): Promise<'captcha' | 'stop' | void>
-  Stop(): void
-  getOnlineInfo(roomID?: number): Promise<'captcha' | 'stop' | void>
-}
-type User = Online
+type User = import('../online').default
 /*******************
  **** dm_client ****
  *******************/
@@ -256,9 +214,7 @@ interface captchaResponseError {
  * @template T
  */
 interface XHRresponse<T> {
-  response: {
-    statusCode: number
-  }
+  response: import('request').Response
   body: T
 }
 /**
@@ -487,15 +443,7 @@ interface userOnlineHeart {
 /*******************
  ***** options *****
  *******************/
-interface Options {
-  _: options
-  user: Map<string, User>
-  whiteList: Set<string>
-  shortRoomID: Map<number, number>
-  longRoomID: Map<number, number>
-  init(): void
-  save(): Promise<options>
-}
+type Options = import('../options').__Options
 /*******************
  ****** plugin *****
  *******************/

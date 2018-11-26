@@ -1,5 +1,5 @@
 import { Options as requestOptions } from 'request'
-import Plugin, { tools } from '../../plugin'
+import Plugin, { tools, AppClient } from '../../plugin'
 
 class CalcGift extends Plugin {
   constructor() {
