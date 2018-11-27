@@ -1346,6 +1346,59 @@ interface LITTLE_TIPS_Data {
   msg: string
 }
 /**
+ * USER_GAIN_MEDAL
+ * {"cmd":"USER_GAIN_MEDAL","data":{"type":1,"up_uid":3467009,"medal_id":1634,"medal_name":"界子","medal_level":3,"medal_color":6406234,"msg_title":"都已经上了<%麻瓜世界君%>的船，怎么能没有TA的粉丝勋章呢？送你一个吧~","msg_content":"获得750点亲密度\n你的粉丝勋章达到3级","normal_color":7697781,"highlight_color":16478873},"_roomid":2696849}
+ *
+ * @interface USER_GAIN_MEDAL
+ * @extends {danmuJson}
+ */
+interface USER_GAIN_MEDAL extends danmuJson {
+  data: USER_GAIN_MEDAL_Data
+}
+interface USER_GAIN_MEDAL_Data {
+  type: number
+  up_uid: number
+  medal_id: number
+  medal_name: string
+  medal_level: number
+  medal_color: number
+  msg_title: string
+  msg_content: string
+  normal_color: number
+  highlight_color: number
+}
+/**
+ * 小时榜
+ * {"cmd":"HOUR_RANK_AWARDS","action":"all_top3","data":{"roomid":4350043,"ruid":19738891,"uname":"一米八的坤儿","face":"http://i0.hdslb.com/bfs/face/09042ebcde49445793c0a40402e784df79822582.jpg","rank_desc":"http://i0.hdslb.com/bfs/vc/b48fcb7a0193942844c55e457449de10ed3f045d.png","content":"恭喜主播获得\n超人气推荐奖励！","life_cycle":3},"_roomid":4350043}
+ *
+ * @interface HOUR_RANK_AWARDS
+ * @extends {danmuJson}
+ */
+interface HOUR_RANK_AWARDS extends danmuJson {
+  action: string
+  data: HOUR_RANK_AWARDS_Data
+}
+interface HOUR_RANK_AWARDS_Data {
+  roomid: number
+  ruid: number
+  uname: string
+  face: string
+  rank_desc: string
+  content: string
+  life_cycle: number
+}
+/**
+ * new_anchor_reward
+ * {"cmd":"new_anchor_reward","reward_id":1,"roomid":1700021,"uid":52772953,"_roomid":1700021}
+ *
+ * @interface new_anchor_reward
+ * @extends {danmuJson}
+ */
+interface new_anchor_reward extends danmuJson {
+  reward_id: number
+  uid: number
+}
+/**
  * 画板活动
  *
  * @interface DRAW_UPDATE
