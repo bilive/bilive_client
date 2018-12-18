@@ -45,3 +45,4 @@ build
 options
 package-lock.json
 /*.js
+temp
