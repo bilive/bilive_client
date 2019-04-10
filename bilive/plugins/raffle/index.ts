@@ -7,7 +7,7 @@ class Raffle extends Plugin {
   }
   public name = '抽奖插件'
   public description = '自动参与抽奖'
-  public version = '0.0.1'
+  public version = '0.0.2'
   public author = 'lzghzr'
   /**
    * 是否开启抽奖
@@ -117,7 +117,7 @@ class Raffle extends Plugin {
         // @ts-ignore
         if (message.time_wait !== undefined) await tools.Sleep(message.time_wait * 1000)
         if (options.config['raffleBan'] && this._raffleBanList.get(uid)) return
-        const raffleBan = await new Lottery(message, user).Start()
+        const raffleBan = await new Lottery(message, user, options).Start()
         if (raffleBan === 'raffleBan') this._raffleBanList.set(uid, true)
       }
     })

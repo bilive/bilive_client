@@ -10,11 +10,13 @@ class Raffle {
    * Creates an instance of Raffle.
    * @param {(raffleMessage | lotteryMessage | beatStormMessage)} raffleMessage
    * @param {User} user
+   * @param {options} options
    * @memberof Raffle
    */
-  constructor(raffleMessage: raffleMessage | lotteryMessage | beatStormMessage, user: User) {
+  constructor(raffleMessage: raffleMessage | lotteryMessage | beatStormMessage, user: User, options: options) {
     this._raffleMessage = raffleMessage
     this._user = user
+    this._options = options
   }
   /**
    * 抽奖设置
@@ -32,6 +34,14 @@ class Raffle {
    * @memberof Raffle
    */
   private _user: User
+  /**
+   * 全局设置
+   *
+   * @private
+   * @type {options}
+   * @memberof Raffle
+   */
+  private _options: options
   /**
    * 抽奖地址
    *
@@ -133,7 +143,11 @@ class Raffle {
         else {
           const msg = `${this._user.nickname} ${title} ${id} 获得 ${gift.gift_num} 个${gift.gift_name}`
           tools.Log(msg)
-          if (gift.gift_name.includes('小电视')) tools.sendSCMSG(msg)
+          if (gift.gift_name.includes('小电视')) tools.emit('systemMSG', <systemMSG>{
+            message: msg,
+            options: this._options,
+            user: this._user
+          })
         }
       }
       else {

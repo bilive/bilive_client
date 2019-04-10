@@ -7,17 +7,24 @@ class CalcGift extends Plugin {
   }
   public name = '礼物统计'
   public description = '指定时间统计礼物, 并发送到指定位置'
-  public version = '0.0.1'
+  public version = '0.0.2'
   public author = 'lzghzr'
-  public async load({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }) {
-    defaultOptions.config['calcGiftTime'] = ''
-    defaultOptions.info['calcGiftTime'] = {
-      description: '汇报礼物时间',
-      tip: '在这个时间点会统计服务器上所有用户的礼物数量情况, 滚键盘则关闭, 格式: HH:mm',
-      type: 'string'
+  public async load({ defaultOptions, whiteList, plugins }: {
+    defaultOptions: options,
+    whiteList: Set<string>,
+    plugins: string[]
+  }): Promise<void> {
+    if (plugins.includes('serverChan')) {
+      defaultOptions.config['calcGiftTime'] = ''
+      defaultOptions.info['calcGiftTime'] = {
+        description: '汇报礼物时间',
+        tip: '在这个时间点会统计服务器上所有用户的礼物数量情况, 滚键盘则关闭, 格式: HH:mm',
+        type: 'string'
+      }
+      whiteList.add('calcGiftTime')
+      this.loaded = true
     }
-    whiteList.add('calcGiftTime')
-    this.loaded = true
+    else tools.Log(this.name, '加载失败, 未检测到Server酱插件')
   }
   public async loop({ cstString, options, users }: { cstString: string, options: options, users: Map<string, User> }) {
     if (cstString === options.config.calcGiftTime) {
@@ -79,7 +86,7 @@ class CalcGift extends Plugin {
           table += `|${giftNum.all}/${giftNum.twoDay}/${giftNum.oneDay}`
         })
       })
-      tools.sendSCMSG(table)
+      tools.emit('SCMSG', { message: table })
     }
   }
 }
