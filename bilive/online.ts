@@ -88,7 +88,11 @@ class Online extends AppClient {
     Options.user.delete(this.uid)
     this.userData.status = false
     Options.save()
-    tools.sendSCMSG(`${this.nickname} 已停止挂机`)
+    tools.emit('systemMSG', <systemMSG>{
+      message: `${this.nickname} 已停止挂机`,
+      options: Options._,
+      user: this
+    })
   }
   /**
    * 检查是否登录
@@ -99,12 +103,12 @@ class Online extends AppClient {
    */
   public async getOnlineInfo(roomID = Options._.config.eventRooms[0]): Promise<'captcha' | 'stop' | void> {
     const isLogin = await tools.XHR<{ code: number }>({
-      uri: `${liveOrigin}/user/getuserinfo`,
+      uri: `${apiLiveOrigin}/xlive/web-ucenter/user/get_user_info`,
       jar: this.jar,
       json: true,
       headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
     })
-    if (isLogin !== undefined && isLogin.response.statusCode === 200 && isLogin.body.code === -500)
+    if (isLogin !== undefined && isLogin.response.statusCode === 200 && isLogin.body.code === -101)
       return this._cookieError()
   }
   /**

@@ -85,8 +85,9 @@ class WebAPI extends EventEmitter {
         // 限制同时只能连接一个客户端
         if (this._wsClient !== undefined) this._wsClient.close(1001, JSON.stringify({ cmd: 'close', msg: 'too many connections' }))
         // 使用function可能出现一些问题, 此处无妨
+        const onLog = (data: string) => this._Send({ cmd: 'log', ts: 'log', msg: data })
         const destroy = () => {
-          delete tools.logs.onLog
+          tools.removeListener('log', onLog)
           client.close()
           client.terminate()
           client.removeAllListeners()
@@ -112,7 +113,7 @@ class WebAPI extends EventEmitter {
         }, 60 * 1000) // 60s为Nginx默认的超时时间
         this._wsClient = client
         // 日志
-        tools.logs.onLog = data => this._Send({ cmd: 'log', ts: 'log', msg: data })
+        tools.on('log', onLog)
       })
   }
   /**
@@ -128,7 +129,7 @@ class WebAPI extends EventEmitter {
     switch (cmd) {
       // 获取log
       case 'getLog': {
-        const data = tools.logs.data
+        const data = tools.logs
         this._Send({ cmd, ts, data })
       }
         break

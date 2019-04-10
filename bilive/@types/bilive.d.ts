@@ -12,7 +12,6 @@ interface options {
   user: userCollection
   newUserData: userData
   info: optionsInfo
-  apiIPs: string[]
   roomList: [number, number][]
 }
 interface server {
@@ -22,17 +21,16 @@ interface server {
   protocol: string
 }
 interface config {
-  [index: string]: string | boolean | number | number[]
+  [index: string]: boolean | number | number[] | string | string[]
   defaultUserID: number
   serverURL: string
   eventRooms: number[]
-  adminServerChan: string
 }
 interface userCollection {
   [index: string]: userData
 }
 interface userData {
-  [index: string]: string | boolean | number | number[]
+  [index: string]: boolean | number | number[] | string | string[]
   nickname: string
   userName: string
   passWord: string
@@ -47,7 +45,6 @@ interface optionsInfo {
   defaultUserID: configInfoData
   serverURL: configInfoData
   eventRooms: configInfoData
-  adminServerChan: configInfoData
   nickname: configInfoData
   userName: configInfoData
   passWord: configInfoData
@@ -218,14 +215,14 @@ interface XHRresponse<T> {
   body: T
 }
 /**
- * Server酱
+ * 客户端消息
  *
- * @interface serverChan
+ * @interface systemMSG
  */
-interface serverChan {
-  errno: number
-  errmsg: string
-  dataset: string
+interface systemMSG {
+  message: string
+  options: options
+  user?: User
 }
 /*******************
  ** bilive_client **
@@ -453,8 +450,29 @@ interface IPlugin {
   version: string
   author: string
   loaded: boolean
-  load?({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }): Promise<void>
-  start?({ options, users }: { options: options, users: Map<string, User> }): Promise<void>
-  loop?({ cst, cstMin, cstHour, cstString, options, users }: { cst: Date, cstMin: number, cstHour: number, cstString: string, options: options, users: Map<string, User> }): Promise<void>
-  msg?({ message, options, users }: { message: raffleMessage | lotteryMessage | beatStormMessage, options: options, users: Map<string, User> }): Promise<void>
+  load?({ defaultOptions, whiteList, plugins }: {
+    defaultOptions: options,
+    whiteList: Set<string>,
+    plugins: string[]
+  }): Promise<void>
+  options?({ options }: {
+    options: options
+  }): Promise<void>
+  start?({ options, users }: {
+    options: options,
+    users: Map<string, User>
+  }): Promise<void>
+  loop?({ cst, cstMin, cstHour, cstString, options, users }: {
+    cst: Date,
+    cstMin: number,
+    cstHour: number,
+    cstString: string,
+    options: options,
+    users: Map<string, User>
+  }): Promise<void>
+  msg?({ message, options, users }: {
+    message: raffleMessage | lotteryMessage | beatStormMessage,
+    options: options,
+    users: Map<string, User>
+  }): Promise<void>
 }

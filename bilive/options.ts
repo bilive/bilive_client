@@ -65,7 +65,6 @@ class Options extends EventEmitter {
     'defaultUserID',
     'serverURL',
     'eventRooms',
-    'adminServerChan',
     'user',
     'nickname',
     'userName',
@@ -74,14 +73,7 @@ class Options extends EventEmitter {
     'accessToken',
     'refreshToken',
     'cookie',
-    'status',
-    'doSign',
-    'treasureBox',
-    'eventRoom',
-    'silver2coin',
-    'sendGift',
-    'sendGiftRoom',
-    'signGroup'
+    'status'
   ])
   /**
    *文件真实路径

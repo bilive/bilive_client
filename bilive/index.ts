@@ -37,22 +37,37 @@ class BiLive {
     await this._loadPlugin()
     // 初始化设置
     Options.init()
+    // 初始化运行插件
+    this._pluginList.forEach(async plugin => {
+      if (typeof plugin.options === 'function') await plugin.options({ options: Options._ })
+    })
     // 新用户
     Options.on('newUser', (user: User) => {
       // 运行插件
-      this._pluginList.forEach(plugin => {
-        if (typeof plugin.start === 'function') plugin.start({ options: Options._, users: new Map([[user.uid, user]]) })
+      this._pluginList.forEach(async plugin => {
+        if (typeof plugin.start === 'function') await plugin.start({ options: Options._, users: new Map([[user.uid, user]]) })
       })
     })
     for (const uid in Options._.user) {
       if (!Options._.user[uid].status) continue
       const user = new User(uid, Options._.user[uid])
       const status = await user.Start()
-      if (status !== undefined) user.Stop()
+      if (status !== undefined) {
+        if (status === 'captcha' && typeof tools.Captcha === 'function') {
+          const captcha = await tools.Captcha(user.captchaJPEG)
+          if (captcha !== '') {
+            user.captcha = captcha
+            const secondStatus = await user.Start()
+            if (secondStatus !== undefined) user.Stop()
+          }
+          else user.Stop()
+        }
+        else user.Stop()
+      }
     }
     // 运行插件
-    this._pluginList.forEach(plugin => {
-      if (typeof plugin.start === 'function') plugin.start({ options: Options._, users: Options.user })
+    this._pluginList.forEach(async plugin => {
+      if (typeof plugin.start === 'function') await plugin.start({ options: Options._, users: Options.user })
     })
     this.loop = setInterval(() => this._loop(), 50 * 1000)
     new WebAPI().Start()
@@ -80,8 +95,7 @@ class BiLive {
     }
     // 运行插件
     this._pluginList.forEach(plugin => {
-      if (typeof plugin.loop === 'function')
-        plugin.loop({ cst, cstMin, cstHour, cstString, options: Options._, users: Options.user })
+      if (typeof plugin.loop === 'function') plugin.loop({ cst, cstMin, cstHour, cstString, options: Options._, users: Options.user })
     })
   }
   /**
@@ -95,7 +109,7 @@ class BiLive {
     const plugins = await FSreadDir(pluginsPath)
     for (const pluginName of plugins) {
       const { default: plugin }: { default: IPlugin } = await import(`${pluginsPath}/${pluginName}/index.js`)
-      if (typeof plugin.load === 'function') await plugin.load({ defaultOptions: Options._, whiteList: Options.whiteList })
+      if (typeof plugin.load === 'function') await plugin.load({ defaultOptions: Options._, whiteList: Options.whiteList, plugins })
       if (plugin.loaded) {
         const { name, description, version, author } = plugin
         tools.Log(`已加载: ${name}, 用于: ${description}, 版本: ${version}, 作者: ${author}`)
