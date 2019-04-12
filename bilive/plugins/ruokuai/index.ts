@@ -41,14 +41,14 @@ class Ruokuai extends Plugin {
     const send: requestOptions = {
       method: 'POST',
       uri: 'https://api.ruokuai.com/create.json',
-      body: JSON.stringify({
+      body: {
         username,
         password,
         typeid: '3050',
         softid: '103978',
         softkey: '9171ed71213044738bf0545f896b4fd8',
         image
-      }),
+      },
       json: true,
       headers: { 'Content-Type': 'application/json' }
     }
