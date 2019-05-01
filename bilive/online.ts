@@ -138,6 +138,7 @@ class Online extends AppClient {
     const online: requestOptions = {
       method: 'POST',
       uri: `${apiLiveOrigin}/User/userOnlineHeart`,
+      body: `csrf_token=${tools.getCookie(this.jar, 'bili_jct')}&csrf=${tools.getCookie(this.jar, 'bili_jct')}&visit_id=`,
       jar: this.jar,
       json: true,
       headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }

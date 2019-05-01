@@ -1,4 +1,4 @@
-import { Options as requestOptions, CookieJar as requestCookieJar } from 'request'
+import { Options as requestOptions } from 'request'
 import Plugin, { tools } from '../../plugin'
 
 class Task extends Plugin {
@@ -49,8 +49,8 @@ class Task extends Plugin {
       const task: requestOptions = {
         method: 'POST',
         uri: 'https://api.live.bilibili.com/activity/v1/task/receive_award',
-        body: `task_id=double_watch_task`,
-        jar: <requestCookieJar>user.jar,
+        body: `task_id=double_watch_task&csrf_token=${tools.getCookie(user.jar, 'bili_jct')}&csrf=${tools.getCookie(user.jar, 'bili_jct')}`,
+        jar: user.jar,
         json: true,
         headers: { 'Referer': 'https://live.bilibili.com/p/center/index' }
       }
