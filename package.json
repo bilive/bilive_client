@@ -1,6 +1,6 @@
 {
   "name": "bilive_client",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "基于Node.JS的bilibili直播挂机系统",
   "main": "index.js",
   "scripts": {
@@ -19,12 +19,12 @@
   "devDependencies": {
     "@types/bootstrap": "^4.3.0",
     "@types/jquery": "^3.3.29",
-    "@types/node": "^10.14.6",
+    "@types/node": "^12.0.8",
     "@types/request": "^2.48.1",
     "@types/ws": "^5.1.2",
     "npm-run-posix-or-windows": "^2.0.2",
     "rimraf": "^2.6.3",
-    "typescript": "^3.4.5"
+    "typescript": "^3.5.2"
   },
   "dependencies": {
     "request": "^2.88.0",

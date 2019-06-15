@@ -8,6 +8,9 @@
   "config": {
     "defaultUserID": 0,
     "serverURL": "wss://bilive.halaal.win/server/#164c48292a6c773c85716093589cd60e",
+    "serverDomains": [
+      "bilive.halaal.win"
+    ],
     "eventRooms": [
       3
     ]

@@ -1,6 +1,10 @@
 import ws from 'ws'
+import url from 'url'
+// @ts-ignore d.ts没有跟进
+import { promises as dnsPromises } from 'dns'
 import { EventEmitter } from 'events'
 import tools from './tools'
+import Options from '../options'
 /**
  * Blive客户端, 用于连接服务器和发送事件
  *
@@ -72,10 +76,18 @@ class Client extends EventEmitter {
    *
    * @memberof Client
    */
-  public Connect() {
+  public async Connect() {
     if (this._connected) return
     this._connected = true
-    this._wsClient = new ws(this._server, [this._protocol])
+    // 规避域名备案
+    const { host } = url.parse(this._server)
+    if (host !== undefined && Options._.config.serverDomains.includes(host)) {
+      let server = this._server
+      const ip: { address: string, family: number } = await dnsPromises.lookup(host).catch(() => undefined)
+      if (ip !== undefined) server = server.replace(host, ip.family === 4 ? ip.address : `[${ip.address}]`)
+      this._wsClient = new ws(server, [this._protocol], { rejectUnauthorized: false, headers: { host } })
+    }
+    else this._wsClient = new ws(this._server, [this._protocol])
     this._wsClient
       .on('error', error => this._ClientErrorHandler(error))
       .on('close', () => this.Close())

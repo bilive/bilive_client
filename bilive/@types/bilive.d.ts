@@ -24,6 +24,7 @@ interface config {
   [index: string]: boolean | number | number[] | string | string[]
   defaultUserID: number
   serverURL: string
+  serverDomains: string[]
   eventRooms: number[]
 }
 interface userCollection {
