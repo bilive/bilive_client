@@ -14,25 +14,29 @@ enum appStatus {
 }
 /**
  * Creates an instance of AppClient.
- * 创建实例后务必init()
  *
  * @class AppClient
  */
 class AppClient {
   /**
    * Creates an instance of AppClient.
-   * 创建实例后务必init()
    * @memberof AppClient
    */
   constructor() {
+    // 设置 Buvid
+    this.headers['Buvid'] = AppClient.RandomID(37).toUpperCase()
+    // 设置 Display-ID
+    this.headers['Display-ID'] = `${this.headers['Buvid']}-${AppClient.TS}`
+    // 设置 Device-ID
+    this.headers['Device-ID'] = AppClient.RandomID(54)
   }
   public static readonly actionKey: string = 'appkey'
+  public static readonly device: string = 'android'
   public static readonly platform: string = 'android'
   // bilibili 客户端
   private static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
   public static readonly appKey: string = '1d8b6e7d45233436'
-  public static readonly build: string = '5291001'
-  public static readonly device: string = 'android'
+  public static readonly build: string = '5431000'
   public static readonly mobiApp: string = 'android'
   // bilibili 国际版
   // private static readonly __secretKey: string = '36efcfed79309338ced0380abd824ac1'
@@ -77,18 +81,18 @@ class AppClient {
     return Math.floor(Math.random() * 1e+8) + 1e+7
   }
   /**
-   * 谜一样的DeviceID
+   * 谜一样的RandomID
    *
-   * @readonly
    * @static
-   * @type {string}
+   * @param {number} length
+   * @returns {string}
    * @memberof AppClient
    */
-  public static get DeviceID(): string {
+  public static RandomID(length: number): string {
     const words = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-    let deviceID = ''
-    for (let i = 0; i < 20; i++) deviceID += words[Math.floor(Math.random() * 62)]
-    return deviceID
+    let randomID = ''
+    for (let i = 0; i < length; i++) randomID += words[Math.floor(Math.random() * 62)]
+    return randomID
   }
   /**
    * 基本请求参数
@@ -112,10 +116,12 @@ class AppClient {
    * @memberof AppClient
    */
   public static signQuery(params: string, ts = true): string {
-    if (ts) params = `${params}&ts=${this.TS}`
-    const paramsSecret = params + this.__secretKey
+    let paramsSort = params
+    if (ts) paramsSort = `${params}&ts=${this.TS}`
+    paramsSort = paramsSort.split('&').sort().join('&')
+    const paramsSecret = paramsSort + this.__secretKey
     const paramsHash = tools.Hash('md5', paramsSecret)
-    return `${params}&sign=${paramsHash}`
+    return `${paramsSort}&sign=${paramsHash}`
   }
   /**
    * 对参数加参后签名
@@ -199,8 +205,8 @@ class AppClient {
    * @memberof AppClient
    */
   public headers: request.Headers = {
+    'User-Agent': 'Mozilla/5.0 BiliDroid/5.43.1 (bbcallen@gmail.com)',
     'Connection': 'Keep-Alive',
-    'User-Agent': 'Mozilla/5.0 BiliDroid/5.30.0 (bbcallen@gmail.com)'
   }
   /**
    * cookieJar
@@ -221,7 +227,6 @@ class AppClient {
   protected _RSAPassWord(publicKey: getKeyResponseData): string {
     const padding = {
       key: publicKey.key,
-      // @ts-ignore 此处为d.ts错误
       padding: crypto.constants.RSA_PKCS1_PADDING
     }
     const hashPassWord = publicKey.hash + this.passWord
@@ -257,12 +262,11 @@ class AppClient {
   protected _auth(publicKey: getKeyResponseData): Promise<XHRresponse<authResponse> | undefined> {
     const passWord = this._RSAPassWord(publicKey)
     const captcha = this.captcha === '' ? '' : `&captcha=${this.captcha}`
-    const authQuery = `appkey=${AppClient.appKey}&build=${AppClient.build}${captcha}&mobi_app=${AppClient.mobiApp}\
-&password=${passWord}&platform=${AppClient.platform}&ts=${AppClient.TS}&username=${encodeURIComponent(this.userName)}`
+    const authQuery = `username=${encodeURIComponent(this.userName)}&password=${passWord}${captcha}`
     const auth: request.Options = {
       method: 'POST',
       uri: 'https://passport.bilibili.com/api/v2/oauth2/login',
-      body: AppClient.signQuery(authQuery, false),
+      body: AppClient.signQueryBase(authQuery),
       jar: this.__jar,
       json: true,
       headers: this.headers
@@ -287,31 +291,6 @@ class AppClient {
       ? `${cookie.name}=${cookie.value}`
       : `${cookieString}; ${cookie.name}=${cookie.value}`
       , '')
-  }
-  /**
-   * 初始化获取Buvid
-   *
-   * @memberof AppClient
-   */
-  public async init() {
-    // 设置 Device-ID
-    this.headers['Device-ID'] = AppClient.DeviceID
-    // 设置 Buvid
-    const buvid = await tools.XHR<string>({
-      uri: 'https://data.bilibili.com/gv/',
-      headers: this.headers
-    }, 'Android')
-    if (buvid !== undefined && buvid.response.statusCode === 200 && buvid.body.endsWith('infoc'))
-      this.headers['Buvid'] = buvid.body
-    // 设置 Display-ID
-    const displayid = await tools.XHR<{ code: number, data: { id: string } }>({
-      uri: 'https://app.bilibili.com/x/v2/display/id?' + AppClient.signQueryBase(),
-      json: true,
-      headers: this.headers
-    }, 'Android')
-    if (displayid !== undefined && displayid.response.statusCode === 200
-      && displayid.body.code === 0 && displayid.body.data.id.length > 20)
-      this.headers['Display-ID'] = displayid.body.data.id
   }
   /**
    * 获取验证码
@@ -382,12 +361,11 @@ class AppClient {
    * @memberof AppClient
    */
   public async refresh(): Promise<loginResponse> {
-    const refreshQuery = `access_token=${this.accessToken}&appkey=${AppClient.appKey}&build=${AppClient.build}\
-&mobi_app=${AppClient.mobiApp}&platform=${AppClient.platform}&refresh_token=${this.refreshToken}`
+    const refreshQuery = `access_token=${this.accessToken}&refresh_token=${this.refreshToken}`
     const refresh: request.Options = {
       method: 'POST',
       uri: 'https://passport.bilibili.com/api/v2/oauth2/refresh_token',
-      body: AppClient.signQuery(refreshQuery),
+      body: AppClient.signQueryBase(refreshQuery),
       json: true,
       headers: this.headers
     }
