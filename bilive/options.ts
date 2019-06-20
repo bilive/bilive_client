@@ -103,6 +103,26 @@ class Options extends EventEmitter {
     })
   }
   /**
+   * 获取短id
+   *
+   * @param {number} roomID
+   * @returns {number}
+   * @memberof Options
+   */
+  public getShortRoomID(roomID: number): number {
+    return this.shortRoomID.get(roomID) || roomID
+  }
+  /**
+   * 获取长id
+   *
+   * @param {number} roomID
+   * @returns {number}
+   * @memberof Options
+   */
+  public getLongRoomID(roomID: number): number {
+    return this.longRoomID.get(roomID) || roomID
+  }
+  /**
    * 保存设置
    *
    * @returns

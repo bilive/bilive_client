@@ -70,10 +70,7 @@ class Online extends AppClient {
   public async Start(): Promise<'captcha' | 'stop' | void> {
     clearTimeout(this._heartTimer)
     if (!Options.user.has(this.uid)) Options.user.set(this.uid, this)
-    if (this.jar === undefined) {
-      await this.init()
-      this.jar = tools.setCookie(this.cookieString)
-    }
+    if (this.jar === undefined) this.jar = tools.setCookie(this.cookieString)
     const test = await this.getOnlineInfo()
     if (test !== undefined) return test
     this._heartLoop()
@@ -106,7 +103,7 @@ class Online extends AppClient {
       uri: `${apiLiveOrigin}/xlive/web-ucenter/user/get_user_info`,
       jar: this.jar,
       json: true,
-      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
+      headers: { 'Referer': `${liveOrigin}/${Options.getShortRoomID(roomID)}` }
     })
     if (isLogin !== undefined && isLogin.response.statusCode === 200 && isLogin.body.code === -101)
       return this._cookieError()
@@ -141,7 +138,7 @@ class Online extends AppClient {
       body: `csrf_token=${tools.getCookie(this.jar, 'bili_jct')}&csrf=${tools.getCookie(this.jar, 'bili_jct')}&visit_id=`,
       jar: this.jar,
       json: true,
-      headers: { 'Referer': `${liveOrigin}/${tools.getShortRoomID(roomID)}` }
+      headers: { 'Referer': `${liveOrigin}/${Options.getShortRoomID(roomID)}` }
     }
     const heartPC = await tools.XHR<userOnlineHeart>(online)
     if (heartPC !== undefined && heartPC.response.statusCode === 200 && heartPC.body.code === 3) return 'cookieError'
@@ -149,7 +146,7 @@ class Online extends AppClient {
     const heartbeat: requestOptions = {
       method: 'POST',
       uri: `${apiLiveOrigin}/mobile/userOnlineHeart?${AppClient.signQueryBase(this.tokenQuery)}`,
-      body: `room_id=${tools.getLongRoomID(roomID)}&scale=xxhdpi`,
+      body: `room_id=${Options.getLongRoomID(roomID)}&scale=xxhdpi`,
       json: true,
       headers: this.headers
     }

@@ -277,7 +277,7 @@ class Listener extends EventEmitter {
     // 更新时间
     this._lastUpdate = Date.now()
     this.emit(cmd, raffleMessage)
-    tools.Log(`房间 ${tools.getShortRoomID(roomID)} 开启了第 ${id} 轮${title}`)
+    tools.Log(`房间 ${Options.getShortRoomID(roomID)} 开启了第 ${id} 轮${title}`)
   }
 }
 export default Listener

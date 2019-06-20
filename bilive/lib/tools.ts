@@ -2,7 +2,6 @@ import util from 'util'
 import crypto from 'crypto'
 import request from 'request'
 import { EventEmitter } from 'events'
-import Options, { liveOrigin, apiLiveOrigin } from '../options'
 /**
  * 一些工具, 供全局调用
  *
@@ -26,7 +25,7 @@ class Tools extends EventEmitter {
       case 'Android':
         return {
           'Connection': 'Keep-Alive',
-          'User-Agent': 'Mozilla/5.0 BiliDroid/5.30.0 (bbcallen@gmail.com)'
+          'User-Agent': 'Mozilla/5.0 BiliDroid/5.43.1 (bbcallen@gmail.com)'
         }
       case 'WebView':
         return {
@@ -34,7 +33,7 @@ class Tools extends EventEmitter {
           'Accept-Language': 'zh-CN',
           'Connection': 'keep-alive',
           'Cookie': 'l=v',
-          'Origin': liveOrigin,
+          'Origin': 'https://live.bilibili.com',
           'User-Agent': 'Mozilla/5.0 (Linux; Android 8.0.0; G8142 Build/47.1.A.12.270; wv) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.91 Mobile Safari/537.36 BiliApp/5300000',
           'X-Requested-With': 'tv.danmaku.bili'
         }
@@ -45,7 +44,7 @@ class Tools extends EventEmitter {
           'Connection': 'keep-alive',
           'Cookie': 'l=v',
           'DNT': '1',
-          'Origin': liveOrigin,
+          'Origin': 'https://live.bilibili.com',
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'
         }
     }
@@ -86,7 +85,7 @@ class Tools extends EventEmitter {
    * @returns {string}
    * @memberof tools
    */
-  public getCookie(jar: request.CookieJar, key: string, url = apiLiveOrigin): string {
+  public getCookie(jar: request.CookieJar, key: string, url = 'https://api.live.bilibili.com'): string {
     const cookies = jar.getCookies(url)
     const cookieFind = cookies.find(cookie => cookie.key === key)
     return cookieFind === undefined ? '' : cookieFind.value
@@ -104,26 +103,6 @@ class Tools extends EventEmitter {
       jar.setCookie(`${cookie}; Domain=bilibili.com; Path=/`, 'https://bilibili.com')
     })
     return jar
-  }
-  /**
-   * 获取短id
-   *
-   * @param {number} roomID
-   * @returns {number}
-   * @memberof tools
-   */
-  public getShortRoomID(roomID: number): number {
-    return Options.shortRoomID.get(roomID) || roomID
-  }
-  /**
-   * 获取长id
-   *
-   * @param {number} roomID
-   * @returns {number}
-   * @memberof tools
-   */
-  public getLongRoomID(roomID: number): number {
-    return Options.longRoomID.get(roomID) || roomID
   }
   /**
    * 格式化JSON
