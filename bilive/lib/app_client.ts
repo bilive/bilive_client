@@ -32,12 +32,12 @@ class AppClient {
   }
   public static readonly actionKey: string = 'appkey'
   public static readonly device: string = 'android'
-  public static readonly platform: string = 'android'
   // bilibili 客户端
   private static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
   public static readonly appKey: string = '1d8b6e7d45233436'
   public static readonly build: string = '5431000'
   public static readonly mobiApp: string = 'android'
+  public static readonly platform: string = 'android'
   // bilibili 国际版
   // private static readonly __secretKey: string = '36efcfed79309338ced0380abd824ac1'
   // public static readonly appKey: string = 'bb3101000e232e27'
@@ -56,8 +56,9 @@ class AppClient {
   // bilibili link
   // private static readonly __secretKey: string = 'e988e794d4d4b6dd43bc0e89d6e90c43'
   // public static readonly appKey: string = '37207f2beaebf8d7'
-  // public static readonly build: string = '212000'
+  // public static readonly build: string = '3900007'
   // public static readonly mobiApp: string = 'biliLink'
+  // public static readonly platform: string = 'android_link'
   /**
    * 谜一样的TS
    *

@@ -4,7 +4,6 @@ import url from 'url'
 import { promises as dnsPromises } from 'dns'
 import { EventEmitter } from 'events'
 import tools from './tools'
-import Options from '../options'
 /**
  * Blive客户端, 用于连接服务器和发送事件
  *
@@ -80,8 +79,9 @@ class Client extends EventEmitter {
     if (this._connected) return
     this._connected = true
     // 规避域名备案
+    const serverDomains = ['bilive.halaal.win']
     const { host } = url.parse(this._server)
-    if (host !== undefined && Options._.config.serverDomains.includes(host)) {
+    if (host !== undefined && serverDomains.includes(host)) {
       let server = this._server
       const ip: { address: string, family: number } = await dnsPromises.lookup(host).catch(() => undefined)
       if (ip !== undefined) server = server.replace(host, ip.family === 4 ? ip.address : `[${ip.address}]`)

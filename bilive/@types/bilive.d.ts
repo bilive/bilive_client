@@ -24,7 +24,6 @@ interface config {
   [index: string]: boolean | number | number[] | string | string[]
   defaultUserID: number
   serverURL: string
-  serverDomains: string[]
   eventRooms: number[]
 }
 interface userCollection {
@@ -88,6 +87,31 @@ interface DMdanmakuError {
   status: dmErrorStatus.danmaku
   error: TypeError
   data: Buffer
+}
+// 弹幕服务器
+interface danmuInfo {
+  code: number
+  message: string
+  ttl: number
+  data: danmuInfoData
+}
+interface danmuInfoData {
+  refresh_row_factor: number
+  refresh_rate: number
+  max_delay: number
+  token: string
+  host_list: danmuInfoDataHostList[]
+  ip_list: danmuInfoDataIPList[]
+}
+interface danmuInfoDataHostList {
+  host: string
+  port: number
+  wss_port: number
+  ws_port: number
+}
+interface danmuInfoDataIPList {
+  host: string
+  port: number
 }
 /*******************
  *** app_client ****
