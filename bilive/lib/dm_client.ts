@@ -23,10 +23,10 @@ enum dmErrorStatus {
 class DMclient extends EventEmitter {
   /**
    * Creates an instance of DMclient.
-   * @param {Options} [{ roomID = 23058, userID = 0, protocol = 'flash' }={}]
+   * @param {Options} [{ roomID = 23058, userID = 0, protocol = 'socket' }={}]
    * @memberof DMclient
    */
-  constructor({ roomID = 23058, userID = 0, protocol = 'flash' }: DMclientOptions = {}) {
+  constructor({ roomID = 23058, userID = 0, protocol = 'socket' }: DMclientOptions = {}) {
     super()
     this.roomID = roomID
     this.userID = userID
@@ -46,6 +46,13 @@ class DMclient extends EventEmitter {
    * @memberof DMclient
    */
   public roomID: number
+  /**
+   * 连接使用的token, 暂时不知道功能
+   *
+   * @type {string}
+   * @memberof DMclient
+   */
+  public key = ''
   /**
    * 连接弹幕服务器使用的协议
    * 为了避免不必要的麻烦, 禁止外部修改
@@ -123,12 +130,12 @@ class DMclient extends EventEmitter {
     return this._connected
   }
   /**
-   * 客户端版本, 目前为1
+   * 版本
    *
    * @type {number}
    * @memberof DMclient
    */
-  public version: number = 1
+  public version: number = this.driver
   /**
    * 猜测为客户端设备
    *
@@ -190,24 +197,20 @@ class DMclient extends EventEmitter {
     this._connected = true
     if (options === undefined) {
       // 动态获取服务器地址, 防止B站临时更换
-      const player = { uri: `https://api.live.bilibili.com/api/player?id=cid:${this.roomID}&ts=${Date.now().toString(16)}` }
-      const playerXML = await tools.XHR<string>(player)
-      let socketServer = 'livecmt-2.bilibili.com'
+      const getDanmuInfo = { uri: `https://api.live.bilibili.com/xlive/app-room/v1/index/getDanmuInfo?${AppClient.signQueryBase(`room_id=${this.roomID}`)}` }
+      const danmuInfo = await tools.XHR<danmuInfo>(getDanmuInfo)
+      let socketServer = 'broadcastlv.chat.bilibili.com'
       let socketPort = 2243
       let wsServer = 'broadcastlv.chat.bilibili.com'
       let wsPort = 2244
-      let wssPort = 2245
-      if (playerXML !== undefined && playerXML.response.statusCode === 200) {
-        const flashServer = playerXML.body.match(/<server>(.+)<\/server>/)
-        const dmPort = playerXML.body.match(/<dm_port>(\d+)<\/dm_port>/)
-        const dmServer = playerXML.body.match(/<dm_server>(.+)<\/dm_server>/)
-        const dmWsPort = playerXML.body.match(/<dm_ws_port>(\d+)<\/dm_ws_port>/)
-        const dmWssPort = playerXML.body.match(/<dm_wss_port>(\d+)<\/dm_wss_port>/)
-        if (flashServer !== null) socketServer = flashServer[1]
-        if (dmPort !== null) socketPort = Number.parseInt(dmPort[1])
-        if (dmServer !== null) wsServer = dmServer[1]
-        if (dmWsPort !== null) wsPort = Number.parseInt(dmWsPort[1])
-        if (dmWssPort !== null) wssPort = Number.parseInt(dmWssPort[1])
+      let wssPort = 443
+      if (danmuInfo !== undefined && danmuInfo.response.statusCode === 200 && danmuInfo.body.code === 0) {
+        socketServer = danmuInfo.body.data.ip_list[0].host
+        socketPort = danmuInfo.body.data.ip_list[0].port
+        wsServer = danmuInfo.body.data.host_list[0].host
+        wsPort = danmuInfo.body.data.host_list[0].ws_port
+        wssPort = danmuInfo.body.data.host_list[0].wss_port
+        this.key = danmuInfo.body.data.token
       }
       if (this._protocol === 'socket' || this._protocol === 'flash') {
         this._server = socketServer
@@ -292,10 +295,10 @@ class DMclient extends EventEmitter {
   protected _ClientConnectHandler() {
     let data: string
     if (this._protocol === 'socket')
-      data = JSON.stringify({ roomid: this.roomID, uid: this.userID, from: 0, platform: 'android', clientver: '5.29.1.5291001', hwid: AppClient.DeviceID, protover: 2 })
+      data = JSON.stringify({ uid: this.userID, roomid: this.roomID, key: this.key, platform: 'android', clientver: '5.43.0.5430400', hwid: AppClient.RandomID(20), protover: 2 })
     else if (this._protocol === 'flash')
-      data = JSON.stringify({ roomid: this.roomID, platform: 'flash', uid: this.userID, protover: 2, clientver: '2.2.11-ffe71d94' })
-    else data = JSON.stringify({ uid: this.userID, roomid: this.roomID, protover: 1, platform: 'web', clientver: '1.4.7' })
+      data = JSON.stringify({ key: this.key, clientver: '2.4.6-9e02b4f1', roomid: this.roomID, uid: this.userID, protover: 2, platform: 'flash' })
+    else data = JSON.stringify({ uid: this.userID, roomid: this.roomID, protover: 2, platform: 'web', clientver: '1.7.4', type: 2, key: this.key })
     this._Timer = setTimeout(() => this._ClientHeart(), 30 * 1000)
     this._ClientSendData(16 + data.length, 16, this.version, 7, this.driver, data)
   }
@@ -308,7 +311,7 @@ class DMclient extends EventEmitter {
   protected _ClientHeart() {
     if (!this._connected) return
     let data: string
-    if (this._protocol === 'socket') data = JSON.stringify({ roomid: this.roomID, uid: this.userID, from: 0 })
+    if (this._protocol === 'socket') data = '{}'
     else if (this._protocol === 'flash') data = ''
     else data = '[object Object]'
     this._timeout = setTimeout(() => {
@@ -324,9 +327,9 @@ class DMclient extends EventEmitter {
    * @protected
    * @param {number} totalLen 总长度
    * @param {number} [headLen=16] 头部长度
-   * @param {any} [version=this.version] 版本
+   * @param {number} [version=this.version] 版本
    * @param {number} [type=2] 类型
-   * @param {any} [driver=this.driver] 设备
+   * @param {number} [driver=this.driver] 设备
    * @param {string} [data] 数据
    * @memberof DMclient
    */
@@ -380,6 +383,8 @@ class DMclient extends EventEmitter {
     if (dataLen < packageLen) return this.__data = data
     // 数据长度20时为在线人数
     if (dataLen > 20) {
+      // const version = data.readInt16BE(6)
+      // if (version === 2) {
       const compress = data.readInt16BE(16)
       if (compress === 0x78DA) {
         // 检查是否压缩, 目前来说压缩格式固定
