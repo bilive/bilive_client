@@ -461,6 +461,11 @@ interface getAllListDataRoomList {
 interface userOnlineHeart {
   code: number
   msg: string
+  message: string
+  data: userOnlineHeartData
+}
+interface userOnlineHeartData {
+  giftlist: any[]
 }
 /*******************
  ***** options *****

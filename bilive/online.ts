@@ -145,7 +145,7 @@ class Online extends AppClient {
     // 客户端
     const heartbeat: requestOptions = {
       method: 'POST',
-      uri: `${apiLiveOrigin}/mobile/userOnlineHeart?${AppClient.signQueryBase(this.tokenQuery)}`,
+      uri: `${apiLiveOrigin}/heartbeat/v1/OnLine/mobileOnline?${AppClient.signQueryBase(this.tokenQuery)}`,
       body: `room_id=${Options.getLongRoomID(roomID)}&scale=xxhdpi`,
       json: true,
       headers: this.headers
