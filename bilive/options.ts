@@ -140,8 +140,5 @@ class Options extends EventEmitter {
 const liveOrigin = 'https://live.bilibili.com'
 const apiVCOrigin = 'https://api.vc.bilibili.com'
 const apiLiveOrigin = 'https://api.live.bilibili.com'
-const smallTVPathname = '/gift/v4/smalltv'
-const rafflePathname = '/activity/v1/Raffle'
-const lotteryPathname = '/lottery/v1/lottery'
 export default new Options()
-export { Options as __Options, liveOrigin, apiVCOrigin, apiLiveOrigin, smallTVPathname, rafflePathname, lotteryPathname }
+export { Options as __Options, liveOrigin, apiVCOrigin, apiLiveOrigin }

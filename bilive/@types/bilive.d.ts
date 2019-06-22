@@ -258,7 +258,7 @@ interface systemMSG {
  * @interface raffleMessage
  */
 interface raffleMessage {
-  cmd: 'smallTV' | 'raffle'
+  cmd: 'raffle'
   roomID: number
   id: number
   type: string
@@ -273,7 +273,7 @@ interface raffleMessage {
  * @interface lotteryMessage
  */
 interface lotteryMessage {
-  cmd: 'lottery'
+  cmd: 'lottery' | 'pklottery'
   roomID: number
   id: number
   type: string
@@ -307,84 +307,84 @@ type message = raffleMessage | lotteryMessage | beatStormMessage | systemMessage
  **** listener *****
  *******************/
 /**
- * 抽奖raffle检查
+ * 统一抽奖信息
  *
- * @interface raffleCheck
+ * @interface lotteryInfo
  */
-interface raffleCheck {
+interface lotteryInfo {
   code: number
-  msg: string
   message: string
-  data: raffleCheckData
+  ttl: number
+  data: lotteryInfoData
 }
-interface raffleCheckData {
-  last_raffle_id: number
-  last_raffle_type: string
-  asset_animation_pic: string
-  asset_tips_pic: string
-  list: raffleCheckDataList[]
+interface lotteryInfoData {
+  activity_box: null
+  bls_box: null
+  gift_list: lotteryInfoDataGiftList[]
+  guard: lotteryInfoDataGuard[]
+  pk: lotteryInfoDataPk[]
+  slive_box: lotteryInfoDataSliveBox
+  storm: lotteryInfoDataStorm
 }
-interface raffleCheckDataList {
+interface lotteryInfoDataGiftList {
   raffleId: number
   title: string
   type: string
-  from: string
-  from_user: raffleCheckDataListFromuser
+  payflow_id: number
+  from_user: lotteryInfoDataGiftListFromUser
   time_wait: number
   time: number
   max_time: number
   status: number
   asset_animation_pic: string
   asset_tips_pic: string
+  sender_type: number
 }
-interface raffleCheckDataListFromuser {
+interface lotteryInfoDataGiftListFromUser {
   uname: string
   face: string
 }
-/**
- * 抽奖lottery检查
- *
- * @interface lotteryCheck
- */
-interface lotteryCheck {
-  code: number
-  msg: string
-  message: string
-  data: lotteryCheckData
-}
-interface lotteryCheckData {
-  guard: lotteryCheckDataGuard[]
-  storm: lotteryCheckDataStorm[]
-}
-interface lotteryCheckDataGuard {
+interface lotteryInfoDataGuard {
   id: number
-  sender: lotteryCheckDataSender
+  sender: lotteryInfoDataGuardSender
   keyword: string
+  privilege_type: number
   time: number
   status: number
-  mobile_display_mode: number
-  mobile_static_asset: string
-  mobile_animation_asset: string
+  payflow_id: string
 }
-interface lotteryCheckDataStorm {
-  id: number
-  sender: lotteryCheckDataSender
-  keyword: string
-  time: number
-  status: number
-  mobile_display_mode: number
-  mobile_static_asset: string
-  mobile_animation_asset: string
-  extra: lotteryCheckDataStormExtra
-}
-interface lotteryCheckDataStormExtra {
-  num: number
-  content: string
-}
-interface lotteryCheckDataSender {
+interface lotteryInfoDataGuardSender {
   uid: number
   uname: string
   face: string
+}
+interface lotteryInfoDataPk {
+  id: number
+  pk_id: number
+  room_id: number
+  time: number
+  status: number
+  asset_icon: string
+  asset_animation_pic: string
+  title: string
+  max_time: number
+}
+interface lotteryInfoDataSliveBox {
+  minute: number
+  silver: number
+  time_end: number
+  time_start: number
+  times: number
+  max_times: number
+  status: number
+}
+interface lotteryInfoDataStorm {
+  id: number
+  num: number
+  time: number
+  content: string
+  hadJoin: number
+  storm_gif: string
 }
 /**
  * 获取直播列表

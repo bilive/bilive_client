@@ -125,9 +125,9 @@ class BiLive {
   public Listener() {
     this._Listener = new Listener()
     this._Listener
-      .on('smallTV', (raffleMessage: raffleMessage) => this._Message(raffleMessage))
       .on('raffle', (raffleMessage: raffleMessage) => this._Message(raffleMessage))
       .on('lottery', (lotteryMessage: lotteryMessage) => this._Message(lotteryMessage))
+      .on('pklottery', (lotteryMessage: lotteryMessage) => this._Message(lotteryMessage))
       .on('beatStorm', (beatStormMessage: beatStormMessage) => this._Message(beatStormMessage))
       .Start()
   }
