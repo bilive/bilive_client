@@ -7,11 +7,13 @@
     "build": "npm run build:client && npm run build:view",
     "build:client": "tsc -p tsconfig.json && npm-run-posix-or-windows copy:client",
     "build:view": "tsc -p docs/tsconfig.json && npm-run-posix-or-windows copy:view",
-    "copy:client": "cp bilive/options.default.json build/bilive/",
-    "copy:client:windows": "xcopy bilive\\options.default.json build\\bilive\\ /Y",
+    "copy:client": "cp bilive/options.default.json build/bilive/ && mkdir -p build/bilive/plugins/",
+    "copy:client:windows": "xcopy bilive\\options.default.json build\\bilive\\ /Y && mkdir build\\bilive\\plugins\\ || exit 0",
     "copy:view": "cp -r docs/view/ docs/index.html build/",
     "copy:view:windows": "xcopy docs\\view\\* build\\view\\ /Y && xcopy docs\\index.html build\\ /Y",
-    "clean": "rimraf build",
+    "clean": "npm-run-posix-or-windows rmbuild",
+    "rmbuild": "rm -rf build",
+    "rmbuild:windows": "rmdir /S /Q build || exit 0",
     "start": "node build/app.js"
   },
   "author": "lzghzr",
@@ -23,7 +25,6 @@
     "@types/request": "^2.48.1",
     "@types/ws": "^5.1.2",
     "npm-run-posix-or-windows": "^2.0.2",
-    "rimraf": "^2.6.3",
     "typescript": "^3.5.2"
   },
   "dependencies": {
