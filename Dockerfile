@@ -1,4 +1,4 @@
-FROM node:10.5.0-alpine
+FROM node:12.5.0-alpine
 
 EXPOSE 10080
 
