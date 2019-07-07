@@ -20,15 +20,15 @@
   "license": "MIT",
   "devDependencies": {
     "@types/bootstrap": "^4.3.0",
-    "@types/jquery": "^3.3.29",
-    "@types/node": "^12.0.8",
+    "@types/jquery": "^3.3.30",
+    "@types/node": "^12.0.12",
     "@types/request": "^2.48.1",
-    "@types/ws": "^5.1.2",
+    "@types/ws": "^6.0.1",
     "npm-run-posix-or-windows": "^2.0.2",
     "typescript": "^3.5.2"
   },
   "dependencies": {
     "request": "^2.88.0",
-    "ws": "^6.2.1"
+    "ws": "^7.0.1"
   }
 }

@@ -1,6 +1,5 @@
 import ws from 'ws'
 import url from 'url'
-// @ts-ignore d.ts没有跟进
 import { promises as dnsPromises } from 'dns'
 import { EventEmitter } from 'events'
 import tools from './tools'
@@ -83,7 +82,7 @@ class Client extends EventEmitter {
     const { host } = url.parse(this._server)
     if (host !== undefined && serverDomains.includes(host)) {
       let server = this._server
-      const ip: { address: string, family: number } = await dnsPromises.lookup(host).catch(() => undefined)
+      const ip = await dnsPromises.lookup(host).catch(() => undefined)
       if (ip !== undefined) server = server.replace(host, ip.family === 4 ? ip.address : `[${ip.address}]`)
       this._wsClient = new ws(server, [this._protocol], { rejectUnauthorized: false, headers: { host } })
     }
