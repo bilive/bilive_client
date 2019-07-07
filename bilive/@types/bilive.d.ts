@@ -76,6 +76,7 @@ interface DMclientOptions {
   roomID?: number
   userID?: number
   protocol?: DMclientProtocol
+  key?: string
 }
 type DMclientProtocol = 'socket' | 'flash' | 'ws' | 'wss'
 type DMerror = DMclientError | DMdanmakuError

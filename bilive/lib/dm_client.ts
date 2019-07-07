@@ -26,11 +26,12 @@ class DMclient extends EventEmitter {
    * @param {Options} [{ roomID = 23058, userID = 0, protocol = 'socket' }={}]
    * @memberof DMclient
    */
-  constructor({ roomID = 23058, userID = 0, protocol = 'socket' }: DMclientOptions = {}) {
+  constructor({ roomID = 23058, userID = 0, protocol = 'socket', key = '' }: DMclientOptions = {}) {
     super()
     this.roomID = roomID
     this.userID = userID
     this._protocol = protocol
+    this.key = key
   }
   /**
    * 用户UID
