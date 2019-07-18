@@ -6,6 +6,7 @@ import {EventEmitter} from 'events'
 import tools from './lib/tools'
 import User from './online'
 import Options from './options'
+import express = require('express');
 
 /**
  * 程序设置
@@ -36,6 +37,9 @@ class WebAPI extends EventEmitter {
      * @memberof WebAPI
      */
     private _HttpServer() {
+        // 监听 HTTP API
+        this._listenAPI(Options._.server);
+
         // 直接跳转到github.io, 为防以后变更使用302
         const server = http.createServer((req, res) => {
             req.on('error', error => tools.ErrorLog('req', error));
@@ -60,6 +64,143 @@ class WebAPI extends EventEmitter {
                 tools.Log(`已监听 ${listen.path}`)
             })
         }
+    }
+
+    private _listenAPI(listen: server) {
+        const bodyParser = require('body-parser');
+        const app: express.Application = express();
+        app.use(bodyParser.json());
+
+        /**
+         * 解决跨域
+         */
+        app.all('*', function (_req, res, next) {
+            res.setHeader("Access-Control-Allow-Origin", "*");
+            res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+            res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+            next();
+        });
+        /**
+         * 拦截所有 GET
+         */
+        app.get('*', function (_req, res) {
+            tools.Log('API ==> ' + 'GET 访问全部拦截');
+            res.redirect("http://github.halaal.win/bilive_client/");
+        });
+
+        const _ = this;
+
+        /**
+         * 处理所有的 post
+         */
+        app.post('/', async function (req, res) {
+            res.setHeader('Content-Type', 'application/json;charset=utf-8');
+
+            const authorization = req.get('Authorization');
+            const cmd = req.get('Action');
+
+            // 初始化返回
+            let sendData = {
+                code: 500,
+                data: {},
+                msg: '没有密钥'
+            };
+
+            if (!cmd) {
+                sendData.msg = '没有操作';
+            }
+
+            if (authorization === listen.protocol && cmd) {
+                tools.Log('API ==> 密钥正确，需要进行:' + cmd);
+                sendData.code = 200;
+                sendData.msg = 'success';
+                const message = <message>req.body;
+                const data = _._processHttp(message, cmd);
+                sendData = Object.assign(sendData, data);
+            }
+            res.send(sendData);
+        });
+
+        const port = process.env.APIPORT === undefined ? 2020 : Number.parseInt(<string>process.env.APIPORT);
+        app.listen(port, function () {
+            tools.Log('API ==> ' + '监听端口' + port);
+        });
+    }
+
+    private _processHttp(message: message, action: string) {
+        const cmd = action;
+        const ts = message.ts;
+        let respond;
+        switch (cmd) {
+            // 获取所有操作方法
+            case 'getAction': {
+                respond = {
+                    cmd,
+                    ts,
+                    data: ['getAction', 'getLog', 'getConfig', 'setConfig', 'getInfo', 'getAllUID', 'getUserData', 'setUserData', 'delUserData', 'newUserData']
+                };
+            }
+                break;
+            // 获取log
+            case 'getLog': {
+                const data = this.wsGetLog();
+                respond = {cmd, ts, data};
+            }
+                break;
+            // 获取设置
+            case 'getConfig': {
+                const data = this.wsGetConfig();
+                respond = {cmd, ts, data};
+            }
+                break;
+            // 保存设置
+            case 'setConfig': {
+                const data = this.wsSetConfig(message);
+                respond = {cmd, ts, ...data};
+            }
+                break;
+            // 获取参数描述
+            case 'getInfo': {
+                const data = this.wsGetInfo();
+                respond = {cmd, ts, data};
+            }
+                break;
+            // 获取uid
+            case 'getAllUID': {
+                const data = this.wsGetAllUId();
+                respond = {cmd, ts, data};
+            }
+                break;
+            // 获取用户设置
+            case 'getUserData': {
+                const data = this.wsGetUserDataById(message);
+                respond = {cmd, ts, ...data};
+            }
+                break;
+            // 保存用户设置
+            case 'setUserData': {
+                const data = this.wsSetUserDataById(message);
+                respond = {cmd, ts, ...data};
+            }
+                break;
+            // 删除用户设置
+            case 'delUserData': {
+                const data = this.wsDelUserDataById(message);
+                respond = {cmd, ts, ...data};
+            }
+                break;
+            // 新建用户设置
+            case 'newUserData': {
+                const data = this.wsCreateUserData();
+                respond = {cmd, ts, ...data};
+            }
+                break;
+            // 未知命令
+            default:
+                respond = {cmd, ts, msg: '未知命令'};
+                break
+        }
+        return respond;
     }
 
     /**
