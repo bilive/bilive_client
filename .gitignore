@@ -47,3 +47,5 @@ package-lock.json
 /*.js
 temp
 bilive/plugins/
+
+.idea
