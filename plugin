@@ -1,0 +1,71 @@
+#!/usr/bin/env node
+const request = require("request");
+const program = require('commander');
+const spawn = require('child_process').spawn;
+
+program
+  .version('0.0.1')
+  .option('-i, --install <插件名>', '安装插件')
+  .option('-l, --list', '列出所有可下载的插件')
+  .parse(process.argv);
+
+let allRepo = [];
+const opt = {
+  uri: 'https://api.github.com/users/bilive/repos',
+  headers: {
+    "Content-Type": 'application/json',
+    "User-Agent": "BilivePluginManager",
+  }
+};
+request(opt, function (error, response, body) {
+  if (!error && response.statusCode === 200) {
+    body = JSON.parse(body);
+    body.forEach((item) => {
+      if (item.name.substr(0, 2) === 'C_') {
+        let name = item.name.trim();
+        if (name.length < 12) {
+          for (let i = 0; i < (12 - name.length); i++) {
+            name += " ";
+          }
+        }
+        allRepo.push({
+          name,
+          description: item.description.trim(),
+          repo: item.html_url,
+        });
+      }
+    });
+    plugin();
+  } else {
+    console.log('无法访问 GitHub 仓储');
+  }
+});
+
+function plugin() {
+  if (program.install !== undefined) {
+    const pluginName = program.install;
+    allRepo.forEach((item) => {
+      if (item.name.trim() === pluginName) {
+        // !!! 特别重要这里遍历传递错误可能导致无法撤回的操作
+        gitCloneRepo(pluginName, './bilive/plugins/', item.repo)
+      }
+    })
+  } else if (program.list) {
+    allRepo.forEach((item) => {
+      console.log(item.name + '\t' + item.description);
+    })
+  }
+}
+
+function gitCloneRepo(name, path, repoUrl) {
+  const {spawn} = require('child_process');
+  // !!! 特别重要这里遍历传递错误可能导致无法撤回的操作
+  spawn('rm', ['-rf', path + name]);
+  const git = spawn('git', ['clone', repoUrl, path + name]);
+  git.stderr.on('data', (data) => {
+    console.log(`安装进程: ${data}`);
+  });
+  git.on('close', (code) => {
+    console.log('安装进程退出，请重新编译运行 Bilive');
+  });
+}
