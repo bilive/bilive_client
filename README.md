@@ -1,4 +1,4 @@
-[![Paypal.me donate](https://img.shields.io/badge/Paypal.me-donate-yellow.svg)](https://www.paypal.me/lzppzr)
+[![Paypal.me donate](https://img.shields.io/badge/Paypal.me-donate-yellow.svg)](https://www.paypal.me/lzppzr) [![Build Status](https://travis-ci.com/StringKe/bilive_client.svg?branch=master)](https://travis-ci.com/StringKe/bilive_client)
 
 使用方法见[Wiki](https://github.com/lzghzr/bilive_client/wiki/%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95(%E5%88%9D%E7%BA%A7))
 
