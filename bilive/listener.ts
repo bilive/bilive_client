@@ -84,6 +84,20 @@ class Listener extends EventEmitter {
     this._loop = setInterval(() => this._MSGCache.clear(), 3 * 1000)
     const { 0: server, 1: protocol } = Options._.config.serverURL.split('#')
     if (protocol !== undefined && protocol !== '') this._RoomListener(server, protocol)
+    // 房间监控
+    tools.on('roomListener', (message: message) => {
+      switch (message.cmd) {
+        case 'raffle':
+        case 'lottery':
+        case 'pklottery':
+        case 'beatStorm':
+          this._RaffleHandler(message)
+          break
+        case 'sysmsg':
+          tools.Log('服务器消息:', message.msg)
+          break
+      }
+    })
   }
   /**
    * 更新分区房间
@@ -144,13 +158,7 @@ class Listener extends EventEmitter {
    */
   private _RoomListener(server: string, protocol: string) {
     const client = new Client(server, protocol)
-    client
-      .on('raffle', (raffleMessage: raffleMessage) => this._RaffleHandler(raffleMessage))
-      .on('lottery', (lotteryMessage: lotteryMessage) => this._RaffleHandler(lotteryMessage))
-      .on('pklottery', (lotteryMessage: lotteryMessage) => this._RaffleHandler(lotteryMessage))
-      .on('beatStorm', (beatStormMessage: beatStormMessage) => this._RaffleHandler(beatStormMessage))
-      .on('sysmsg', (systemMessage: systemMessage) => tools.Log('服务器消息:', systemMessage.msg))
-      .Connect()
+    client.Connect()
     Options.on('clientUpdate', () => client.Update())
   }
   /**

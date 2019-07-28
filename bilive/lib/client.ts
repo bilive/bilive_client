@@ -131,7 +131,7 @@ class Client extends EventEmitter {
    */
   protected async _MessageHandler(data: string) {
     const message = await tools.JSONparse<message>(data)
-    if (message !== undefined) this.emit(message.cmd, message)
+    if (message !== undefined) tools.emit('roomListener', message)
   }
 }
 export default Client
