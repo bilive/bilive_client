@@ -53,7 +53,7 @@ class DMclient extends EventEmitter {
    * @type {string}
    * @memberof DMclient
    */
-  public key = ''
+  public key: string
   /**
    * 连接弹幕服务器使用的协议
    * 为了避免不必要的麻烦, 禁止外部修改

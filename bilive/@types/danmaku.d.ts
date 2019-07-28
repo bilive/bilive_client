@@ -760,6 +760,24 @@ interface NOTICE_MSG_Side {
   border: string
 }
 /**
+ * 房间通知
+ * {"cmd":"NOTICE_MSG_H5","data":{"msg":"<%s>降临在<%s>的直播间，参战获大奖！","value":["混沌机甲 mSv型","老骚豆腐"],"special_index":[2],"room_id":763679,"ts":1562655097},"_roomid":21203168}
+ *
+ * @interface NOTICE_MSG_H5
+ * @extends {danmuJson}
+ */
+interface NOTICE_MSG_H5 extends danmuJson {
+  data: NOTICE_MSG_H5_Data
+}
+interface NOTICE_MSG_H5_Data {
+  msg: string
+  value: string[]
+  special_index: number[]
+  room_id: number
+  ts: number
+}
+
+/**
  * 连麦PK
  *
  * @interface PK_MIC_Base
