@@ -141,7 +141,7 @@ class Online extends AppClient {
       headers: { 'Referer': `${liveOrigin}/${Options.getShortRoomID(roomID)}` }
     }
     const heartPC = await tools.XHR<userOnlineHeart>(online)
-    if (heartPC !== undefined && heartPC.response.statusCode === 200 && heartPC.body.code === 3) return 'cookieError'
+    if (heartPC !== undefined && heartPC.response.statusCode === 200 && heartPC.body.code === -101) return 'cookieError'
     // 客户端
     const heartbeat: requestOptions = {
       method: 'POST',
@@ -151,7 +151,7 @@ class Online extends AppClient {
       headers: this.headers
     }
     const heart = await tools.XHR<userOnlineHeart>(heartbeat, 'Android')
-    if (heart !== undefined && heart.response.statusCode === 200 && heart.body.code === 3) return 'tokenError'
+    if (heart !== undefined && heart.response.statusCode === 200 && heart.body.code === -101) return 'tokenError'
   }
   /**
    * cookie失效
