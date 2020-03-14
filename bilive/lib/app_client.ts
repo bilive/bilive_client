@@ -51,8 +51,8 @@ class AppClient {
   // bilibili TV
   // private static readonly __secretKey: string = '59b43e04ad6965f34319062b478f83dd'
   // public static readonly appKey: string = '4409e2ce8ffd12b8'
-  // public static readonly build: string = '140600'
-  // public static readonly mobiApp: string = 'android_tv'
+  // public static readonly build: string = '101901'
+  // public static readonly mobiApp: string = 'android_tv_yst'
   // bilibili link
   // private static readonly __secretKey: string = 'e988e794d4d4b6dd43bc0e89d6e90c43'
   // public static readonly appKey: string = '37207f2beaebf8d7'
