@@ -1,6 +1,7 @@
 import crypto from 'crypto'
-import request from 'request'
+import { CookieJar } from 'tough-cookie'
 import tools from './tools'
+import { IncomingHttpHeaders } from 'http'
 /**
  * 登录状态
  *
@@ -202,10 +203,10 @@ class AppClient {
   /**
    * 请求头
    *
-   * @type {request.Headers}
+   * @type {IncomingHttpHeaders}
    * @memberof AppClient
    */
-  public headers: request.Headers = {
+  public headers: IncomingHttpHeaders = {
     'User-Agent': 'Mozilla/5.0 BiliDroid/5.43.1 (bbcallen@gmail.com)',
     'Connection': 'Keep-Alive',
   }
@@ -213,10 +214,10 @@ class AppClient {
    * cookieJar
    *
    * @private
-   * @type {request.CookieJar}
+   * @type {CookieJar}
    * @memberof AppClient
    */
-  private __jar: request.CookieJar = request.jar()
+  private __jar: CookieJar = new CookieJar()
   /**
    * 对密码进行加密
    *
@@ -242,7 +243,7 @@ class AppClient {
    * @memberof AppClient
    */
   protected _getKey(): Promise<XHRresponse<getKeyResponse> | undefined> {
-    const getKey: request.Options = {
+    const getKey: XHRoptions = {
       method: 'POST',
       uri: 'https://passport.bilibili.com/api/oauth2/getKey',
       body: AppClient.signQueryBase(),
@@ -264,7 +265,7 @@ class AppClient {
     const passWord = this._RSAPassWord(publicKey)
     const captcha = this.captcha === '' ? '' : `&captcha=${this.captcha}`
     const authQuery = `username=${encodeURIComponent(this.userName)}&password=${passWord}${captcha}`
-    const auth: request.Options = {
+    const auth: XHRoptions = {
       method: 'POST',
       uri: 'https://passport.bilibili.com/api/v2/oauth2/login',
       body: AppClient.signQueryBase(authQuery),
@@ -300,7 +301,7 @@ class AppClient {
    * @memberof AppClient
    */
   public async getCaptcha(): Promise<captchaResponse> {
-    const captcha: request.Options = {
+    const captcha: XHRoptions = {
       uri: 'https://passport.bilibili.com/captcha',
       encoding: null,
       jar: this.__jar,
@@ -341,7 +342,7 @@ class AppClient {
    */
   public async logout(): Promise<logoutResponse> {
     const revokeQuery = `${this.cookieString.replace(/; */g, '&')}&access_token=${this.accessToken}`
-    const revoke: request.Options = {
+    const revoke: XHRoptions = {
       method: 'POST',
       uri: 'https://passport.bilibili.com/api/v2/oauth2/revoke',
       body: AppClient.signQueryBase(revokeQuery),
@@ -363,7 +364,7 @@ class AppClient {
    */
   public async refresh(): Promise<loginResponse> {
     const refreshQuery = `access_token=${this.accessToken}&refresh_token=${this.refreshToken}`
-    const refresh: request.Options = {
+    const refresh: XHRoptions = {
       method: 'POST',
       uri: 'https://passport.bilibili.com/api/v2/oauth2/refresh_token',
       body: AppClient.signQueryBase(refreshQuery),

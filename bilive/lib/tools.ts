@@ -1,7 +1,9 @@
 import util from 'util'
 import crypto from 'crypto'
-import request from 'request'
+import got from 'got'
+import { CookieJar } from 'tough-cookie'
 import { EventEmitter } from 'events'
+import { IncomingHttpHeaders } from 'http'
 /**
  * 一些工具, 供全局调用
  *
@@ -20,7 +22,7 @@ class Tools extends EventEmitter {
    * @returns {request.Headers}
    * @memberof tools
    */
-  public getHeaders(platform: string): request.Headers {
+  public getHeaders(platform: string): IncomingHttpHeaders {
     switch (platform) {
       case 'Android':
         return {
@@ -53,40 +55,50 @@ class Tools extends EventEmitter {
    * 添加request头信息
    *
    * @template T
-   * @param {request.OptionsWithUri} options
+   * @param {XHRoptions} options
    * @param {('PC' | 'Android' | 'WebView')} [platform='PC']
    * @returns {(Promise<XHRresponse<T> | undefined>)}
    * @memberof tools
    */
-  public XHR<T>(options: request.OptionsWithUri, platform: 'PC' | 'Android' | 'WebView' = 'PC'): Promise<XHRresponse<T> | undefined> {
-    return new Promise<XHRresponse<T> | undefined>(resolve => {
-      options.gzip = true
-      // 添加头信息
-      const headers = this.getHeaders(platform)
-      options.headers = options.headers === undefined ? headers : Object.assign(headers, options.headers)
-      if (options.method === 'POST' && options.headers['Content-Type'] === undefined)
-        options.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
-      // 返回异步request
-      request(options, (error, response, body) => {
-        if (error === null) resolve({ response, body })
-        else {
-          this.ErrorLog(options.uri, error)
-          resolve()
-        }
-      })
-    })
+  public async XHR<T>(options: XHRoptions, platform: 'PC' | 'Android' | 'WebView' = 'PC'): Promise<XHRresponse<T> | undefined> {
+    // 为了兼容已有插件
+    if (options.url === undefined && options.uri !== undefined) {
+      options.url = options.uri
+      delete options.uri
+    }
+    if (options.cookieJar === undefined && options.jar !== undefined) {
+      options.cookieJar = options.jar
+      delete options.jar
+    }
+    if (options.encoding === null) {
+      options.responseType = 'buffer'
+      delete options.encoding
+    }
+    if (options.json === true) {
+      options.responseType = 'json'
+      delete options.json
+    }
+    // 添加头信息
+    const headers = this.getHeaders(platform)
+    options.headers = options.headers === undefined ? headers : Object.assign(headers, options.headers)
+    if (options.method?.toLocaleUpperCase() === 'POST' && options.headers['Content-Type'] === undefined)
+      options.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
+    // @ts-ignore got把参数分的太细了, 导致responseType没法确定
+    const gotResponse = await got<T>(options).catch(error => this.ErrorLog(options.url, error))
+    if (gotResponse === undefined) return
+    else return { response: gotResponse, body: gotResponse.body }
   }
   /**
    * 获取cookie值
    *
-   * @param {request.CookieJar} jar
+   * @param {CookieJar} jar
    * @param {string} key
    * @param {*} [url=apiLiveOrigin]
    * @returns {string}
    * @memberof tools
    */
-  public getCookie(jar: request.CookieJar, key: string, url = 'https://api.live.bilibili.com'): string {
-    const cookies = jar.getCookies(url)
+  public getCookie(jar: CookieJar, key: string, url = 'https://api.live.bilibili.com'): string {
+    const cookies = jar.getCookiesSync(url)
     const cookieFind = cookies.find(cookie => cookie.key === key)
     return cookieFind === undefined ? '' : cookieFind.value
   }
@@ -94,14 +106,12 @@ class Tools extends EventEmitter {
    * 设置cookie
    *
    * @param {string} cookieString
-   * @returns {request.CookieJar}
+   * @returns {CookieJar}
    * @memberof tools
    */
-  public setCookie(cookieString: string): request.CookieJar {
-    const jar = request.jar()
-    cookieString.split(';').forEach(cookie => {
-      jar.setCookie(`${cookie}; Domain=bilibili.com; Path=/`, 'https://bilibili.com')
-    })
+  public setCookie(cookieString: string): CookieJar {
+    const jar = new CookieJar()
+    if (cookieString !== '') cookieString.split(';').forEach(cookie => jar.setCookieSync(`${cookie}; Domain=bilibili.com; Path=/`, 'https://bilibili.com'))
     return jar
   }
   /**

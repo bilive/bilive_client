@@ -1,4 +1,3 @@
-import { Options as requestOptions } from 'request'
 import { EventEmitter } from 'events'
 import tools from './lib/tools'
 import AppClient from './lib/app_client'
@@ -174,7 +173,7 @@ class Listener extends EventEmitter {
     const roomID = dataJson.real_roomid
     // 等待3s, 防止土豪刷屏
     await tools.Sleep(3000)
-    const _lotteryInfo: requestOptions = {
+    const _lotteryInfo: XHRoptions = {
       uri: `${apiLiveOrigin}/xlive/lottery-interface/v1/lottery/getLotteryInfo?${AppClient.signQueryBase(`roomid=${roomID}`)}`,
       json: true
     }

@@ -231,13 +231,36 @@ interface captchaResponseError {
  ****** tools ******
  *******************/
 /**
+ * XHR设置
+ * 因为request已经为Deprecated状态, 为了兼容把设置项缩小, 可以会影响一些插件
+ *
+ * @interface XHRoptions
+ */
+interface XHRoptions {
+  /** @deprecated 为了兼容request, 现在可以使用url */
+  uri?: string | URL
+  url?: string | URL
+  // OutgoingHttpHeaders包含number, 导致无法兼容got
+  headers?: import('http').IncomingHttpHeaders
+  method?: import('got').Method
+  body?: string | Buffer
+  /** @deprecated 为了兼容request, 现在可以使用cookieJar */
+  jar?: import('tough-cookie').CookieJar
+  cookieJar?: import('tough-cookie').CookieJar
+  /** 为了兼容request, 保留null */
+  encoding?: BufferEncoding | null
+  /** @deprecated 为了兼容request, 现在可以使用responseType */
+  json?: boolean
+  responseType?: 'json' | 'buffer' | 'text'
+}
+/**
  * XHR返回
  *
  * @interface response
  * @template T
  */
 interface XHRresponse<T> {
-  response: import('request').Response
+  response: import('got').Response
   body: T
 }
 /**

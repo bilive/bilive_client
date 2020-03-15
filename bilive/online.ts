@@ -1,4 +1,4 @@
-import { Options as requestOptions, CookieJar as requestCookieJar } from 'request'
+import { CookieJar } from 'tough-cookie'
 import tools from './lib/tools'
 import AppClient from './lib/app_client'
 import Options, { apiLiveOrigin, liveOrigin } from './options'
@@ -36,7 +36,7 @@ class Online extends AppClient {
   public set refreshToken(refreshToken: string) { this.userData.refreshToken = refreshToken }
   public get cookieString(): string { return this.userData.cookie }
   public set cookieString(cookieString: string) { this.userData.cookie = cookieString }
-  public jar!: requestCookieJar
+  public jar!: CookieJar
   /**
    * 验证码 DataURL
    *
@@ -132,7 +132,7 @@ class Online extends AppClient {
    */
   protected async _onlineHeart(): Promise<'cookieError' | 'tokenError' | void> {
     const roomID = Options._.config.eventRooms[0]
-    const online: requestOptions = {
+    const online: XHRoptions = {
       method: 'POST',
       uri: `${apiLiveOrigin}/User/userOnlineHeart`,
       body: `csrf_token=${tools.getCookie(this.jar, 'bili_jct')}&csrf=${tools.getCookie(this.jar, 'bili_jct')}&visit_id=`,
@@ -143,7 +143,7 @@ class Online extends AppClient {
     const heartPC = await tools.XHR<userOnlineHeart>(online)
     if (heartPC !== undefined && heartPC.response.statusCode === 200 && heartPC.body.code === -101) return 'cookieError'
     // 客户端
-    const heartbeat: requestOptions = {
+    const heartbeat: XHRoptions = {
       method: 'POST',
       uri: `${apiLiveOrigin}/heartbeat/v1/OnLine/mobileOnline?${AppClient.signQueryBase(this.tokenQuery)}`,
       body: `room_id=${Options.getLongRoomID(roomID)}&scale=xxhdpi`,

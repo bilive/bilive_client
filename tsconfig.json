@@ -1,30 +1,37 @@
 {
   "compilerOptions": {
     /* 基本选项 */
-    "target": "es2017",                       /* 指定 ECMAScript 目标版本: "ES3" (默认)、"ES5"、"ES2015"、"ES2016"、"ES2017"、"ES2018" 或 "ESNEXT"。 */
-    "module": "commonjs",                     /* 指定模块代码生成: "none"、"commonjs"、"amd"、"system"、"umd"、"es2015"或 "ESNext"。 */
-    // "lib": [],                             /* Specify library files to be included in the compilation. */
+    // "incremental": true,                   /* Enable incremental compilation */
+    "target": "es2017",                       /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', 'ES2018', 'ES2019', 'ES2020', or 'ESNEXT'. */
+    "module": "commonjs",                     /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', 'es2020', or 'ESNext'. */
+    // "lib": [],                             /* 指定要在编译中包括的库文件。 */
     // "allowJs": true,                       /* 允许编译 JavaScript 文件。 */
     // "checkJs": true,                       /* .js 文件中的报表出错。 */
     // "jsx": "preserve",                     /* 指定 JSX 代码生成: "preserve"、"react-native" 或 "react"。 */
     "declaration": false,                     /* 生成相应的 ".d.ts" 文件。 */
-    // "declarationMap": true,                /* 为每个相应的 ".d.ts" 文件生成 sourcemap。 */
+    // "declarationMap": true,                /* 为每个相应的 ".d.ts" 文件生成源映射。 */
     "sourceMap": false,                       /* 生成相应的 ".map" 文件。 */
     // "outFile": "./",                       /* 连接输出并将其发出到单个文件。 */
     "outDir": "build",                        /* 将输出结构重定向到目录。 */
     // "rootDir": "./",                       /* 指定输入文件的根目录。与 --outDir 一起用于控制输出目录结构。 */
     // "composite": true,                     /* 启用项目编译 */
+    // "tsBuildInfoFile": "./",               /* Specify file to store incremental compilation information */
     "removeComments": true,                   /* 请勿将注释发出到输出。 */
     // "noEmit": true,                        /* 请勿发出输出。 */
     // "importHelpers": true,                 /* 从 "tslib" 导入发出帮助程序。 */
     // "downlevelIteration": true,            /* 以 "ES5" 或 "ES3" 设为目标时，对 "for-of"、传播和析构中的可迭代项提供完全支持。 */
     // "isolatedModules": true,               /* 将每个文件转换为单独的模块(类似 "ts.transpileModule")。 */
 
+    /* 高级选项 */
+    "locale": "zh-cn",                         /* 向用户显示消息时所用的区域设置(例如，"en-us") */
+    "forceConsistentCasingInFileNames": true,  /* 不允许对同一文件采用大小不一致的引用。 */
+
     /* 严格类型检查选项 */
     "strict": true,                           /* 启用所有严格类型检查选项。 */
     // "noImplicitAny": true,                 /* 对具有隐式 "any" 类型的表达式和声明引发错误。 */
     // "strictNullChecks": true,              /* 启用严格的 NULL 检查。 */
     // "strictFunctionTypes": true,           /* 对函数类型启用严格检查。 */
+    // "strictBindCallApply": true,           /* Enable strict 'bind', 'call', and 'apply' methods on functions. */
     // "strictPropertyInitialization": true,  /* 启用类中属性初始化的严格检查。 */
     // "noImplicitThis": true,                /* 在带隐式“any" 类型的 "this" 表达式上引发错误。 */
     // "alwaysStrict": true,                  /* 以严格模式进行分析，并为每个源文件发出 "use strict" 指令。 */
@@ -45,19 +52,17 @@
     // "allowSyntheticDefaultImports": true,  /* 允许从不带默认输出的模块中默认输入。这不会影响代码发出，只是类型检查。 */
     "esModuleInterop": true,                  /* 通过为所有导入创建命名空间对象来启用 CommonJS 和 ES 模块之间的发出互操作性。表示 "allowSyntheticDefaultImports"。 */
     // "preserveSymlinks": true,              /* 不要解析 symlink 的真实路径。 */
+    // "allowUmdGlobalAccess": true,          /* Allow accessing UMD globals from modules. */
 
     /* 源映射选项 */
-    // "sourceRoot": "./",                    /* 指定调试调试程序应将 TypeScript 文件放置到的位置而不是源位置。 */
-    // "mapRoot": "./",                       /* 指定调试程序应将映射文件放置到的位置而不是生成的位置。 */
+    // "sourceRoot": "",                    /* 指定调试调试程序应将 TypeScript 文件放置到的位置而不是源位置。 */
+    // "mapRoot": "",                       /* 指定调试程序应将映射文件放置到的位置而不是生成的位置。 */
     // "inlineSourceMap": true,               /* 发出包含源映射而非包含单独文件的单个文件。 */
     // "inlineSources": true,                 /* 在单个文件内发出源以及源映射；需要设置 "--inlineSourceMap" 或 "--sourceMap"。 */
 
     /* 实验性选项 */
     // "experimentalDecorators": true,        /* 对 ES7 修饰器启用实验支持。 */
     // "emitDecoratorMetadata": true,         /* 对发出修饰器的类型元数据启用实验支持。 */
-
-    /* 高级选项 */
-    "locale": "zh-cn"                         /* 向用户显示消息时所用的区域设置(例如，"en-us") */
   },
   "exclude": [
     "./docs"
