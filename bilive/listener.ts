@@ -72,6 +72,8 @@ class Listener extends EventEmitter {
   private _lastUpdate: number = Date.now()
   // @ts-ignore
   private _loop: NodeJS.Timer
+  //@ts-ignore
+  private _updateRoomTimer: NodeJS.Timer
   /**
    * 开始监听
    *
@@ -81,6 +83,8 @@ class Listener extends EventEmitter {
     this.updateAreaRoom()
     // 3s清空一次消息缓存
     this._loop = setInterval(() => this._MSGCache.clear(), 3 * 1000)
+    // 10min更新一次房间
+    this._updateRoomTimer = setInterval(() => this.updateAreaRoom(), 10 * 60 * 1000)
     const { 0: server, 1: protocol } = Options._.config.serverURL.split('#')
     if (protocol !== undefined && protocol !== '') this._RoomListener(server, protocol)
     // 房间监控
