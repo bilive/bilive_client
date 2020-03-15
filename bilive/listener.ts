@@ -123,8 +123,7 @@ class Listener extends EventEmitter {
         if (this._DMclient.has(roomID)) return
         const newDMclient = new DMclient({ roomID, userID })
         newDMclient
-          .on('SYS_MSG', dataJson => this._RaffleCheck(dataJson))
-          .on('SYS_GIFT', dataJson => this._RaffleCheck(dataJson))
+          .on('NOTICE_MSG', dataJson => this._RaffleCheck(dataJson))
           .Connect()
         this._DMclient.set(roomID, newDMclient)
       })
@@ -164,12 +163,12 @@ class Listener extends EventEmitter {
    * 检查房间抽奖raffle信息
    *
    * @private
-   * @param {(SYS_MSG | SYS_GIFT)} dataJson
+   * @param {NOTICE_MSG} dataJson
    * @memberof Listener
    */
-  private async _RaffleCheck(dataJson: SYS_MSG | SYS_GIFT) {
-    if (dataJson.real_roomid === undefined || this._MSGCache.has(dataJson.msg_text)) return
-    this._MSGCache.add(dataJson.msg_text)
+  private async _RaffleCheck(dataJson: NOTICE_MSG) {
+    if (dataJson.real_roomid === undefined || this._MSGCache.has(dataJson.msg_common)) return
+    this._MSGCache.add(dataJson.msg_common)
     const roomID = dataJson.real_roomid
     // 等待3s, 防止土豪刷屏
     await tools.Sleep(3000)
