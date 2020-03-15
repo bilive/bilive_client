@@ -324,8 +324,11 @@ class AppClient {
       const authResponse = await this._auth(getKeyResponse.body.data)
       if (authResponse !== undefined && authResponse.response.statusCode === 200) {
         if (authResponse.body.code === 0) {
-          this._update(authResponse.body.data)
-          return { status: appStatus.success, data: authResponse.body }
+          if (authResponse.body.data.token_info !== undefined && authResponse.body.data.cookie_info !== undefined) {
+            this._update(authResponse.body.data)
+            return { status: appStatus.success, data: authResponse.body }
+          }
+          return { status: appStatus.error, data: authResponse.body }
         }
         if (authResponse.body.code === -105) return { status: appStatus.captcha, data: authResponse.body }
         return { status: appStatus.error, data: authResponse.body }
