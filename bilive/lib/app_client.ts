@@ -80,7 +80,11 @@ class AppClient {
    * @memberof AppClient
    */
   public static get RND(): number {
-    return Math.floor(Math.random() * 1e+8) + 1e+7
+    const words = '0123456789'
+    let rnd = ''
+    rnd += words[Math.floor(Math.random() * 9) + 1]
+    for (let i = 0; i < 8; i++) rnd += words[Math.floor(Math.random() * 10)]
+    return +rnd
   }
   /**
    * 谜一样的RandomID
