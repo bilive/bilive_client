@@ -23,8 +23,8 @@
     // "isolatedModules": true,               /* 将每个文件转换为单独的模块(类似 "ts.transpileModule")。 */
 
     /* 高级选项 */
-    "locale": "zh-cn",                         /* 向用户显示消息时所用的区域设置(例如，"en-us") */
-    "forceConsistentCasingInFileNames": true,  /* 不允许对同一文件采用大小不一致的引用。 */
+    "locale": "zh-cn",                        /* 向用户显示消息时所用的区域设置(例如，"en-us") */
+    "forceConsistentCasingInFileNames": true, /* 不允许对同一文件采用大小不一致的引用。 */
 
     /* 严格类型检查选项 */
     "strict": true,                           /* 启用所有严格类型检查选项。 */
@@ -55,8 +55,8 @@
     // "allowUmdGlobalAccess": true,          /* Allow accessing UMD globals from modules. */
 
     /* 源映射选项 */
-    // "sourceRoot": "",                    /* 指定调试调试程序应将 TypeScript 文件放置到的位置而不是源位置。 */
-    // "mapRoot": "",                       /* 指定调试程序应将映射文件放置到的位置而不是生成的位置。 */
+    // "sourceRoot": "",                      /* 指定调试调试程序应将 TypeScript 文件放置到的位置而不是源位置。 */
+    // "mapRoot": "",                         /* 指定调试程序应将映射文件放置到的位置而不是生成的位置。 */
     // "inlineSourceMap": true,               /* 发出包含源映射而非包含单独文件的单个文件。 */
     // "inlineSources": true,                 /* 在单个文件内发出源以及源映射；需要设置 "--inlineSourceMap" 或 "--sourceMap"。 */
 
