@@ -243,7 +243,7 @@ interface XHRoptions {
   // OutgoingHttpHeaders包含number, 导致无法兼容got
   headers?: import('http').IncomingHttpHeaders
   method?: import('got').Method
-  body?: string | Buffer
+  body?: string | Buffer | import('stream').Readable | import('form-data')
   /** @deprecated 为了兼容request, 现在可以使用cookieJar */
   jar?: import('tough-cookie').CookieJar
   cookieJar?: import('tough-cookie').CookieJar
