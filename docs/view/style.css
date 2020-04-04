@@ -1,7 +1,5 @@
-* {
-  filter: grayscale(1);
-}
 body {
+  filter: grayscale(1);
   background-color: #343a40;
 }
 #login, #option, #log {
