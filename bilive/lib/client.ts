@@ -75,8 +75,9 @@ class Client extends EventEmitter {
   public async Connect() {
     if (this._connected) return
     this._connected = true
+    const serverTest = await tools.XHR({ url: this._server.replace('wss://', 'https://'), method: 'HEAD' })
     // @ts-ignore d.ts 未更新
-    this._wsClient = new ws(this._server, [this._protocol], { servername: '' })
+    this._wsClient = new ws(this._server, [this._protocol], { servername: serverTest === undefined ? '' : undefined })
     this._wsClient
       .on('error', error => this._ClientErrorHandler(error))
       .on('close', () => this.Close())
