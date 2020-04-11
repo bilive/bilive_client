@@ -290,6 +290,7 @@ interface raffleMessage {
   time: number
   max_time: number
   time_wait: number
+  raw: '' | TV_START | RAFFLE_START
 }
 /**
  * 消息格式
@@ -303,6 +304,7 @@ interface lotteryMessage {
   type: string
   title: string
   time: number
+  raw: '' | LOTTERY_START | PK_LOTTERY_START
 }
 /**
  * 消息格式
@@ -316,6 +318,31 @@ interface beatStormMessage {
   type: string
   title: string
   time: number
+  raw: '' | SPECIAL_GIFT
+}
+/**
+ * 消息格式
+ *
+ * @interface anchorLotMessage
+ */
+interface anchorLotMessage {
+  cmd: 'anchorLot'
+  roomID: number
+  id: number
+  title: string
+  raw: '' | ANCHOR_LOT_START
+}
+/**
+ * 消息格式
+ *
+ * @interface boxActivityMessage
+ */
+interface boxActivityMessage {
+  cmd: 'boxActivity'
+  roomID: number
+  id: number
+  title: string
+  raw: '' | BOX_ACTIVITY_START
 }
 /**
  * 消息格式
@@ -326,7 +353,7 @@ interface systemMessage {
   cmd: 'sysmsg'
   msg: string
 }
-type message = raffleMessage | lotteryMessage | beatStormMessage | systemMessage
+type message = raffleMessage | lotteryMessage | beatStormMessage | anchorLotMessage | boxActivityMessage | systemMessage
 /*******************
  **** listener *****
  *******************/

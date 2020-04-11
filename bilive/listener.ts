@@ -55,6 +55,22 @@ class Listener extends EventEmitter {
    */
   private _beatStormID: Set<number> = new Set()
   /**
+   * 天选时刻ID
+   *
+   * @private
+   * @type {Set<number>}
+   * @memberof Listener
+   */
+  private _anchorLotID: Set<number> = new Set()
+  /**
+   * 宝箱抽奖ID
+   *
+   * @private
+   * @type {Set<number>}
+   * @memberof Listener
+   */
+  private _boxActivityID: Set<number> = new Set()
+  /**
    * 消息缓存
    *
    * @private
@@ -94,6 +110,8 @@ class Listener extends EventEmitter {
         case 'lottery':
         case 'pklottery':
         case 'beatStorm':
+        case 'anchorLot':
+        case 'boxActivity':
           this._RaffleHandler(message)
           break
         case 'sysmsg':
@@ -192,7 +210,8 @@ class Listener extends EventEmitter {
           title: data.title,
           time: +data.time_wait,
           max_time: +data.max_time,
-          time_wait: +data.time_wait
+          time_wait: +data.time_wait,
+          raw: ''
         }
         this._RaffleHandler(message)
       })
@@ -202,10 +221,10 @@ class Listener extends EventEmitter {
    * 监听抽奖消息
    *
    * @private
-   * @param {raffleMessage | lotteryMessage | beatStormMessage} raffleMessage
+   * @param {raffleMessage | lotteryMessage | beatStormMessage | anchorLotMessage | boxActivityMessage} raffleMessage
    * @memberof Listener
    */
-  private _RaffleHandler(raffleMessage: raffleMessage | lotteryMessage | beatStormMessage) {
+  private _RaffleHandler(raffleMessage: raffleMessage | lotteryMessage | beatStormMessage | anchorLotMessage | boxActivityMessage) {
     const { cmd, id, roomID, title } = raffleMessage
     switch (cmd) {
       case 'raffle':
@@ -224,11 +243,20 @@ class Listener extends EventEmitter {
         if (this._beatStormID.has(id)) return
         this._beatStormID.add(id)
         break
+      case 'anchorLot':
+        if (this._anchorLotID.has(id)) return
+        this._anchorLotID.add(id)
+        break
+      case 'boxActivity':
+        if (this._boxActivityID.has(id)) return
+        this._boxActivityID.add(id)
+        break
       default:
         return
     }
     // 更新时间
     this._lastUpdate = Date.now()
+    this.clearAllID()
     this.emit(cmd, raffleMessage)
     tools.Log(`房间 ${Options.getShortRoomID(roomID)} 开启了第 ${id} 轮${title}`)
   }

@@ -108,6 +108,44 @@ interface ACTIVITY_MATCH_GIFT_Data_Detail_Home_GiftInfo {
   gift_name: string
 }
 /**
+ * ANCHOR_LOT_START
+ * {"cmd":"ANCHOR_LOT_START","data":{"asset_icon":"https://i0.hdslb.com/bfs/live/992c2ccf88d3ea99620fb3a75e672e0abe850e9c.png","award_image":"","award_name":"2元红包","award_num":1,"cur_gift_num":0,"current_time":1586016065,"danmu":"咕咕咕","gift_id":0,"gift_name":"","gift_num":1,"gift_price":0,"goaway_time":180,"id":176301,"join_type":0,"lot_status":0,"max_time":600,"require_text":"关注主播","require_type":1,"require_value":0,"room_id":12594500,"send_gift_ensure":0,"show_panel":1,"status":1,"time":599,"url":"https://live.bilibili.com/p/html/live-lottery/anchor-join.html?is_live_half_webview=1&hybrid_biz=live-lottery-anchor&hybrid_half_ui=1,5,100p,100p,000000,0,30,0,0,1;2,5,100p,100p,000000,0,30,0,0,1;3,5,100p,100p,000000,0,30,0,0,1;4,5,100p,100p,000000,0,30,0,0,1;5,5,100p,100p,000000,0,30,0,0,1;6,5,100p,100p,000000,0,30,0,0,1;7,5,100p,100p,000000,0,30,0,0,1;8,5,100p,100p,000000,0,30,0,0,1","web_url":"https://live.bilibili.com/p/html/live-lottery/anchor-join.html"},"_roomid":12594500}
+ *
+ * @interface ANCHOR_LOT_START
+ * @extends {danmuJson}
+ */
+interface ANCHOR_LOT_START extends danmuJson {
+  data: ANCHOR_LOT_START_Data
+}
+interface ANCHOR_LOT_START_Data {
+  asset_icon: string
+  award_image: string
+  award_name: string
+  award_num: number
+  cur_gift_num: number
+  current_time: number
+  danmu: string
+  gift_id: number
+  gift_name: string
+  gift_num: number
+  gift_price: number
+  goaway_time: number
+  id: number
+  join_type: number
+  lot_status: number
+  max_time: number
+  require_text: string
+  require_type: number
+  require_value: number
+  room_id: number
+  send_gift_ensure: number
+  show_panel: number
+  status: number
+  time: number
+  url: string
+  web_url: string
+}
+/**
  * ANIMATION
  * {"cmd":"ANIMATION","data":{"animation":"https://i0.hdslb.com/bfs/live/6826d0dfa20cccedfbe6a70d6acaabaa816774a3.svga","type":"BOSS","weights":100,"uid":2352558},"_roomid":5441}
  *
@@ -214,12 +252,34 @@ interface BOSS_INJURY_Data {
 /**
  * BOX_ACTIVITY_START
  * {"cmd":"BOX_ACTIVITY_START","aid":381,"_roomid":5440}
+ * {"cmd":"BOX_ACTIVITY_START","aid":519,"data":{"activity_id":519,"jump_url":"https://live.bilibili.com/p/html/live-app-treasurebox/index.html?is_live_half_webview=1&hybrid_biz=live-app-treasurebox&hybrid_rotate_d=1&hybrid_half_ui=1,3,100p,70p,0,0,30,100;2,2,375,100p,0,0,30,100;3,3,100p,70p,0,0,30,100;4,2,375,100p,0,0,30,100;5,3,100p,70p,0,0,30,100;6,3,100p,70p,0,0,30,100;7,3,100p,70p,0,0,30,100&aid=519","weight":20,"closeable":0,"title":"华为宝箱抽奖","title_color":"#FFFFFF","activity_pic":"https://i0.hdslb.com/bfs/live/c3ed87683f6e87d256d1f5fdddbfb220fc4c2cdf.png","background":"https://i0.hdslb.com/bfs/live/84cd59bcb1e977359df618dbeb0f7828751f457c.png","current_round":1,"typeB":[{"join_start_time":1586346000,"join_end_time":1586347200,"round_num":1},{"join_start_time":1586347800,"join_end_time":1586349000,"round_num":2},{"join_start_time":1586349600,"join_end_time":1586350800,"round_num":3},{"join_start_time":1586351400,"join_end_time":1586352600,"round_num":4},{"join_start_time":1586353200,"join_end_time":1586353800,"round_num":5}]},"_roomid":4089610}
  *
  * @interface BOX_ACTIVITY_START
  * @extends {danmuJson}
  */
 interface BOX_ACTIVITY_START extends danmuJson {
   aid: number
+}
+interface BOX_ACTIVITY_START extends danmuJson {
+  aid: number
+  data: BOX_ACTIVITY_START_Data
+}
+interface BOX_ACTIVITY_START_Data {
+  activity_id: number
+  jump_url: string
+  weight: number
+  closeable: number
+  title: string
+  title_color: string
+  activity_pic: string
+  background: string
+  current_round: number
+  typeB: BOX_ACTIVITY_START_Data_TypeB[]
+}
+interface BOX_ACTIVITY_START_Data_TypeB {
+  join_start_time: number
+  join_end_time: number
+  round_num: number
 }
 /**
  * 房间设置变更
