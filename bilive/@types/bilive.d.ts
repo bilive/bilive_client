@@ -145,7 +145,7 @@ interface getKeyResponseData {
 interface authResponse {
   ts: number
   code: number
-  data: authResponseData
+  data: authResponseData & authResponseTokeninfo
 }
 interface authResponseData {
   status: number

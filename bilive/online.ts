@@ -1,6 +1,6 @@
 import { CookieJar } from 'tough-cookie'
 import tools from './lib/tools'
-import AppClient from './lib/app_client'
+import AppClient from './lib/tv_client'
 import Options, { apiLiveOrigin, liveOrigin } from './options'
 /**
  * Creates an instance of Online.
@@ -106,7 +106,7 @@ class Online extends AppClient {
       headers: { 'Referer': `${liveOrigin}/${Options.getShortRoomID(roomID)}` }
     })
     if (isLogin !== undefined && isLogin.response.statusCode === 200 && isLogin.body.code === -101)
-      return this._cookieError()
+      return await this._cookieError()
   }
   /**
    * 设置心跳循环
@@ -170,7 +170,7 @@ class Online extends AppClient {
       this._heartLoop()
       tools.Log(this.nickname, 'Cookie已更新')
     }
-    else return this._tokenError()
+    else return await this._tokenError()
   }
   /**
    * token失效

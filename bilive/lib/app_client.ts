@@ -24,36 +24,56 @@ class AppClient {
    * @memberof AppClient
    */
   constructor() {
-    // 设置 Buvid
-    this.headers['Buvid'] = AppClient.RandomID(37).toUpperCase()
-    // 设置 Display-ID
-    this.headers['Display-ID'] = `${this.headers['Buvid']}-${AppClient.TS}`
-    // 设置 Device-ID
-    this.headers['Device-ID'] = AppClient.RandomID(54)
+    this.headers['APP-KEY'] = AppClient.mobiApp
+    this.headers['Buvid'] = AppClient.buvid
+    this.headers['Device-ID'] = AppClient.deviceId
   }
   public static readonly actionKey: string = 'appkey'
-  public static readonly device: string = 'android'
   // bilibili 客户端
-  private static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
+  protected static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
   public static readonly appKey: string = '1d8b6e7d45233436'
-  public static readonly build: string = '5431000'
+  public static readonly biliLocalId: string = AppClient.RandomID(64)
+  public static readonly build: string = '5570300'
+  public static readonly buvid: string = AppClient.RandomID(37).toLocaleUpperCase()
+  public static readonly channel: string = 'bili'
+  public static readonly device: string = 'phone'
+  public static readonly deviceId: string = AppClient.biliLocalId
+  public static readonly deviceName: string = 'SonyJ9110'
+  public static readonly devicePlatform: string = 'Android10SonyJ9110'
+  public static readonly localId: string = AppClient.buvid
   public static readonly mobiApp: string = 'android'
   public static readonly platform: string = 'android'
+
   // bilibili 国际版
   // private static readonly __secretKey: string = '36efcfed79309338ced0380abd824ac1'
   // public static readonly appKey: string = 'bb3101000e232e27'
   // public static readonly build: string = '112000'
   // public static readonly mobiApp: string = 'android_i'
+
   // bilibili 概念版
   // private static readonly __secretKey: string = '25bdede4e1581c836cab73a48790ca6e'
   // public static readonly appKey: string = '07da50c9a0bf829f'
   // public static readonly build: string = '591204'
   // public static readonly mobiApp: string = 'android_b'
+
   // bilibili TV
   // private static readonly __secretKey: string = '59b43e04ad6965f34319062b478f83dd'
   // public static readonly appKey: string = '4409e2ce8ffd12b8'
-  // public static readonly build: string = '101901'
+  // public static readonly biliLocalId: string = AppClient.RandomID(20)
+  // public static readonly build: string = '102401'
+  // public static readonly buvid: string = AppClient.RandomID(37)
+  // public static readonly channel: string = 'master'
+  // public static readonly device: string = 'Sony'
+  // public static readonly deviceId: string = AppClient.biliLocalId
+  // public static readonly deviceName: string = 'J9110'
+  // public static readonly devicePlatform: string = 'Android10SonyJ9110'
+  // public static readonly fingerprint: string = AppClient.RandomID(62)
+  // public static readonly guid: string = AppClient.buvid
+  // public static readonly localFingerprint: string = AppClient.fingerprint
+  // public static readonly localId: string = AppClient.buvid
   // public static readonly mobiApp: string = 'android_tv_yst'
+  // public static readonly networkstate: string = 'wifi'
+
   // bilibili link
   // private static readonly __secretKey: string = 'e988e794d4d4b6dd43bc0e89d6e90c43'
   // public static readonly appKey: string = '37207f2beaebf8d7'
@@ -80,11 +100,22 @@ class AppClient {
    * @memberof AppClient
    */
   public static get RND(): number {
+    return AppClient.RandomNum(9)
+  }
+  /**
+   * 谜一样的RandomNum
+   *
+   * @static
+   * @param {number} length
+   * @returns {number}
+   * @memberof AppClient
+   */
+  public static RandomNum(length: number): number {
     const words = '0123456789'
-    let rnd = ''
-    rnd += words[Math.floor(Math.random() * 9) + 1]
-    for (let i = 0; i < 8; i++) rnd += words[Math.floor(Math.random() * 10)]
-    return +rnd
+    let randomNum = ''
+    randomNum += words[Math.floor(Math.random() * 9) + 1]
+    for (let i = 0; i < length - 1; i++) randomNum += words[Math.floor(Math.random() * 10)]
+    return +randomNum
   }
   /**
    * 谜一样的RandomID
@@ -97,7 +128,8 @@ class AppClient {
   public static RandomID(length: number): string {
     const words = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
     let randomID = ''
-    for (let i = 0; i < length; i++) randomID += words[Math.floor(Math.random() * 62)]
+    randomID += words[Math.floor(Math.random() * 61) + 1]
+    for (let i = 0; i < length - 1; i++) randomID += words[Math.floor(Math.random() * 62)]
     return randomID
   }
   /**
@@ -211,17 +243,17 @@ class AppClient {
    * @memberof AppClient
    */
   public headers: IncomingHttpHeaders = {
-    'User-Agent': 'Mozilla/5.0 BiliDroid/5.43.1 (bbcallen@gmail.com)',
+    'User-Agent': 'Mozilla/5.0 BiliDroid/5.57.0 (bbcallen@gmail.com) os/android model/J9110 mobi_app/android build/5570300 channel/bili innerVer/5570300 osVer/10 network/2',
     'Connection': 'Keep-Alive',
   }
   /**
    * cookieJar
    *
-   * @private
+   * @protected
    * @type {CookieJar}
    * @memberof AppClient
    */
-  private __jar: CookieJar = new CookieJar()
+  protected __jar: CookieJar = new CookieJar()
   /**
    * 对密码进行加密
    *
