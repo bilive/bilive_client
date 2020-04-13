@@ -30,6 +30,8 @@ class AppClient {
   }
   public static readonly actionKey: string = 'appkey'
   // bilibili 客户端
+  protected static readonly __loginSecretKey: string = '60698ba2f68e01ce44738920a0ffe768'
+  public static readonly loginAppKey: string = 'bca7e84c2d947ac6'
   protected static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
   public static readonly appKey: string = '1d8b6e7d45233436'
   public static readonly biliLocalId: string = AppClient.RandomID(64)
@@ -303,7 +305,7 @@ class AppClient {
     const authQuery = `username=${encodeURIComponent(this.userName)}&password=${passWord}${captcha}`
     const auth: XHRoptions = {
       method: 'POST',
-      uri: 'https://passport.bilibili.com/api/v2/oauth2/login',
+      uri: 'https://passport.bilibili.com/api/v3/oauth2/login',
       body: AppClient.signQueryBase(authQuery),
       jar: this.__jar,
       json: true,
