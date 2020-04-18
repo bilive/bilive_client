@@ -217,6 +217,8 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
       const captchaTemplate = <HTMLTemplateElement>template.querySelector('#captchaTemplate')
       const clone = document.importNode(captchaTemplate.content, true)
       const captchaImg = <HTMLImageElement>clone.querySelector('img')
+      const captchaInput = <HTMLInputElement>clone.querySelector('input')
+      captchaInput.remove()
       const qr = qrcode(6, 'L')
       qr.addData(userDataMSG.authcode)
       qr.make()
