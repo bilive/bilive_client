@@ -1,6 +1,6 @@
 {
   "name": "bilive_client",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "基于Node.JS的bilibili直播挂机系统",
   "main": "index.js",
   "scripts": {
