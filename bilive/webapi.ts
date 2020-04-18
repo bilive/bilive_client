@@ -191,6 +191,8 @@ class WebAPI extends EventEmitter {
           const setUserData = <userData>message.data || {}
           let msg = ''
           let captcha = ''
+          let validate = ''
+          let authcode = ''
           for (const i in userData) {
             if (typeof userData[i] !== typeof setUserData[i]) {
               msg = i + '参数错误'
@@ -205,6 +207,10 @@ class WebAPI extends EventEmitter {
               const status = await newUser.Start()
               // 账号会尝试登录, 如果需要验证码status会返回'captcha', 并且验证码会以DataUrl形式保存在captchaJPEG
               if (status === 'captcha') captcha = newUser.captchaJPEG
+              // 账号会尝试登录, 如果需要滑动验证码status会返回'validate', 并且链接会以Url字符串形式保存在validateURL
+              else if (status === 'validate') validate = newUser.validateURL
+              // 账号会尝试登录, 如果需要扫描登录status会返回'authcode', 并且链接会以Url字符串形式保存在authCodeURL
+              else if (status === 'authcode') authcode = newUser.authcodeURL
               else if (Options.user.has(setUID)) Options.emit('newUser', newUser)
             }
             else if (userData.status && Options.user.has(setUID)) {
@@ -217,11 +223,24 @@ class WebAPI extends EventEmitter {
                 if (status === 'captcha') captcha = captchaUser.captchaJPEG
                 else if (Options.user.has(setUID)) Options.emit('newUser', captchaUser)
               }
+              else if (captchaUser.validateURL !== '' && message.validate !== undefined) {
+                captchaUser.validate = message.validate
+                const status = await captchaUser.Start()
+                if (status === 'validate') validate = captchaUser.validateURL
+                else if (Options.user.has(setUID)) Options.emit('newUser', captchaUser)
+              }
+              else if (captchaUser.authcodeURL !== '' && message.authcode !== undefined) {
+                const status = await captchaUser.Start()
+                if (status === 'authcode') authcode = captchaUser.authcodeURL
+                else if (Options.user.has(setUID)) Options.emit('newUser', captchaUser)
+              }
             }
             else if (!userData.status && Options.user.has(setUID)) (<User>Options.user.get(setUID)).Stop()
             Options.save()
-            if (captcha === '') this._Send({ cmd, ts, uid: setUID, data: userData })
-            else this._Send({ cmd, ts, uid: setUID, msg: 'captcha', data: userData, captcha })
+            if (captcha !== '') this._Send({ cmd, ts, uid: setUID, msg: 'captcha', data: userData, captcha })
+            else if (validate !== '') this._Send({ cmd, ts, uid: setUID, msg: 'validate', data: userData, validate })
+            else if (authcode !== '') this._Send({ cmd, ts, uid: setUID, msg: 'authcode', data: userData, authcode })
+            else this._Send({ cmd, ts, uid: setUID, data: userData })
           }
           else this._Send({ cmd, ts, uid: setUID, msg, data: userData })
         }
@@ -278,6 +297,8 @@ interface message {
   uid?: string
   data?: config | optionsInfo | string[] | userData
   captcha?: string
+  validate?: string
+  authcode?: string
 }
 export default WebAPI
 export { message }

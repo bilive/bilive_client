@@ -208,10 +208,14 @@ function getUserDF(uid, userData) {
     userConfigDiv.appendChild(userConfigDF);
     // 保存用户设置
     let captcha = undefined;
+    let validate = undefined;
+    let authcode = undefined;
     saveUserButton.onclick = () => __awaiter(this, void 0, void 0, function* () {
         modal();
-        const userDataMSG = yield options.setUserData(uid, userData, captcha);
+        const userDataMSG = yield options.setUserData({ uid, data: userData, captcha, validate, authcode });
         captcha = undefined;
+        validate = undefined;
+        authcode = undefined;
         if (userDataMSG.msg == null) {
             modal({ body: '保存成功' });
             userData = userDataMSG.data;
@@ -230,6 +234,23 @@ function getUserDF(uid, userData) {
                 showOK: true,
                 onOK: () => {
                     captcha = captchaInput.value;
+                    saveUserButton.click();
+                }
+            });
+        }
+        else if (userDataMSG.msg === 'authcode' && userDataMSG.authcode != null) {
+            const captchaTemplate = template.querySelector('#captchaTemplate');
+            const clone = document.importNode(captchaTemplate.content, true);
+            const captchaImg = clone.querySelector('img');
+            const qr = qrcode(6, 'L');
+            qr.addData(userDataMSG.authcode);
+            qr.make();
+            captchaImg.src = qr.createDataURL(4);
+            modal({
+                body: clone,
+                showOK: true,
+                onOK: () => {
+                    authcode = 'confirm';
                     saveUserButton.click();
                 }
             });

@@ -64,10 +64,10 @@ class Online extends AppClient {
    * 当账号出现异常时, 会返回'captcha'或'stop'
    * 'captcha'为登录需要验证码, 若无法处理需Stop()
    *
-   * @returns {(Promise<'captcha' | 'stop' | void>)}
+   * @returns {(Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void>)}
    * @memberof Online
    */
-  public async Start(): Promise<'captcha' | 'stop' | void> {
+  public async Start(): Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void> {
     clearTimeout(this._heartTimer)
     if (!Options.user.has(this.uid)) Options.user.set(this.uid, this)
     if (this.jar === undefined) this.jar = tools.setCookie(this.cookieString)
@@ -95,10 +95,10 @@ class Online extends AppClient {
    * 检查是否登录
    *
    * @private
-   * @returns {(Promise<'captcha' | 'stop' | void>)}
+   * @returns {(Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void>)}
    * @memberof Online
    */
-  public async getOnlineInfo(roomID = Options._.config.eventRooms[0]): Promise<'captcha' | 'stop' | void> {
+  public async getOnlineInfo(roomID = Options._.config.eventRooms[0]): Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void> {
     const isLogin = await tools.XHR<{ code: number }>({
       uri: `${apiLiveOrigin}/xlive/web-ucenter/user/get_user_info`,
       jar: this.jar,
@@ -157,10 +157,10 @@ class Online extends AppClient {
    * cookie失效
    *
    * @protected
-   * @returns {(Promise<'captcha' | 'stop' | void>)}
+   * @returns {(Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void>)}
    * @memberof Online
    */
-  protected async _cookieError(): Promise<'captcha' | 'stop' | void> {
+  protected async _cookieError(): Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void> {
     tools.Log(this.nickname, 'Cookie已失效')
     const refresh = await this.refresh()
     if (refresh.status === AppClient.status.success) {
@@ -176,35 +176,54 @@ class Online extends AppClient {
    * token失效
    *
    * @protected
-   * @returns {(Promise<'captcha' | 'stop' | void>)}
+   * @returns {(Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void>)}
    * @memberof Online
    */
-  protected async _tokenError(): Promise<'captcha' | 'stop' | void> {
+  protected async _tokenError(): Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void> {
     tools.Log(this.nickname, 'Token已失效')
-    const login = await this.login()
-    if (login.status === AppClient.status.success) {
-      clearTimeout(this._heartTimer)
-      this.captchaJPEG = ''
-      this.jar = tools.setCookie(this.cookieString)
-      await this.getOnlineInfo()
-      Options.save()
-      this._heartLoop()
-      tools.Log(this.nickname, 'Token已更新')
+    let login: loginResponse
+    if (this.authcodeURL !== '') login = await this.qrcodePoll()
+    else login = await this.login()
+    switch (login.status) {
+      case AppClient.status.success:
+        clearTimeout(this._heartTimer)
+        this.captchaJPEG = ''
+        this.validateURL = ''
+        this.authcodeURL = ''
+        this.jar = tools.setCookie(this.cookieString)
+        await this.getOnlineInfo()
+        Options.save()
+        this._heartLoop()
+        tools.Log(this.nickname, 'Token已更新')
+        break
+      case AppClient.status.captcha:
+        const captcha = await this.getCaptcha()
+        if (captcha.status === AppClient.status.success)
+          this.captchaJPEG = `data:image/jpeg;base64,${captcha.data.toString('base64')}`
+        this._heartTimer = setTimeout(() => this.Stop(), 60 * 1000)
+        tools.Log(this.nickname, '验证码错误')
+        return 'captcha'
+      case AppClient.status.validate:
+        this._heartTimer = setTimeout(() => this.Stop(), 60 * 1000)
+        tools.Log(this.nickname, '滑动验证码错误')
+        return 'validate'
+      case AppClient.status.authcode:
+        const authcode = await this.getAuthcode()
+        if (authcode.status === AppClient.status.success) {
+          this.authcode = authcode.data.data.auth_code
+          this.authcodeURL = authcode.data.data.url
+        }
+        this._heartTimer = setTimeout(() => this.Stop(), 60 * 1000)
+        tools.Log(this.nickname, '二维码错误')
+        return 'authcode'
+      case AppClient.status.error:
+        this.Stop()
+        tools.Log(this.nickname, 'Token更新失败', login.data)
+        return 'stop'
+      default:
+        tools.Log(this.nickname, 'Token更新失败')
+        break
     }
-    else if (login.status === AppClient.status.captcha) {
-      const captcha = await this.getCaptcha()
-      if (captcha.status === AppClient.status.success)
-        this.captchaJPEG = `data:image/jpeg;base64,${captcha.data.toString('base64')}`
-      this._heartTimer = setTimeout(() => this.Stop(), 60 * 1000)
-      tools.Log(this.nickname, '验证码错误')
-      return 'captcha'
-    }
-    else if (login.status === AppClient.status.error) {
-      this.Stop()
-      tools.Log(this.nickname, 'Token更新失败', login.data)
-      return 'stop'
-    }
-    else tools.Log(this.nickname, 'Token更新失败')
   }
 }
 export default Online

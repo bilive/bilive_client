@@ -119,9 +119,11 @@ interface danmuInfoDataIPList {
  *******************/
 declare enum appStatus {
   'success' = 0,
-  'captcha' = 1,
-  'error' = 2,
-  'httpError' = 3
+  'error' = 1,
+  'httpError' = 2,
+  'captcha' = 3,
+  'validate' = 4,
+  'authcode' = 5,
 }
 /**
  * 公钥返回
@@ -146,6 +148,9 @@ interface authResponse {
   ts: number
   code: number
   data: authResponseData & authResponseTokeninfo
+}
+interface authResponseData {
+  url: string
 }
 interface authResponseData {
   status: number
@@ -188,7 +193,7 @@ interface loginResponseSuccess {
   data: authResponse
 }
 interface loginResponseCaptcha {
-  status: appStatus.captcha
+  status: appStatus.captcha | appStatus.validate | appStatus.authcode
   data: authResponse
 }
 interface loginResponseError {
@@ -226,6 +231,37 @@ interface captchaResponseSuccess {
 interface captchaResponseError {
   status: appStatus.error
   data: XHRresponse<Buffer> | undefined
+}
+/**
+ * 二维码返回
+ *
+ * @interface authcodeResponse
+ */
+interface authcodeResponse {
+  code: number
+  message: string
+  ttl: number
+  data: authcodeResponseData
+}
+interface authcodeResponseData {
+  auth_code: string
+  url: string
+}
+/**
+ * 二维码返回信息
+ */
+type qrcodeResponse = qrcodeResponseSuccess | qrcodeResponseError | qrcodeResponseHttp
+interface qrcodeResponseSuccess {
+  status: appStatus.success
+  data: authcodeResponse
+}
+interface qrcodeResponseError {
+  status: appStatus.error
+  data: authcodeResponse
+}
+interface qrcodeResponseHttp {
+  status: appStatus.httpError
+  data: XHRresponse<authcodeResponse> | undefined
 }
 /*******************
  ****** tools ******
