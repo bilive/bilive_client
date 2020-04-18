@@ -39,7 +39,7 @@ class DMclientRE extends DMclient {
       }
       else {
         this.reConnectTime++
-        this.Connect({ server: this._server, port: this.port, key: this.key })
+        this.Connect()
       }
     }, 3 * 1000)
   }
