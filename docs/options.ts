@@ -224,11 +224,15 @@ class Options {
   /**
    * 保存用户设置
    *
-   * @param {setUserData} { uid, data, captcha, validate, authcode }
+   * @param {string} uid
+   * @param {userData} data
+   * @param {string} [captcha]
+   * @param {string} [validate]
+   * @param {string} [authcode]
    * @returns {Promise<userDataMSG>}
    * @memberof Options
    */
-  public setUserData({ uid, data, captcha, validate, authcode }: setUserData): Promise<userDataMSG> {
+  public setUserData(uid: string, data: userData, captcha?: string, validate?: string, authcode?: string): Promise<userDataMSG> {
     const message: userDataMSG = { cmd: 'setUserData', uid, data }
     if (captcha !== undefined) message.captcha = captcha
     else if (validate !== undefined) message.validate = validate

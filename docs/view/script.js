@@ -212,7 +212,7 @@ function getUserDF(uid, userData) {
     let authcode = undefined;
     saveUserButton.onclick = () => __awaiter(this, void 0, void 0, function* () {
         modal();
-        const userDataMSG = yield options.setUserData({ uid, data: userData, captcha, validate, authcode });
+        const userDataMSG = yield options.setUserData(uid, userData, captcha, validate, authcode);
         captcha = undefined;
         validate = undefined;
         authcode = undefined;

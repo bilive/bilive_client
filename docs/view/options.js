@@ -202,11 +202,15 @@ class Options {
     /**
      * 保存用户设置
      *
-     * @param {setUserData} { uid, data, captcha, validate, authcode }
+     * @param {string} uid
+     * @param {userData} data
+     * @param {string} [captcha]
+     * @param {string} [validate]
+     * @param {string} [authcode]
      * @returns {Promise<userDataMSG>}
      * @memberof Options
      */
-    setUserData({ uid, data, captcha, validate, authcode }) {
+    setUserData(uid, data, captcha, validate, authcode) {
         const message = { cmd: 'setUserData', uid, data };
         if (captcha !== undefined)
             message.captcha = captcha;

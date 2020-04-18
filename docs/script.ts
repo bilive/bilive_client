@@ -187,7 +187,7 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
   let authcode: string | undefined = undefined
   saveUserButton.onclick = async () => {
     modal()
-    const userDataMSG = await options.setUserData({ uid, data: userData, captcha, validate, authcode })
+    const userDataMSG = await options.setUserData(uid, userData, captcha, validate, authcode)
     captcha = undefined
     validate = undefined
     authcode = undefined

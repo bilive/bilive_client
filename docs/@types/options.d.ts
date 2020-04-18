@@ -1,6 +1,5 @@
 interface Window {
   Options: Options
-  qrcode(typeNumber: number, errorCorrectionLevel: string): {}
 }
 // WebSocket消息
 interface message {
@@ -23,13 +22,6 @@ interface userMSG extends message {
   data: string[]
 }
 interface userDataMSG extends message {
-  uid: string
-  data: userData
-  captcha?: string
-  validate?: string
-  authcode?: string
-}
-interface setUserData {
   uid: string
   data: userData
   captcha?: string
