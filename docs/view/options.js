@@ -13,6 +13,14 @@ class Options {
          * @memberof Options
          */
         this.__callback = {};
+        /**
+         * 加密相关
+         *
+         * @private
+         * @type {boolean}
+         * @memberof Options
+         */
+        this.__crypto = false;
         // 关闭窗口时断开连接
         window.onunload = () => { options.close(); };
     }
@@ -31,6 +39,27 @@ class Options {
         return random.slice(0, 32);
     }
     /**
+     * hex字符串转为Uint8Array
+     *
+     * @param {string} hex
+     * @returns {Uint8Array}
+     * @memberof Options
+     */
+    hex2buf(hex) {
+        // @ts-ignore 需要格式正确
+        return new Uint8Array(hex.match(/.{2}/g).map(byte => parseInt(byte, 16)));
+    }
+    /**
+     * ArrayBuffer转为hex字符串
+     *
+     * @param {ArrayBuffer} buf
+     * @returns {string}
+     * @memberof Options
+     */
+    buf2hex(buf) {
+        return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    /**
      * 连接到服务器
      *
      * @param {string} path
@@ -46,10 +75,38 @@ class Options {
                     delete ws.onopen;
                     delete ws.onerror;
                 };
-                ws.onopen = () => {
+                ws.onopen = async () => {
+                    this.__crypto = false;
                     removeEvent();
                     this._ws = ws;
                     this._init();
+                    if (window.crypto.subtle !== undefined) {
+                        const clientKey = await window.crypto.subtle.generateKey({
+                            name: 'ECDH',
+                            namedCurve: 'P-521'
+                        }, false, ['deriveKey', 'deriveBits']);
+                        const clientPublicKeyExported = await window.crypto.subtle.exportKey('raw', clientKey.publicKey);
+                        const clientPublicKeyHex = this.buf2hex(clientPublicKeyExported);
+                        const type = 'ECDH-AES-256-GCM';
+                        const server = await this._send({ cmd: 'hello', msg: type, data: clientPublicKeyHex });
+                        if (server.msg === type) {
+                            const serverPublicKeyHex = server.data;
+                            const serverPublicKey = this.hex2buf(serverPublicKeyHex);
+                            const serverKeyImported = await window.crypto.subtle.importKey('raw', serverPublicKey, {
+                                name: 'ECDH',
+                                namedCurve: 'P-521'
+                            }, false, []);
+                            const sharedSecret = await window.crypto.subtle.deriveKey({
+                                name: 'ECDH',
+                                public: serverKeyImported
+                            }, clientKey.privateKey, {
+                                name: 'AES-GCM',
+                                length: 256
+                            }, false, ['encrypt', 'decrypt']);
+                            this.__crypto = true;
+                            this.__sharedSecret = sharedSecret;
+                        }
+                    }
                     resolve(true);
                 };
                 ws.onerror = error => {
@@ -85,8 +142,23 @@ class Options {
             else
                 console.error(data);
         };
-        this._ws.onmessage = data => {
-            const message = JSON.parse(data.data);
+        this._ws.onmessage = async (data) => {
+            const msg = data.data;
+            let message;
+            if (this.__crypto) {
+                const encryptedAuth = this.hex2buf(msg);
+                const iv = encryptedAuth.slice(0, 12);
+                const encoded = encryptedAuth.slice(12);
+                const decoded = await window.crypto.subtle.decrypt({
+                    name: "AES-GCM",
+                    iv: iv
+                }, this.__sharedSecret, encoded);
+                const decoder = new TextDecoder();
+                const messageDecoded = decoder.decode(decoded);
+                message = JSON.parse(messageDecoded);
+            }
+            else
+                message = JSON.parse(data.data);
             const ts = message.ts;
             if (ts != null && typeof this.__callback[ts] === 'function') {
                 delete message.ts;
@@ -111,7 +183,7 @@ class Options {
      * @memberof Options
      */
     _send(message) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             const timeout = setTimeout(() => {
                 reject('timeout');
             }, 30 * 1000); // 30秒
@@ -122,8 +194,22 @@ class Options {
                 resolve(msg);
             };
             const msg = JSON.stringify(message);
-            if (this._ws.readyState === WebSocket.OPEN)
-                this._ws.send(msg);
+            if (this._ws.readyState === WebSocket.OPEN) {
+                if (this.__crypto) {
+                    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                    const ivHex = this.buf2hex(iv);
+                    const encoder = new TextEncoder();
+                    const messageBuf = encoder.encode(msg);
+                    const encoded = await window.crypto.subtle.encrypt({
+                        name: "AES-GCM",
+                        iv: iv
+                    }, this.__sharedSecret, messageBuf);
+                    const encodedMessageHex = this.buf2hex(encoded);
+                    this._ws.send(ivHex + encodedMessageHex);
+                }
+                else
+                    this._ws.send(msg);
+            }
             else
                 reject('closed');
         });

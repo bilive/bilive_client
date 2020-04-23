@@ -219,6 +219,7 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
       const captchaImg = <HTMLImageElement>clone.querySelector('img')
       const captchaInput = <HTMLInputElement>clone.querySelector('input')
       captchaInput.remove()
+      // 绘制二维码
       const qr = qrcode(6, 'L')
       qr.addData(userDataMSG.authcode)
       qr.make()

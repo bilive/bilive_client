@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     /* 基本选项 */
-    "target": "es2015",                       /* 指定 ECMAScript 目标版本: "ES3" (默认)、"ES5"、"ES2015"、"ES2016"、"ES2017"、"ES2018" 或 "ESNEXT"。 */
+    "target": "es2018",                       /* 指定 ECMAScript 目标版本: "ES3" (默认)、"ES5"、"ES2015"、"ES2016"、"ES2017"、"ES2018" 或 "ESNEXT"。 */
     "module": "commonjs",                     /* 指定模块代码生成: "none"、"commonjs"、"amd"、"system"、"umd"、"es2015"或 "ESNext"。 */
     // "lib": [],                             /* Specify library files to be included in the compilation. */
     // "allowJs": true,                       /* 允许编译 JavaScript 文件。 */

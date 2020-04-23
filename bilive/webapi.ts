@@ -1,7 +1,7 @@
 import ws from 'ws'
 import fs from 'fs'
 import http from 'http'
-import { randomBytes } from 'crypto'
+import crypto from 'crypto'
 import { EventEmitter } from 'events'
 import tools from './lib/tools'
 import User from './online'
@@ -18,65 +18,25 @@ class WebAPI extends EventEmitter {
   }
   private _wsClient!: ws
   /**
+   * 加密相关
+   *
+   * @private
+   * @type {boolean}
+   * @memberof WebAPI
+   */
+  private __crypto: boolean = false
+  private __sharedSecret!: Buffer
+  /**
    * 启动HTTP以及WebSocket服务
    *
    * @memberof WebAPI
    */
   public Start() {
-    this._HttpServer()
-  }
-  /**
-   * HTTP服务
-   *
-   * @private
-   * @memberof WebAPI
-   */
-  private _HttpServer() {
-    // 直接跳转到github.io, 为防以后变更使用302
-    const server = http.createServer((req, res) => {
-      req.on('error', error => tools.ErrorLog('req', error))
-      res.on('error', error => tools.ErrorLog('res', error))
-      res.writeHead(302, { 'Location': '//github.halaal.win/bilive_client/' })
-      res.end()
-    }).on('error', error => tools.ErrorLog('http', error))
-    // 监听地址优先支持Unix Domain Socket
-    const listen = Options._.server
-    if (listen.path === '') {
-      const host = process.env.HOST === undefined ? listen.hostname : process.env.HOST
-      const port = process.env.PORT === undefined ? listen.port : Number.parseInt(<string>process.env.PORT)
-      server.listen(port, host, () => {
-        this._WebSocketServer(server)
-        tools.Log(`已监听 ${host}:${port}`)
-      })
-    }
-    else {
-      if (fs.existsSync(listen.path)) fs.unlinkSync(listen.path)
-      server.listen(listen.path, () => {
-        fs.chmodSync(listen.path, '666')
-        this._WebSocketServer(server)
-        tools.Log(`已监听 ${listen.path}`)
-      })
-    }
-  }
-  /**
-   * WebSocket服务
-   *
-   * @private
-   * @param {http.Server} server
-   * @memberof WebAPI
-   */
-  private _WebSocketServer(server: http.Server) {
-    const WSserver = new ws.Server({
-      server,
-      verifyClient: (info: { origin: string, req: http.IncomingMessage, secure: boolean }) => {
-        const protocol = info.req.headers['sec-websocket-protocol']
-        const adminProtocol = Options._.server.protocol
-        if (protocol === adminProtocol) return true
-        else return false
-      }
-    })
-    WSserver.on('error', error => tools.ErrorLog('websocket', error))
+    // Websockets服务
+    const wsserver = new ws.Server({ noServer: true })
+      .on('error', error => tools.ErrorLog('websocket', error))
       .on('connection', (client: ws, req: http.IncomingMessage) => {
+        this.__crypto = false
         // 使用Nginx可能需要
         const remoteAddress = req.headers['x-real-ip'] === undefined
           ? `${req.connection.remoteAddress}:${req.connection.remotePort}`
@@ -102,7 +62,18 @@ class WebAPI extends EventEmitter {
             tools.Log(`${remoteAddress} 已断开`, code, reason)
           })
           .on('message', async (msg: string) => {
-            const message = await tools.JSONparse<message>(msg)
+            let message: message | undefined
+            if (this.__crypto) {
+              const encryptedAuth = Buffer.from(msg, 'hex')
+              const iv = encryptedAuth.slice(0, 12)
+              const auth = encryptedAuth.slice(encryptedAuth.length - 16)
+              const encrypted = encryptedAuth.slice(12, encryptedAuth.length - 16)
+              const decipher = crypto.createDecipheriv('aes-256-gcm', this.__sharedSecret, iv)
+              decipher.setAuthTag(auth)
+              const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()])
+              message = await tools.JSONparse<message>(decrypted.toString())
+            }
+            else message = await tools.JSONparse<message>(msg)
             if (message !== undefined && message.cmd !== undefined && message.ts !== undefined) this._onCMD(message)
             else this._Send({ cmd: 'error', ts: 'error', msg: '消息格式错误' })
           })
@@ -115,6 +86,44 @@ class WebAPI extends EventEmitter {
         // 日志
         tools.on('log', onLog)
       })
+    // HTTP服务
+    // 直接跳转到github.io, 为防以后变更使用302
+    const server = http.createServer((req, res) => {
+      req.on('error', error => tools.ErrorLog('req', error))
+      res.on('error', error => tools.ErrorLog('res', error))
+      res.writeHead(302, { 'Location': '//github.halaal.win/bilive_client/' })
+      res.end()
+    })
+      .on('error', error => tools.ErrorLog('http', error))
+      .on('upgrade', (request: http.IncomingMessage, socket, head) => {
+        const protocolraw = request.headers['sec-websocket-protocol']
+        let protocols: string[]
+        if (protocolraw === undefined) protocols = []
+        else if (typeof protocolraw === 'string') protocols = protocolraw.split(/, ?/)
+        else protocols = protocolraw
+        const adminProtocol = Options._.server.protocol
+        if (protocols[0] === adminProtocol)
+          wsserver.handleUpgrade(request, socket, head, ws => {
+            wsserver.emit('connection', ws, request)
+          })
+        else socket.destroy()
+      })
+    // 监听地址优先支持Unix Domain Socket
+    const listen = Options._.server
+    if (listen.path === '') {
+      const host = process.env.HOST === undefined ? listen.hostname : process.env.HOST
+      const port = process.env.PORT === undefined ? listen.port : Number.parseInt(<string>process.env.PORT)
+      server.listen(port, host, () => {
+        tools.Log(`已监听 ${host}:${port}`)
+      })
+    }
+    else {
+      if (fs.existsSync(listen.path)) fs.unlinkSync(listen.path)
+      server.listen(listen.path, () => {
+        fs.chmodSync(listen.path, '666')
+        tools.Log(`已监听 ${listen.path}`)
+      })
+    }
   }
   /**
    * 监听客户端发来的消息, CMD为关键字
@@ -264,12 +273,27 @@ class WebAPI extends EventEmitter {
       // 新建用户设置
       case 'newUserData': {
         // 虽然不能保证唯一性, 但是这都能重复的话可以去买彩票
-        const uid = randomBytes(16).toString('hex')
+        const uid = crypto.randomBytes(16).toString('hex')
         const data = Object.assign({}, Options._.newUserData)
         Options.whiteList.add(uid)
         Options._.user[uid] = data
         Options.save()
         this._Send({ cmd, ts, uid, data })
+      }
+        break
+      case 'hello': {
+        const type = 'ECDH-AES-256-GCM'
+        if (message.msg === type) {
+          const clientPublicKeyHex = <string>message.data
+          const server = crypto.createECDH('secp521r1')
+          server.generateKeys()
+          const serverPublicKeyHex = server.getPublicKey('hex')
+          const sharedSecret = server.computeSecret(clientPublicKeyHex, 'hex')
+          this._Send({ cmd, ts, msg: type, data: serverPublicKeyHex })
+          this.__crypto = true
+          this.__sharedSecret = sharedSecret.slice(0, 32)
+        }
+        else this._Send({ cmd, ts, msg: '未知加密格式' })
       }
         break
       // 未知命令
@@ -286,7 +310,15 @@ class WebAPI extends EventEmitter {
    * @memberof WebAPI
    */
   private _Send(message: message) {
-    if (this._wsClient.readyState === ws.OPEN) this._wsClient.send(JSON.stringify(message))
+    if (this._wsClient.readyState === ws.OPEN) {
+      if (this.__crypto) {
+        const iv = crypto.randomBytes(12)
+        const cipher = crypto.createCipheriv('aes-256-gcm', this.__sharedSecret, iv)
+        const crypted = Buffer.concat([iv, cipher.update(JSON.stringify(message)), cipher.final(), cipher.getAuthTag()])
+        this._wsClient.send(crypted.toString('hex'))
+      }
+      else this._wsClient.send(JSON.stringify(message))
+    }
   }
 }
 // WebSocket消息
@@ -295,7 +327,7 @@ interface message {
   ts: string
   msg?: string
   uid?: string
-  data?: config | optionsInfo | string[] | userData
+  data?: config | optionsInfo | string | string[] | userData
   captcha?: string
   validate?: string
   authcode?: string

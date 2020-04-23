@@ -7,7 +7,10 @@ interface message {
   msg?: string
   ts?: string
   uid?: string
-  data?: config | optionsInfo | string[] | userData
+  data?: config | optionsInfo | string | string[] | userData
+  captcha?: string
+  validate?: string
+  authcode?: string
 }
 interface logMSG extends message {
   data: string[]

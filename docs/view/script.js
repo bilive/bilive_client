@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 const options = new Options();
 let optionsInfo;
 const dDiv = document.querySelector('#ddd');
@@ -64,131 +55,123 @@ function showLogin() {
             protocolInput.value = loginInfo[2];
         }
     }
-    connectButton.onclick = () => __awaiter(this, void 0, void 0, function* () {
+    connectButton.onclick = async () => {
         const protocols = [protocolInput.value];
-        const connected = yield options.connect(pathInput.value, protocols);
+        const connected = await options.connect(pathInput.value, protocols);
         if (connected)
             login();
         else
             connectSpan.innerText = '连接失败';
-    });
+    };
     loginDiv.classList.remove('d-none');
 }
 /**
  * 登录成功
  *
  */
-function login() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const infoMSG = yield options.getInfo();
-        optionsInfo = infoMSG.data;
-        // 处理错误信息
-        options.onerror = (event) => {
-            modal({ body: event.data });
-        };
-        options.onwserror = () => wsClose('连接发生错误');
-        options.onwsclose = (event) => {
-            try {
-                const msg = JSON.parse(event.reason);
-                wsClose('连接已关闭 ' + msg.msg);
-            }
-            catch (error) {
-                wsClose('连接已关闭');
-            }
-        };
-        danimation(optionDiv);
-        yield showConfig();
-        yield showUser();
-        showLog();
-    });
+async function login() {
+    const infoMSG = await options.getInfo();
+    optionsInfo = infoMSG.data;
+    // 处理错误信息
+    options.onerror = (event) => {
+        modal({ body: event.data });
+    };
+    options.onwserror = () => wsClose('连接发生错误');
+    options.onwsclose = (event) => {
+        try {
+            const msg = JSON.parse(event.reason);
+            wsClose('连接已关闭 ' + msg.msg);
+        }
+        catch (error) {
+            wsClose('连接已关闭');
+        }
+    };
+    danimation(optionDiv);
+    await showConfig();
+    await showUser();
+    showLog();
 }
 /**
  * 加载全局设置
  *
  */
-function showConfig() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const saveConfigButton = document.querySelector('#saveConfig');
-        const addUserButton = document.querySelector('#addUser');
-        const showLogButton = document.querySelector('#showLog');
-        const configMSG = yield options.getConfig();
-        let config = configMSG.data;
-        const configDF = getConfigTemplate(config);
-        // 保存全局设置
-        saveConfigButton.onclick = () => __awaiter(this, void 0, void 0, function* () {
-            modal();
-            const configMSG = yield options.setConfig(config);
-            if (configMSG.msg != null)
-                modal({ body: configMSG.msg });
-            else {
-                config = configMSG.data;
-                const configDF = getConfigTemplate(config);
-                configDiv.innerText = '';
-                configDiv.appendChild(configDF);
-                modal({ body: '保存成功' });
-            }
-        });
-        // 添加新用户
-        addUserButton.onclick = () => __awaiter(this, void 0, void 0, function* () {
-            modal();
-            const userDataMSG = yield options.newUserData();
-            const uid = userDataMSG.uid;
-            const userData = userDataMSG.data;
-            const userDF = getUserDF(uid, userData);
-            userDiv.appendChild(userDF);
-            modal({ body: '添加成功' });
-        });
-        // 显示日志
-        showLogButton.onclick = () => {
-            danimation(logDiv);
-        };
-        configDiv.appendChild(configDF);
-    });
+async function showConfig() {
+    const saveConfigButton = document.querySelector('#saveConfig');
+    const addUserButton = document.querySelector('#addUser');
+    const showLogButton = document.querySelector('#showLog');
+    const configMSG = await options.getConfig();
+    let config = configMSG.data;
+    const configDF = getConfigTemplate(config);
+    // 保存全局设置
+    saveConfigButton.onclick = async () => {
+        modal();
+        const configMSG = await options.setConfig(config);
+        if (configMSG.msg != null)
+            modal({ body: configMSG.msg });
+        else {
+            config = configMSG.data;
+            const configDF = getConfigTemplate(config);
+            configDiv.innerText = '';
+            configDiv.appendChild(configDF);
+            modal({ body: '保存成功' });
+        }
+    };
+    // 添加新用户
+    addUserButton.onclick = async () => {
+        modal();
+        const userDataMSG = await options.newUserData();
+        const uid = userDataMSG.uid;
+        const userData = userDataMSG.data;
+        const userDF = getUserDF(uid, userData);
+        userDiv.appendChild(userDF);
+        modal({ body: '添加成功' });
+    };
+    // 显示日志
+    showLogButton.onclick = () => {
+        danimation(logDiv);
+    };
+    configDiv.appendChild(configDF);
 }
 /**
  * 加载Log
  *
  */
-function showLog() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const logMSG = yield options.getLog();
-        const logs = logMSG.data;
-        const logDF = document.createDocumentFragment();
-        logs.forEach(log => {
-            const div = document.createElement('div');
-            div.innerHTML = log.replace(/房间 (\d+) /, '房间 <a href="https://live.bilibili.com/$1" target="_blank" rel="noreferrer">$1</a> ');
-            logDF.appendChild(div);
-        });
-        options.onlog = data => {
-            const div = document.createElement('div');
-            div.innerHTML = data.replace(/房间 (\d+) /, '房间 <a href="https://live.bilibili.com/$1" target="_blank" rel="noreferrer">$1</a> ');
-            logDiv.appendChild(div);
-            if (logDiv.scrollHeight - logDiv.clientHeight - logDiv.scrollTop < 2 * div.offsetHeight)
-                logDiv.scrollTop = logDiv.scrollHeight;
-        };
-        returnButton.onclick = () => {
-            danimation(optionDiv);
-        };
-        logDiv.appendChild(logDF);
+async function showLog() {
+    const logMSG = await options.getLog();
+    const logs = logMSG.data;
+    const logDF = document.createDocumentFragment();
+    logs.forEach(log => {
+        const div = document.createElement('div');
+        div.innerHTML = log.replace(/房间 (\d+) /, '房间 <a href="https://live.bilibili.com/$1" target="_blank" rel="noreferrer">$1</a> ');
+        logDF.appendChild(div);
     });
+    options.onlog = data => {
+        const div = document.createElement('div');
+        div.innerHTML = data.replace(/房间 (\d+) /, '房间 <a href="https://live.bilibili.com/$1" target="_blank" rel="noreferrer">$1</a> ');
+        logDiv.appendChild(div);
+        if (logDiv.scrollHeight - logDiv.clientHeight - logDiv.scrollTop < 2 * div.offsetHeight)
+            logDiv.scrollTop = logDiv.scrollHeight;
+    };
+    returnButton.onclick = () => {
+        danimation(optionDiv);
+    };
+    logDiv.appendChild(logDF);
 }
 /**
  * 加载用户设置
  *
  */
-function showUser() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const userMSG = yield options.getAllUID();
-        const uidArray = userMSG.data;
-        const df = document.createDocumentFragment();
-        for (const uid of uidArray) {
-            const userDataMSG = yield options.getUserData(uid);
-            const userData = userDataMSG.data;
-            const userDF = getUserDF(uid, userData);
-            df.appendChild(userDF);
-        }
-        userDiv.appendChild(df);
-    });
+async function showUser() {
+    const userMSG = await options.getAllUID();
+    const uidArray = userMSG.data;
+    const df = document.createDocumentFragment();
+    for (const uid of uidArray) {
+        const userDataMSG = await options.getUserData(uid);
+        const userData = userDataMSG.data;
+        const userDF = getUserDF(uid, userData);
+        df.appendChild(userDF);
+    }
+    userDiv.appendChild(df);
 }
 /**
  * 新建用户模板
@@ -210,9 +193,9 @@ function getUserDF(uid, userData) {
     let captcha = undefined;
     let validate = undefined;
     let authcode = undefined;
-    saveUserButton.onclick = () => __awaiter(this, void 0, void 0, function* () {
+    saveUserButton.onclick = async () => {
         modal();
-        const userDataMSG = yield options.setUserData(uid, userData, captcha, validate, authcode);
+        const userDataMSG = await options.setUserData(uid, userData, captcha, validate, authcode);
         captcha = undefined;
         validate = undefined;
         authcode = undefined;
@@ -244,6 +227,7 @@ function getUserDF(uid, userData) {
             const captchaImg = clone.querySelector('img');
             const captchaInput = clone.querySelector('input');
             captchaInput.remove();
+            // 绘制二维码
             const qr = qrcode(6, 'L');
             qr.addData(userDataMSG.authcode);
             qr.make();
@@ -259,18 +243,18 @@ function getUserDF(uid, userData) {
         }
         else
             modal({ body: userDataMSG.msg });
-    });
+    };
     // 删除用户设置
-    deleteUserButton.onclick = () => __awaiter(this, void 0, void 0, function* () {
+    deleteUserButton.onclick = async () => {
         modal();
-        const userDataMSG = yield options.delUserData(uid);
+        const userDataMSG = await options.delUserData(uid);
         if (userDataMSG.msg != null)
             modal({ body: userDataMSG.msg });
         else {
             modal({ body: '删除成功' });
             userDataDiv.remove();
         }
-    });
+    };
     return clone;
 }
 /**
