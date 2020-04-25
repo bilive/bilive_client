@@ -72,11 +72,11 @@ class Options {
             try {
                 const ws = new WebSocket(path, protocols);
                 const removeEvent = () => {
+                    this.__crypto = false;
                     delete ws.onopen;
                     delete ws.onerror;
                 };
                 ws.onopen = async () => {
-                    this.__crypto = false;
                     removeEvent();
                     this._ws = ws;
                     this._init();
@@ -143,22 +143,27 @@ class Options {
                 console.error(data);
         };
         this._ws.onmessage = async (data) => {
-            const msg = data.data;
+            const Data = data.data;
             let message;
-            if (this.__crypto) {
-                const encryptedAuth = this.hex2buf(msg);
-                const iv = encryptedAuth.slice(0, 12);
-                const encoded = encryptedAuth.slice(12);
-                const decoded = await window.crypto.subtle.decrypt({
-                    name: "AES-GCM",
-                    iv: iv
-                }, this.__sharedSecret, encoded);
-                const decoder = new TextDecoder();
-                const messageDecoded = decoder.decode(decoded);
-                message = JSON.parse(messageDecoded);
+            if (typeof Data === 'string')
+                message = JSON.parse(Data);
+            else {
+                const msg = new Blob([Data]);
+                if (this.__crypto) {
+                    const aesdata = new Uint8Array(await msg.arrayBuffer());
+                    const iv = aesdata.slice(0, 12);
+                    const encrypted = aesdata.slice(12);
+                    const decrypted = await window.crypto.subtle.decrypt({
+                        name: "AES-GCM",
+                        iv: iv
+                    }, this.__sharedSecret, encrypted);
+                    const decoder = new Blob([decrypted]);
+                    const decoded = await decoder.text();
+                    message = JSON.parse(decoded);
+                }
+                else
+                    message = JSON.parse(await msg.text());
             }
-            else
-                message = JSON.parse(data.data);
             const ts = message.ts;
             if (ts != null && typeof this.__callback[ts] === 'function') {
                 delete message.ts;
@@ -197,15 +202,14 @@ class Options {
             if (this._ws.readyState === WebSocket.OPEN) {
                 if (this.__crypto) {
                     const iv = window.crypto.getRandomValues(new Uint8Array(12));
-                    const ivHex = this.buf2hex(iv);
-                    const encoder = new TextEncoder();
-                    const messageBuf = encoder.encode(msg);
-                    const encoded = await window.crypto.subtle.encrypt({
+                    const encoder = new Blob([msg]);
+                    const encoded = await encoder.arrayBuffer();
+                    const encrypted = await window.crypto.subtle.encrypt({
                         name: "AES-GCM",
                         iv: iv
-                    }, this.__sharedSecret, messageBuf);
-                    const encodedMessageHex = this.buf2hex(encoded);
-                    this._ws.send(ivHex + encodedMessageHex);
+                    }, this.__sharedSecret, encoded);
+                    const aesdata = new Uint8Array([...iv, ...new Uint8Array(encrypted)]);
+                    this._ws.send(aesdata);
                 }
                 else
                     this._ws.send(msg);

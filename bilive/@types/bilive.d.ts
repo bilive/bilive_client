@@ -21,16 +21,14 @@ interface server {
   protocol: string
 }
 interface config {
-  [index: string]: boolean | number | number[] | string | string[]
+  [x: string]: boolean | number | number[] | string | string[]
   defaultUserID: number
   serverURL: string
   eventRooms: number[]
 }
-interface userCollection {
-  [index: string]: userData
-}
+type userCollection = Record<string, userData>
 interface userData {
-  [index: string]: boolean | number | number[] | string | string[]
+  [x: string]: boolean | number | number[] | string | string[]
   nickname: string
   userName: string
   passWord: string
@@ -40,19 +38,8 @@ interface userData {
   cookie: string
   status: boolean
 }
-interface optionsInfo {
-  [index: string]: configInfoData
-  defaultUserID: configInfoData
-  serverURL: configInfoData
-  eventRooms: configInfoData
-  nickname: configInfoData
-  userName: configInfoData
-  passWord: configInfoData
-  biliUID: configInfoData
-  accessToken: configInfoData
-  refreshToken: configInfoData
-  cookie: configInfoData
-  status: configInfoData
+type optionsInfo = {
+  [x in keyof (config & userData)]: configInfoData
 }
 interface configInfoData {
   description: string
