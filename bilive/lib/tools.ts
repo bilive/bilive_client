@@ -86,7 +86,7 @@ class Tools extends EventEmitter {
     // 添加头信息
     const headers = this.getHeaders(platform)
     options.headers = options.headers === undefined ? headers : Object.assign(headers, options.headers)
-    if (options.method?.toLocaleUpperCase() === 'POST' && options.headers['Content-Type'] === undefined)
+    if (options.method !== undefined && options.method.toLocaleUpperCase() === 'POST' && options.headers['Content-Type'] === undefined)
       options.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
     // @ts-ignore got把参数分的太细了, 导致responseType没法确定
     const gotResponse = await got<T>(options).catch(error => this.ErrorLog(options.url, error))

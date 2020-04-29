@@ -10,7 +10,6 @@ const logDiv = document.querySelector('#log');
 const returnButton = document.querySelector('#logreturn');
 const modalDiv = document.querySelector('.modal');
 const template = document.querySelector('#template');
-// 3D效果
 let firstDiv = loginDiv;
 let secondDiv;
 const dddArray = ['top', 'bottom', 'left', 'right'];
@@ -39,10 +38,6 @@ dDiv.addEventListener('animationend', () => {
     if (firstDiv === logDiv)
         returnButton.classList.remove('d-none');
 });
-/**
- * 显示登录界面
- *
- */
 function showLogin() {
     const pathInput = loginDiv.querySelector('#path input');
     const protocolInput = loginDiv.querySelector('#protocol input[type="text"]');
@@ -65,14 +60,9 @@ function showLogin() {
     };
     loginDiv.classList.remove('d-none');
 }
-/**
- * 登录成功
- *
- */
 async function login() {
     const infoMSG = await options.getInfo();
     optionsInfo = infoMSG.data;
-    // 处理错误信息
     options.onerror = (event) => {
         modal({ body: event.data });
     };
@@ -91,10 +81,6 @@ async function login() {
     await showUser();
     showLog();
 }
-/**
- * 加载全局设置
- *
- */
 async function showConfig() {
     const saveConfigButton = document.querySelector('#saveConfig');
     const addUserButton = document.querySelector('#addUser');
@@ -102,7 +88,6 @@ async function showConfig() {
     const configMSG = await options.getConfig();
     let config = configMSG.data;
     const configDF = getConfigTemplate(config);
-    // 保存全局设置
     saveConfigButton.onclick = async () => {
         modal();
         const configMSG = await options.setConfig(config);
@@ -116,7 +101,6 @@ async function showConfig() {
             modal({ body: '保存成功' });
         }
     };
-    // 添加新用户
     addUserButton.onclick = async () => {
         modal();
         const userDataMSG = await options.newUserData();
@@ -126,16 +110,11 @@ async function showConfig() {
         userDiv.appendChild(userDF);
         modal({ body: '添加成功' });
     };
-    // 显示日志
     showLogButton.onclick = () => {
         danimation(logDiv);
     };
     configDiv.appendChild(configDF);
 }
-/**
- * 加载Log
- *
- */
 async function showLog() {
     const logMSG = await options.getLog();
     const logs = logMSG.data;
@@ -157,10 +136,6 @@ async function showLog() {
     };
     logDiv.appendChild(logDF);
 }
-/**
- * 加载用户设置
- *
- */
 async function showUser() {
     const userMSG = await options.getAllUID();
     const uidArray = userMSG.data;
@@ -173,13 +148,6 @@ async function showUser() {
     }
     userDiv.appendChild(df);
 }
-/**
- * 新建用户模板
- *
- * @param {string} uid
- * @param {userData} userData
- * @returns {DocumentFragment}
- */
 function getUserDF(uid, userData) {
     const userTemplate = template.querySelector('#userTemplate');
     const clone = document.importNode(userTemplate.content, true);
@@ -189,7 +157,6 @@ function getUserDF(uid, userData) {
     const deleteUserButton = clone.querySelector('.deleteUser');
     const userConfigDF = getConfigTemplate(userData);
     userConfigDiv.appendChild(userConfigDF);
-    // 保存用户设置
     let captcha = undefined;
     let validate = undefined;
     let authcode = undefined;
@@ -227,7 +194,6 @@ function getUserDF(uid, userData) {
             const captchaImg = clone.querySelector('img');
             const captchaInput = clone.querySelector('input');
             captchaInput.remove();
-            // 绘制二维码
             const qr = qrcode(6, 'L');
             qr.addData(userDataMSG.authcode);
             qr.make();
@@ -244,7 +210,6 @@ function getUserDF(uid, userData) {
         else
             modal({ body: userDataMSG.msg });
     };
-    // 删除用户设置
     deleteUserButton.onclick = async () => {
         modal();
         const userDataMSG = await options.delUserData(uid);
@@ -257,12 +222,6 @@ function getUserDF(uid, userData) {
     };
     return clone;
 }
-/**
- * 设置模板
- *
- * @param {(config | userData)} config
- * @returns {DocumentFragment}
- */
 function getConfigTemplate(config) {
     const df = document.createDocumentFragment();
     for (const key in config) {
@@ -310,11 +269,6 @@ function getConfigTemplate(config) {
     }
     return df;
 }
-/**
- * 处理连接中断
- *
- * @param {string} data
- */
 function wsClose(data) {
     const connectSpan = loginDiv.querySelector('#connect span');
     configDiv.innerText = '';
@@ -323,12 +277,6 @@ function wsClose(data) {
     connectSpan.innerText = data;
     danimation(loginDiv);
 }
-/**
- * 弹窗提示
- * 无参数时只显示遮罩
- *
- * @param {modalOPtions} [options]
- */
 function modal(options) {
     if (options != null) {
         const modalDialogDiv = modalDiv.querySelector('.modal-dialog');

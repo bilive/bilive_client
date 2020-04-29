@@ -1,5 +1,7 @@
 interface Window {
   Options: Options
+  qrcode: typeof import('qrcode-generator')
+  CryptoJS: typeof import('crypto-js')
 }
 // WebSocket消息
 interface message {

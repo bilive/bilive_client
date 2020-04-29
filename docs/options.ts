@@ -23,7 +23,9 @@ class Options {
    * @memberof Options
    */
   private __crypto: boolean = false
+  private __algorithm!: string
   private __sharedSecret!: CryptoKey
+  private __sharedSecretHex!: string
   /**
    * WebSocket客户端
    * 
@@ -45,27 +47,6 @@ class Options {
     let random = ''
     bufArray.forEach(value => { random += value.toString(16) })
     return random.slice(0, 32)
-  }
-  /**
-   * hex字符串转为Uint8Array
-   *
-   * @param {string} hex
-   * @returns {Uint8Array}
-   * @memberof Options
-   */
-  public hex2buf(hex: string): Uint8Array {
-    // @ts-ignore 需要格式正确
-    return new Uint8Array(hex.match(/.{2}/g).map(byte => parseInt(byte, 16)))
-  }
-  /**
-   * ArrayBuffer转为hex字符串
-   *
-   * @param {ArrayBuffer} buf
-   * @returns {string}
-   * @memberof Options
-   */
-  public buf2hex(buf: ArrayBuffer): string {
-    return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('')
   }
   /**
    * 连接到服务器
@@ -100,12 +81,12 @@ class Options {
             const clientPublicKeyExported = await window.crypto.subtle.exportKey(
               'raw', clientKey.publicKey
             )
-            const clientPublicKeyHex = this.buf2hex(clientPublicKeyExported)
+            const clientPublicKeyHex = ECDH.buf2hex(new Uint8Array(clientPublicKeyExported))
             const type = 'ECDH-AES-256-GCM'
             const server = await this._send<message>({ cmd: 'hello', msg: type, data: clientPublicKeyHex })
             if (server.msg === type) {
               const serverPublicKeyHex = <string>server.data
-              const serverPublicKey = this.hex2buf(serverPublicKeyHex)
+              const serverPublicKey = ECDH.hex2buf(serverPublicKeyHex)
               const serverKeyImported = await window.crypto.subtle.importKey(
                 'raw',
                 serverPublicKey,
@@ -130,7 +111,22 @@ class Options {
                 ['encrypt', 'decrypt']
               )
               this.__crypto = true
+              this.__algorithm = type
               this.__sharedSecret = sharedSecret
+            }
+          }
+          else {
+            const clientKey = ECDH.createECDH('secp521r1')
+            clientKey.generateKeys()
+            const clientPublicKeyHex = clientKey.getPublicKey()
+            const type = 'ECDH-AES-256-CBC'
+            const server = await this._send<message>({ cmd: 'hello', msg: type, data: clientPublicKeyHex })
+            if (server.msg === type) {
+              const serverPublicKeyHex = <string>server.data
+              const sharedSecretHex = clientKey.computeSecret(serverPublicKeyHex).slice(0, 64)
+              this.__crypto = true
+              this.__algorithm = type
+              this.__sharedSecretHex = CryptoJS.enc.Hex.parse(sharedSecretHex)
             }
           }
           resolve(true)
@@ -171,20 +167,40 @@ class Options {
       else {
         const msg = new Blob([Data])
         if (this.__crypto) {
-          const aesdata = new Uint8Array(await msg.arrayBuffer())
-          const iv = aesdata.slice(0, 12)
-          const encrypted = aesdata.slice(12)
-          const decrypted = await window.crypto.subtle.decrypt(
-            {
-              name: "AES-GCM",
-              iv: iv
-            },
-            this.__sharedSecret,
-            encrypted
-          )
-          const decoder = new Blob([decrypted])
-          const decoded = await decoder.text()
-          message = JSON.parse(decoded)
+          switch (this.__algorithm) {
+            case 'ECDH-AES-256-GCM': {
+              const aesdata = new Uint8Array(await msg.arrayBuffer())
+              const iv = aesdata.slice(0, 12)
+              const encrypted = aesdata.slice(12)
+              const decrypted = await window.crypto.subtle.decrypt(
+                {
+                  name: "AES-GCM",
+                  iv: iv
+                },
+                this.__sharedSecret,
+                encrypted
+              )
+              const decoder = new Blob([decrypted])
+              const decoded = await decoder.text()
+              message = JSON.parse(decoded)
+            }
+              break
+            case 'ECDH-AES-256-CBC': {
+              const aesdata = new Uint8Array(await msg.arrayBuffer())
+              const ivHex = CryptoJS.enc.Hex.parse(ECDH.buf2hex(aesdata.slice(0, 16)))
+              const encryptedHex = CryptoJS.enc.Hex.parse(ECDH.buf2hex(aesdata.slice(16)))
+              const encryptedBase64 = CryptoJS.enc.Base64.stringify(encryptedHex)
+              const decrypted = CryptoJS.AES.decrypt(encryptedBase64, this.__sharedSecretHex, {
+                iv: ivHex
+              })
+              const decoded = decrypted.toString(CryptoJS.enc.Utf8)
+              message = JSON.parse(decoded)
+            }
+              break
+            default:
+              message = { cmd: 'log', ts: 'log', msg: '未知加密格式' }
+              break
+          }
         }
         else message = JSON.parse(await msg.text())
       }
@@ -223,19 +239,36 @@ class Options {
       const msg = JSON.stringify(message)
       if (this._ws.readyState === WebSocket.OPEN) {
         if (this.__crypto) {
-          const iv = window.crypto.getRandomValues(new Uint8Array(12))
-          const encoder = new Blob([msg])
-          const encoded = await encoder.arrayBuffer()
-          const encrypted = await window.crypto.subtle.encrypt(
-            {
-              name: "AES-GCM",
-              iv: iv
-            },
-            this.__sharedSecret,
-            encoded
-          )
-          const aesdata = new Uint8Array([...iv, ...new Uint8Array(encrypted)])
-          this._ws.send(aesdata)
+          switch (this.__algorithm) {
+            case 'ECDH-AES-256-GCM': {
+              const iv = window.crypto.getRandomValues(new Uint8Array(12))
+              const encoder = new Blob([msg])
+              const encoded = await encoder.arrayBuffer()
+              const encrypted = await window.crypto.subtle.encrypt(
+                {
+                  name: "AES-GCM",
+                  iv: iv
+                },
+                this.__sharedSecret,
+                encoded
+              )
+              const aesdata = new Uint8Array([...iv, ...new Uint8Array(encrypted)])
+              this._ws.send(aesdata)
+            }
+              break
+            case 'ECDH-AES-256-CBC': {
+              const ivHex = CryptoJS.enc.Hex.parse(ECDH.randomBytes(16))
+              const encrypted = CryptoJS.AES.encrypt(msg, this.__sharedSecretHex, {
+                iv: ivHex
+              })
+              const aesdataHex = ivHex + encrypted.ciphertext
+              const aesdata = ECDH.hex2buf(aesdataHex)
+              this._ws.send(aesdata)
+            }
+              break
+            default:
+              break
+          }
         }
         else this._ws.send(msg)
       }

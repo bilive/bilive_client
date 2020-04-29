@@ -145,7 +145,8 @@ class WebAPI extends EventEmitter {
       case 'hello': {
         const algorithm = message.msg
         switch (algorithm) {
-          case 'ECDH-AES-256-GCM': {
+          case 'ECDH-AES-256-GCM':
+          case 'ECDH-AES-256-CBC': {
             const clientPublicKeyHex = <string>message.data
             const computeSecret = await this._ComputeSecret(clientPublicKeyHex)
             if (computeSecret !== undefined) {
@@ -393,6 +394,17 @@ class WebAPI extends EventEmitter {
           }
         }
           break
+        case 'ECDH-AES-256-CBC': {
+          const iv = crypto.randomBytes(16)
+          try {
+            const cipher = crypto.createCipheriv('aes-256-cbc', <Buffer>option.sharedSecret, iv)
+            const crypted = Buffer.concat([iv, cipher.update(data), cipher.final()])
+            resolve(crypted)
+          } catch (error) {
+            resolve(undefined)
+          }
+        }
+          break
         default:
           resolve(undefined)
           break
@@ -420,6 +432,19 @@ class WebAPI extends EventEmitter {
             try {
               const decipher = crypto.createDecipheriv('aes-256-gcm', <Buffer>option.sharedSecret, iv)
               decipher.setAuthTag(auth)
+              const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()])
+              const message: message = JSON.parse(decrypted.toString())
+              resolve(message)
+            } catch (error) {
+              resolve(undefined)
+            }
+          }
+            break
+          case 'ECDH-AES-256-CBC': {
+            const iv = data.slice(0, 16)
+            const encrypted = data.slice(16)
+            try {
+              const decipher = crypto.createDecipheriv('aes-256-cbc', <Buffer>option.sharedSecret, iv)
               const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()])
               const message: message = JSON.parse(decrypted.toString())
               resolve(message)

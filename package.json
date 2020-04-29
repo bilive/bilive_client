@@ -19,18 +19,20 @@
   "author": "lzghzr",
   "license": "MIT",
   "devDependencies": {
-    "@types/bootstrap": "^4.3.1",
-    "@types/jquery": "^3.3.33",
-    "@types/node": "^13.9.1",
-    "@types/tough-cookie": "^2.3.6",
-    "@types/ws": "^7.2.2",
+    "@types/bootstrap": "^4.3.2",
+    "@types/crypto-js": "^3.1.45",
+    "@types/jquery": "^3.3.36",
+    "@types/node": "^13.13.4",
+    "@types/tough-cookie": "^2.3.7",
+    "@types/ws": "^7.2.4",
     "npm-run-posix-or-windows": "^2.0.2",
+    "qrcode-generator": "^1.4.4",
     "typescript": "^3.8.3"
   },
   "dependencies": {
     "form-data": "^3.0.0",
-    "got": "^10.6.0",
+    "got": "^10.7.0",
     "tough-cookie": "^3.0.1",
-    "ws": "^7.2.3"
+    "ws": "^7.2.5"
   }
 }
