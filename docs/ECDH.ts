@@ -1,4 +1,7 @@
-// 算法来自 https://andrea.corbellini.name/2015/05/30/elliptic-curve-cryptography-ecdh-and-ecdsa/
+/**
+ * 算法来自 https://andrea.corbellini.name/2015/05/30/elliptic-curve-cryptography-ecdh-and-ecdsa/
+ * MIT license
+ */
 class ECDH {
   private constructor(curve_name: string) {
     if (ECDH.curve[curve_name] !== undefined) this.curve = ECDH.curve[curve_name]

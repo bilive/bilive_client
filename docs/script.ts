@@ -142,6 +142,7 @@ async function showLog() {
     const div = document.createElement('div')
     div.innerHTML = data.replace(/房间 (\d+) /, '房间 <a href="https://live.bilibili.com/$1" target="_blank" rel="noreferrer">$1</a> ')
     logDiv.appendChild(div)
+    if (logDiv.childElementCount > 500) logDiv.firstElementChild?.remove()
     if (logDiv.scrollHeight - logDiv.clientHeight - logDiv.scrollTop < 2 * div.offsetHeight) logDiv.scrollTop = logDiv.scrollHeight
   }
   returnButton.onclick = () => {

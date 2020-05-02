@@ -272,8 +272,7 @@ interface XHRoptions {
   cookieJar?: import('tough-cookie').CookieJar
   /** 为了兼容request, 保留null */
   encoding?: BufferEncoding | null
-  /** @deprecated 为了兼容request, 现在可以使用responseType */
-  json?: boolean
+  json?: object | Array<unknown> | number | string | boolean | null
   responseType?: 'json' | 'buffer' | 'text'
 }
 /**
