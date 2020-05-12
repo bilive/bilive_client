@@ -7,4 +7,4 @@
 * [StringKe/bilive_client](https://github.com/StringKe/bilive_client) 标准化WebAPI, 使其可以提供更多功能
 
 此为客户端, 更多功能需配合服务端使用
-[服务端](https://github.com/lzghzr/bilive_server)
+[服务端](https://github.com/bilive/bilive_server)
