@@ -1,11 +1,8 @@
-FROM node:12.6.0-alpine
-
-EXPOSE 10080
+FROM node:14-alpine
 
 WORKDIR /app
-
 COPY . /app
-
 RUN npm install && npm run build
 
-CMD ["sh","-c","npm start"]
+EXPOSE 10080
+CMD ["npm", "start"]
