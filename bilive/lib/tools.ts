@@ -89,7 +89,7 @@ class Tools extends EventEmitter {
     if (options.method !== undefined && options.method.toLocaleUpperCase() === 'POST' && options.headers['Content-Type'] === undefined)
       options.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
     // @ts-ignore got把参数分的太细了, 导致responseType没法确定
-    const gotResponse = await got<T>(options).catch(error => this.ErrorLog(options.url, error))
+    const gotResponse: void | Response<T> = await got(options).catch(error => this.ErrorLog(options.url, error))
     if (gotResponse === undefined) return
     else return { response: gotResponse, body: gotResponse.body }
   }
