@@ -61,9 +61,9 @@ declare enum dmErrorStatus {
 }
 interface DMclientOptions {
   roomID?: number
-  userID?: number
   protocol?: DMclientProtocol
-  key?: string
+  userID?: number
+  token?: string
 }
 type DMclientProtocol = 'socket' | 'flash' | 'ws' | 'wss'
 type DMerror = DMclientError | DMdanmakuError

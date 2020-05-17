@@ -22,16 +22,16 @@ enum dmErrorStatus {
  */
 class DMclient extends EventEmitter {
   /**
-   * Creates an instance of DMclient.
-   * @param {Options} [{ roomID = 23058, userID = 0, protocol = 'socket' }={}]
+   *Creates an instance of DMclient.
+   * @param {DMclientOptions} [{ roomID = 23058, protocol = 'socket', userID = 0, token = '' }={}]
    * @memberof DMclient
    */
-  constructor({ roomID = 23058, userID = 0, protocol = 'socket', key = '' }: DMclientOptions = {}) {
+  constructor({ roomID = 23058, protocol = 'socket', userID = 0, token = '' }: DMclientOptions = {}) {
     super()
     this.roomID = roomID
     this.userID = userID
     this._protocol = protocol
-    this.key = key
+    this.token = token
   }
   /**
    * 用户UID
@@ -48,12 +48,19 @@ class DMclient extends EventEmitter {
    */
   public roomID: number
   /**
-   * 连接使用的token, 暂时不知道功能
+   * 连接使用的key, 用于验证身份
    *
    * @type {string}
    * @memberof DMclient
    */
-  public key: string
+  public key: string = ''
+  /**
+   * 连接使用的token, 用于自动获取key
+   *
+   * @type {string}
+   * @memberof DMclient
+   */
+  public token: string
   /**
    * 连接弹幕服务器使用的协议
    * 为了避免不必要的麻烦, 禁止外部修改
@@ -190,16 +197,17 @@ class DMclient extends EventEmitter {
   /**
    * 连接到指定服务器
    *
-   * @param {{ server: string, port: number, key: string }} [options]
+   * @param {{ server: string, port: number, userID: number, key: string }} [options]
    * @memberof DMclient
    */
-  public async Connect(options?: { server: string, port: number, key: string }) {
+  public async Connect(options?: { server: string, port: number, userID: number, key: string }) {
     if (this._connected) return
     this._connected = true
     if (options === undefined) {
       // 动态获取服务器地址, 防止B站临时更换
+      const accessKey = this.token === '' ? '' : `&access_key=${this.token}`
       const getDanmuInfo: XHRoptions = {
-        url: `https://api.live.bilibili.com/xlive/app-room/v1/index/getDanmuInfo?${AppClient.signQueryBase(`room_id=${this.roomID}`)}`,
+        url: `https://api.live.bilibili.com/xlive/app-room/v1/index/getDanmuInfo?${AppClient.signQueryBase(`room_id=${this.roomID}${accessKey}`)}`,
         responseType: 'json'
       }
       const danmuInfo = await tools.XHR<danmuInfo>(getDanmuInfo, 'Android')
@@ -229,6 +237,7 @@ class DMclient extends EventEmitter {
     else {
       this._server = options.server
       this._port = options.port
+      this.userID = options.userID
       this.key = options.key
     }
     this._ClientConnect()
@@ -423,7 +432,7 @@ class DMclient extends EventEmitter {
         this.emit('online', data.readInt32BE(16))
         break
       case 5: {
-        const dataJson = await tools.JSONparse<danmuJson>(data.toString('UTF-8', 16))
+        const dataJson = await tools.JSONparse<danmuJson>(data.toString('utf-8', 16))
         if (dataJson !== undefined) this._ClientData(dataJson)
         else {
           // 格式化消息失败则跳过
@@ -434,7 +443,7 @@ class DMclient extends EventEmitter {
         break
       case 8:
         this._ClientHeart()
-        const dataJson = await tools.JSONparse<danmuJson>(data.toString('UTF-8', 16))
+        const dataJson = await tools.JSONparse<danmuJson>(data.toString('utf-8', 16))
         this.emit('connect', dataJson === undefined ? 'connect' : dataJson)
         break
       default: {

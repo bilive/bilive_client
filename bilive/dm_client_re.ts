@@ -9,12 +9,12 @@ import DMclient from './lib/dm_client'
  */
 class DMclientRE extends DMclient {
   /**
-   * Creates an instance of DMclientRE.
-   * @param {DMclientOptions} [{ roomID = 23058, userID = 0, protocol = 'socket' }={}]
+   *Creates an instance of DMclientRE.
+   * @param {DMclientOptions} [{ roomID = 23058, protocol = 'socket', userID = 0, token = '' }={}]
    * @memberof DMclientRE
    */
-  constructor({ roomID = 23058, userID = 0, protocol = 'socket' }: DMclientOptions = {}) {
-    super({ roomID, userID, protocol })
+  constructor({ roomID = 23058, protocol = 'socket', userID = 0, token = '' }: DMclientOptions = {}) {
+    super({ roomID, userID, protocol, token })
     this.on('DMerror', error => tools.ErrorLog(error))
     this.on('close', () => this._ClientReConnect())
   }
@@ -50,6 +50,8 @@ class DMclientRE extends DMclient {
    * @memberof DMclientRE
    */
   private _DelayReConnect() {
+    this.userID = 0
+    this.token = ''
     this._Timer = setTimeout(() => this.Connect(), 5 * 60 * 1000)
     tools.ErrorLog('尝试重连弹幕服务器失败，五分钟后再次重新连接')
   }
