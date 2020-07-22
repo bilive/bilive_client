@@ -13,6 +13,8 @@ enum dmErrorStatus {
   'client',
   'danmaku',
   'timeout',
+  'http',
+  'auth',
 }
 /**
  * 弹幕客户端, 用于连接弹幕服务器和发送弹幕事件
@@ -200,7 +202,7 @@ class DMclient extends EventEmitter {
    * @param {{ server: string, port: number, userID: number, key: string }} [options]
    * @memberof DMclient
    */
-  public async Connect(options?: { server: string, port: number, userID: number, key: string }) {
+  public async Connect(options?: { server: string, port: number, userID?: number, key?: string }) {
     if (this._connected) return
     this._connected = true
     if (options === undefined) {
@@ -224,6 +226,11 @@ class DMclient extends EventEmitter {
         wssPort = danmuInfo.body.data.host_list[0].wss_port
         this.key = danmuInfo.body.data.token
       }
+      else {
+        // 获取 key 失败
+        const errorInfo: DMclientError = { status: dmErrorStatus.http, error: new Error('http错误') }
+        return this._ClientErrorHandler(errorInfo)
+      }
       if (this._protocol === 'socket' || this._protocol === 'flash') {
         this._server = socketServer
         this._port = socketPort
@@ -237,8 +244,8 @@ class DMclient extends EventEmitter {
     else {
       this._server = options.server
       this._port = options.port
-      this.userID = options.userID
-      this.key = options.key
+      if (options.userID !== undefined) this.userID = options.userID
+      if (options.key !== undefined) this.key = options.key
     }
     this._ClientConnect()
   }
@@ -252,15 +259,17 @@ class DMclient extends EventEmitter {
     this._connected = false
     clearTimeout(this._Timer)
     clearTimeout(this._timeout)
-    if (this._protocol === 'socket' || this._protocol === 'flash') {
-      (<Socket>this._client).end();
-      (<Socket>this._client).destroy()
+    if (this._client !== undefined) {
+      if (this._protocol === 'socket' || this._protocol === 'flash') {
+        (<Socket>this._client).end();
+        (<Socket>this._client).destroy()
+      }
+      else {
+        (<ws>this._client).close();
+        (<ws>this._client).terminate()
+      }
+      this._client.removeAllListeners()
     }
-    else {
-      (<ws>this._client).close();
-      (<ws>this._client).terminate()
-    }
-    this._client.removeAllListeners()
     // 发送关闭消息
     this.emit('close')
   }
@@ -380,6 +389,11 @@ class DMclient extends EventEmitter {
       else return
     }
     // 读取数据
+    if (data.readInt32BE() === 0x48545450) {
+      // userID 与 key 不匹配
+      const errorInfo: DMclientError = { status: dmErrorStatus.auth, error: new Error('uid不匹配') }
+      return this._ClientErrorHandler(errorInfo)
+    }
     const dataLen = data.length
     if (dataLen < 16 || dataLen > 0x100000) {
       // 抛弃长度过短和过长的数据

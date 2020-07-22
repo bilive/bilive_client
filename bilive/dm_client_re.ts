@@ -15,7 +15,11 @@ class DMclientRE extends DMclient {
    */
   constructor({ roomID = 23058, protocol = 'socket', userID = 0, token = '' }: DMclientOptions = {}) {
     super({ roomID, userID, protocol, token })
-    this.on('DMerror', error => tools.ErrorLog(error))
+    this.on('DMerror', (error: DMerror) => {
+      if (error.status === DMclient.errorStatus.http) this.reConnectTime = 5
+      tools.ErrorLog(error)
+    }
+    )
     this.on('close', () => this._ClientReConnect())
   }
   /**

@@ -57,7 +57,9 @@ type User = import('../online').default
 declare enum dmErrorStatus {
   'client' = 0,
   'danmaku' = 1,
-  'timeout' = 2
+  'timeout' = 2,
+  'http' = 3,
+  'auth' = 4,
 }
 interface DMclientOptions {
   roomID?: number
@@ -68,7 +70,7 @@ interface DMclientOptions {
 type DMclientProtocol = 'socket' | 'flash' | 'ws' | 'wss'
 type DMerror = DMclientError | DMdanmakuError
 interface DMclientError {
-  status: dmErrorStatus.client | dmErrorStatus.timeout
+  status: dmErrorStatus.client | dmErrorStatus.timeout | dmErrorStatus.http | dmErrorStatus.auth
   error: Error
 }
 interface DMdanmakuError {
