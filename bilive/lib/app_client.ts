@@ -139,6 +139,26 @@ abstract class AppClient {
     return randomID
   }
   /**
+   * UUID
+   *
+   * @static
+   * @returns {string}
+   * @memberof AppClient
+   */
+  public static UUID(): string {
+    return crypto.randomBytes(16).toString('hex').replace(/(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})/, '$1-$2-$3-$3-$5')
+  }
+  /**
+   * 随机Hex
+   *
+   * @static
+   * @returns {string}
+   * @memberof AppClient
+   */
+  public static RandomHex(length: number): string {
+    return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').substring(0, length)
+  }
+  /**
    * 请求头
    *
    * @readonly
