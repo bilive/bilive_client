@@ -555,10 +555,11 @@ interface IPlugin {
   version: string
   author: string
   loaded: boolean
-  load?({ defaultOptions, whiteList, plugins }: {
+  load?({ defaultOptions, whiteList, plugins, version }: {
     defaultOptions: options,
     whiteList: Set<string>,
-    plugins: string[]
+    plugins: string[],
+    version: version
   }): Promise<void>
   options?({ options }: {
     options: options
@@ -580,4 +581,14 @@ interface IPlugin {
     options: options,
     users: Map<string, User>
   }): Promise<void>
+}
+interface version {
+  /** 主版本号 */
+  major: number
+  /** 次版本号 */
+  minor: number
+  /** 修订号 */
+  patch: number
+  /** 语义化版本 */
+  semver: string
 }

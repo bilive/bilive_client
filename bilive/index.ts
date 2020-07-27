@@ -14,6 +14,18 @@ const FSreadDir = util.promisify(fs.readdir)
 class BiLive {
   constructor() {
   }
+  /**
+   * 版本
+   *
+   * @type {version}
+   * @memberof BiLive
+   */
+  public version: version = {
+    major: 2,
+    minor: 2,
+    patch: 0,
+    semver: '2.2.0'
+  }
   // 系统消息监听
   private _Listener!: Listener
   // 全局计时器
@@ -103,7 +115,7 @@ class BiLive {
     const plugins = await FSreadDir(pluginsPath)
     for (const pluginName of plugins) {
       const { default: plugin }: { default: IPlugin } = await import(`${pluginsPath}/${pluginName}/index.js`)
-      if (typeof plugin.load === 'function') await plugin.load({ defaultOptions: Options._, whiteList: Options.whiteList, plugins })
+      if (typeof plugin.load === 'function') await plugin.load({ defaultOptions: Options._, whiteList: Options.whiteList, plugins, version: this.version })
       if (plugin.loaded) {
         const { name, description, version, author } = plugin
         tools.Log(`已加载: ${name}, 用于: ${description}, 版本: ${version}, 作者: ${author}`)
