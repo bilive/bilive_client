@@ -29,10 +29,11 @@ abstract class AppClient {
   protected static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
   public static readonly appKey: string = '1d8b6e7d45233436'
   public static get biliLocalId(): string { return this.RandomID(64) }
-  public static readonly build: string = '5570300'
+  public static readonly build: string = '6060300'
   public static get buvid(): string { return this.RandomID(37).toLocaleUpperCase() }
+  public static readonly Clocale: string = 'zh_CN'
   public static readonly channel: string = 'bili'
-  public static readonly device: string = 'phone'
+  public static readonly device: string = 'android'
   // 同一客户端与biliLocalId相同
   public static get deviceId(): string { return this.biliLocalId }
   public static readonly deviceName: string = 'SonyJ9110'
@@ -41,7 +42,8 @@ abstract class AppClient {
   public static get localId(): string { return this.buvid }
   public static readonly mobiApp: string = 'android'
   public static readonly platform: string = 'android'
-  public static readonly statistics: string = '%7B%22appId%22%3A1%2C%22platform%22%3A3%2C%22version%22%3A%225.57.0%22%2C%22abtest%22%3A%22%22%7D'
+  public static readonly Slocale: string = 'zh_CN'
+  public static readonly statistics: string = encodeURIComponent('{"appId":1,"platform":3,"version":"6.6.0","abtest":""}')
 
   // bilibili 国际版
   // protected static readonly __loginSecretKey: string = 'c75875c596a69eb55bd119e74b07cfe3'
@@ -169,11 +171,10 @@ abstract class AppClient {
    */
   public static get headers(): IncomingHttpHeaders {
     return {
-      'User-Agent': 'Mozilla/5.0 BiliDroid/5.57.0 (bbcallen@gmail.com) os/android model/J9110 mobi_app/android build/5570300 channel/bili innerVer/5570300 osVer/10 network/2',
+      'User-Agent': 'Mozilla/5.0 BiliDroid/6.6.0 (bbcallen@gmail.com) os/android model/J9110 mobi_app/android build/6060300 channel/bili innerVer/6060300 osVer/10 network/2',
       'APP-KEY': this.mobiApp,
       'Buvid': this.buvid,
       'Device-ID': this.deviceId,
-      'Display-ID': `${this.buvid}-${this.TS}`,
       'env': 'prod'
     }
   }
@@ -186,8 +187,8 @@ abstract class AppClient {
    * @memberof AppClient
    */
   public static get baseQuery(): string {
-    return `actionKey=${this.actionKey}&appkey=${this.appKey}&build=${this.build}&channel=${this.channel}\
-&device=${this.device}&mobi_app=${this.mobiApp}&platform=${this.platform}&statistics=${this.statistics}`
+    return `actionKey=${this.actionKey}&appkey=${this.appKey}&build=${this.build}&c_locale=${this.Clocale}&channel=${this.channel}\
+&device=${this.device}&mobi_app=${this.mobiApp}&platform=${this.platform}&s_locale=${this.Slocale}&statistics=${this.statistics}`
   }
   /**
    * 登录请求参数
@@ -264,6 +265,7 @@ abstract class AppClient {
   public appKey: string = AppClient.appKey
   public biliLocalId = AppClient.biliLocalId
   public build: string = AppClient.build
+  public Clocale: string = AppClient.Clocale
   public buvid = AppClient.buvid
   public channel: string = AppClient.channel
   public device: string = AppClient.device
@@ -273,6 +275,7 @@ abstract class AppClient {
   public localId: string = this.buvid
   public mobiApp: string = AppClient.mobiApp
   public platform: string = AppClient.platform
+  public Slocale: string = AppClient.Slocale
   public statistics: string = AppClient.statistics
   /**
    * 请求头
@@ -281,11 +284,10 @@ abstract class AppClient {
    * @memberof AppClient
    */
   public headers: IncomingHttpHeaders = {
-    'User-Agent': 'Mozilla/5.0 BiliDroid/5.57.0 (bbcallen@gmail.com) os/android model/J9110 mobi_app/android build/5570300 channel/bili innerVer/5570300 osVer/10 network/2',
+    'User-Agent': 'Mozilla/5.0 BiliDroid/6.6.0 (bbcallen@gmail.com) os/android model/J9110 mobi_app/android build/6060300 channel/bili innerVer/6060300 osVer/10 network/2',
     'APP-KEY': this.mobiApp,
     'Buvid': this.buvid,
     'Device-ID': this.deviceId,
-    'Display-ID': `${this.buvid}-${AppClient.TS}`,
     'env': 'prod'
   }
   /**
@@ -294,8 +296,8 @@ abstract class AppClient {
    * @type {string}
    * @memberof AppClient
    */
-  public baseQuery: string = `actionKey=${this.actionKey}&appkey=${this.appKey}&build=${this.build}&channel=${this.channel}\
-&device=${this.device}&mobi_app=${this.mobiApp}&platform=${this.platform}&statistics=${this.statistics}`
+  public baseQuery: string = `actionKey=${this.actionKey}&appkey=${this.appKey}&build=${this.build}&c_locale=${this.Clocale}&channel=${this.channel}\
+&device=${this.device}&mobi_app=${this.mobiApp}&platform=${this.platform}&s_locale=${this.Slocale}&statistics=${this.statistics}`
   /**
    * 登录请求参数
    *

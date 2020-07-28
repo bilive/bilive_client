@@ -28,7 +28,7 @@ class Tools extends EventEmitter {
         return {
           'Connection': 'Keep-Alive',
           'env': 'prod',
-          'User-Agent': 'Mozilla/5.0 BiliDroid/5.57.0 (bbcallen@gmail.com) os/android model/J9110 mobi_app/android build/5570300 channel/bili innerVer/5570300 osVer/10 network/2'
+          'User-Agent': 'Mozilla/5.0 BiliDroid/6.6.0 (bbcallen@gmail.com) os/android model/J9110 mobi_app/android build/6060300 channel/bili innerVer/6060300 osVer/10 network/2'
         }
       case 'WebView':
         return {
@@ -39,7 +39,7 @@ class Tools extends EventEmitter {
           'Sec-Fetch-Dest': 'empty',
           'Sec-Fetch-Mode': 'cors',
           'Sec-Fetch-Site': 'same-site',
-          'User-Agent': 'Mozilla/5.0 (Linux; Android 10; J9110 Build/55.1.A.3.107; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.162 Mobile Safari/537.36 BiliApp/5570300',
+          'User-Agent': 'Mozilla/5.0 (Linux; Android 10; J9110 Build/55.1.A.3.107; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/84.0.4147.89 Mobile Safari/537.36 BiliApp/6060300',
           'X-Requested-With': 'tv.danmaku.bili'
         }
       default:
@@ -52,7 +52,7 @@ class Tools extends EventEmitter {
           'Sec-Fetch-Dest': 'empty',
           'Sec-Fetch-Mode': 'cors',
           'Sec-Fetch-Site': 'same-site',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36'
         }
     }
   }
