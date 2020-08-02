@@ -149,7 +149,7 @@ abstract class AppClient {
    * @memberof AppClient
    */
   public static get UUID(): string {
-    return AppClient.RandomHex(32).replace(/(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})/, '$1-$2-$3-$3-$5')
+    return this.RandomHex(32).replace(/(\w{8})(\w{4})\w(\w{3})\w(\w{3})(\w{12})/, `$1-$2-4$3-${'89ab'[Math.floor(Math.random() * 4)]}$4-$5`)
   }
   /**
    * 随机Hex
