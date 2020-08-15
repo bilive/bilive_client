@@ -126,7 +126,6 @@ class Listener extends EventEmitter {
    * @memberof Listener
    */
   public async updateAreaRoom() {
-    const userID = Options._.config.defaultUserID
     // 获取直播列表
     const getAllList = await tools.XHR<getAllList>({
       uri: `${apiLiveOrigin}/room/v2/AppIndex/getAllList?${AppClient.baseQuery}`,
@@ -143,7 +142,7 @@ class Listener extends EventEmitter {
       // 添加房间
       roomIDs.forEach(roomID => {
         if (this._DMclient.has(roomID)) return
-        const newDMclient = new DMclient({ roomID, userID })
+        const newDMclient = new DMclient({ roomID })
         newDMclient
           .on('NOTICE_MSG', dataJson => this._RaffleCheck(dataJson))
           .Connect()

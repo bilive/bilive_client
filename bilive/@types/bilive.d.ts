@@ -22,7 +22,6 @@ interface server {
 }
 interface config {
   [x: string]: boolean | number | number[] | string | string[]
-  defaultUserID: number
   serverURL: string
   eventRooms: number[]
 }

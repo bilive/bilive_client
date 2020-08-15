@@ -6,7 +6,6 @@
     "protocol": "admin"
   },
   "config": {
-    "defaultUserID": 0,
     "serverURL": "wss://bilive.halaal.win/server/#164c48292a6c773c85716093589cd60e",
     "eventRooms": [
       3
@@ -24,11 +23,6 @@
     "status": false
   },
   "info": {
-    "defaultUserID": {
-      "description": "默认监听UID",
-      "tip": "用来监听系统消息的用户ID, 默认为0",
-      "type": "number"
-    },
     "serverURL": {
       "description": "监听服务器",
       "tip": "用来监听房间抽奖消息, 格式为server#protocol",
