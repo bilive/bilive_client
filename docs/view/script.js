@@ -190,16 +190,46 @@ function getUserDF(uid, userData) {
                 }
             });
         }
+        else if (userDataMSG.msg === 'validate' && userDataMSG.validate != null) {
+            const verificationUrl = userDataMSG.validate.match(/gt=(\w*)&challenge=(\w*)/);
+            if (verificationUrl !== null) {
+                const [, gt, challenge] = verificationUrl;
+                const validateTemplate = template.querySelector('#validateTemplate');
+                const clone = document.importNode(validateTemplate.content, true);
+                const validateBox = clone.querySelector('.validate');
+                let geetestObj;
+                initGeetest({
+                    gt,
+                    challenge,
+                    offline: false,
+                    new_captcha: false,
+                    https: true,
+                    product: 'float',
+                    width: '100%'
+                }, captchaObj => {
+                    captchaObj.appendTo(validateBox);
+                    captchaObj.onSuccess(() => geetestObj = captchaObj);
+                });
+                modal({
+                    body: clone,
+                    showOK: true,
+                    onOK: () => {
+                        const result = geetestObj.getValidate();
+                        validate = result.geetest_validate;
+                        validate = `validate=${result.geetest_validate}&challenge=${result.geetest_challenge}&seccode=${encodeURIComponent(result.geetest_seccode)}`;
+                        saveUserButton.click();
+                    }
+                });
+            }
+        }
         else if (userDataMSG.msg === 'authcode' && userDataMSG.authcode != null) {
-            const captchaTemplate = template.querySelector('#captchaTemplate');
-            const clone = document.importNode(captchaTemplate.content, true);
-            const captchaImg = clone.querySelector('img');
-            const captchaInput = clone.querySelector('input');
-            captchaInput.remove();
+            const authcodeTemplate = template.querySelector('#authcodeTemplate');
+            const clone = document.importNode(authcodeTemplate.content, true);
+            const authcodeImg = clone.querySelector('.authcode');
             const qr = qrcode(6, 'L');
             qr.addData(userDataMSG.authcode);
             qr.make();
-            captchaImg.src = qr.createDataURL(4);
+            authcodeImg.src = qr.createDataURL(4);
             modal({
                 body: clone,
                 showOK: true,

@@ -214,17 +214,49 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
         }
       })
     }
+    else if (userDataMSG.msg === 'validate' && userDataMSG.validate != null) {
+      const verificationUrl = userDataMSG.validate.match(/gt=(\w*)&challenge=(\w*)/)
+      if (verificationUrl !== null) {
+        const [, gt, challenge] = verificationUrl
+        const validateTemplate = <HTMLTemplateElement>template.querySelector('#validateTemplate')
+        const clone = document.importNode(validateTemplate.content, true)
+        const validateBox = <HTMLImageElement>clone.querySelector('.validate')
+        let geetestObj: geetestCaptcha
+        initGeetest({
+          gt,
+          challenge,
+          offline: false,
+          new_captcha: false,
+          https: true,
+          product: 'float',
+          width: '100%'
+        },
+          captchaObj => {
+            captchaObj.appendTo(validateBox)
+            captchaObj.onSuccess(() => geetestObj = captchaObj)
+          })
+        modal({
+          body: clone,
+          showOK: true,
+          onOK: () => {
+            const result = geetestObj.getValidate()
+            validate = result.geetest_validate
+            validate = `validate=${result.geetest_validate}&challenge=${result.geetest_challenge}&seccode=${encodeURIComponent(result.geetest_seccode)}`
+            // geetestObj.destroy()
+            saveUserButton.click()
+          }
+        })
+      }
+    }
     else if (userDataMSG.msg === 'authcode' && userDataMSG.authcode != null) {
-      const captchaTemplate = <HTMLTemplateElement>template.querySelector('#captchaTemplate')
-      const clone = document.importNode(captchaTemplate.content, true)
-      const captchaImg = <HTMLImageElement>clone.querySelector('img')
-      const captchaInput = <HTMLInputElement>clone.querySelector('input')
-      captchaInput.remove()
+      const authcodeTemplate = <HTMLTemplateElement>template.querySelector('#authcodeTemplate')
+      const clone = document.importNode(authcodeTemplate.content, true)
+      const authcodeImg = <HTMLImageElement>clone.querySelector('.authcode')
       // 绘制二维码
       const qr = qrcode(6, 'L')
       qr.addData(userDataMSG.authcode)
       qr.make()
-      captchaImg.src = qr.createDataURL(4)
+      authcodeImg.src = qr.createDataURL(4)
       modal({
         body: clone,
         showOK: true,

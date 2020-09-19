@@ -1,6 +1,6 @@
 import { CookieJar } from 'tough-cookie'
 import tools from './lib/tools'
-import AppClient from './lib/tv_client'
+import AppClient from './lib/app_client'
 import Options, { apiLiveOrigin, liveOrigin } from './options'
 /**
  * Creates an instance of Online.
@@ -98,7 +98,7 @@ class Online extends AppClient {
    * @returns {(Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void>)}
    * @memberof Online
    */
-  public async getOnlineInfo(roomID = Options._.config.eventRooms[0]): Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void> {
+  public async getOnlineInfo(roomID = 3): Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void> {
     const isLogin = await tools.XHR<{ code: number }>({
       uri: `${apiLiveOrigin}/xlive/web-ucenter/user/get_user_info`,
       jar: this.jar,
@@ -131,7 +131,7 @@ class Online extends AppClient {
    * @memberof Online
    */
   protected async _onlineHeart(): Promise<'cookieError' | 'tokenError' | void> {
-    const roomID = Options._.config.eventRooms[0]
+    const roomID = 3
     const online: XHRoptions = {
       method: 'POST',
       uri: `${apiLiveOrigin}/User/userOnlineHeart`,
@@ -182,14 +182,14 @@ class Online extends AppClient {
   protected async _tokenError(): Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void> {
     tools.Log(this.nickname, 'Token已失效')
     let login: loginResponse
-    if (this.authcodeURL !== '') login = await this.qrcodePoll()
-    else login = await this.login()
+    // if (this.authcodeURL !== '') login = await this.qrcodePoll()
+    /** else */ login = await this.login()
     switch (login.status) {
       case AppClient.status.success:
         clearTimeout(this._heartTimer)
         this.captchaJPEG = ''
         this.validateURL = ''
-        this.authcodeURL = ''
+        // this.authcodeURL = ''
         this.jar = tools.setCookie(this.cookieString)
         await this.getOnlineInfo()
         Options.save()
@@ -205,17 +205,17 @@ class Online extends AppClient {
         return 'captcha'
       case AppClient.status.validate:
         this._heartTimer = setTimeout(() => this.Stop(), 60 * 1000)
-        tools.Log(this.nickname, '滑动验证码错误')
+        tools.Log(this.nickname, '极验验证码错误')
         return 'validate'
-      case AppClient.status.authcode:
-        const authcode = await this.getAuthcode()
-        if (authcode.status === AppClient.status.success) {
-          this.authcode = authcode.data.data.auth_code
-          this.authcodeURL = authcode.data.data.url
-        }
-        this._heartTimer = setTimeout(() => this.Stop(), 60 * 1000)
-        tools.Log(this.nickname, '二维码错误')
-        return 'authcode'
+      // case AppClient.status.authcode:
+      //   const authcode = await this.getAuthcode()
+      //   if (authcode.status === AppClient.status.success) {
+      //     this.authcode = authcode.data.data.auth_code
+      //     this.authcodeURL = authcode.data.data.url
+      //   }
+      //   this._heartTimer = setTimeout(() => this.Stop(), 60 * 1000)
+      //   tools.Log(this.nickname, '二维码错误')
+      //   return 'authcode'
       case AppClient.status.error:
         this.Stop()
         tools.Log(this.nickname, 'Token更新失败', login.data)

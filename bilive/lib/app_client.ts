@@ -29,11 +29,11 @@ abstract class AppClient {
   protected static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
   public static readonly appKey: string = '1d8b6e7d45233436'
   public static get biliLocalId(): string { return this.RandomID(64) }
-  public static readonly build: string = '6060300'
+  public static readonly build: string = '6070600'
   public static get buvid(): string { return this.RandomID(37).toLocaleUpperCase() }
   public static readonly Clocale: string = 'zh_CN'
   public static readonly channel: string = 'bili'
-  public static readonly device: string = 'android'
+  public static readonly device: string = 'phone'
   // 同一客户端与biliLocalId相同
   public static get deviceId(): string { return this.biliLocalId }
   public static readonly deviceName: string = 'SonyJ9110'
@@ -43,7 +43,7 @@ abstract class AppClient {
   public static readonly mobiApp: string = 'android'
   public static readonly platform: string = 'android'
   public static readonly Slocale: string = 'zh_CN'
-  public static readonly statistics: string = encodeURIComponent('{"appId":1,"platform":3,"version":"6.6.0","abtest":""}')
+  public static readonly statistics: string = encodeURIComponent('{"appId":1,"platform":3,"version":"6.7.0","abtest":""}')
 
   // bilibili 国际版
   // protected static readonly __loginSecretKey: string = 'c75875c596a69eb55bd119e74b07cfe3'
@@ -265,8 +265,8 @@ abstract class AppClient {
   public appKey: string = AppClient.appKey
   public biliLocalId = AppClient.biliLocalId
   public build: string = AppClient.build
-  public Clocale: string = AppClient.Clocale
   public buvid = AppClient.buvid
+  public Clocale: string = AppClient.Clocale
   public channel: string = AppClient.channel
   public device: string = AppClient.device
   public deviceId: string = this.biliLocalId
@@ -479,7 +479,7 @@ abstract class AppClient {
    */
   protected _auth(publicKey: getKeyResponseData): Promise<XHRresponse<authResponse> | undefined> {
     const passWord = this._RSAPassWord(publicKey)
-    const validate = this.validate === '' ? '' : `&validate=${this.validate}`
+    const validate = this.validate === '' ? '' : `&${this.validate}`
     const authQuery = `username=${encodeURIComponent(this.userName)}&password=${passWord}${validate}`
     const auth: XHRoptions = {
       method: 'POST',

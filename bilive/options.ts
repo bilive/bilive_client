@@ -63,7 +63,6 @@ class Options extends EventEmitter {
     'protocol',
     'config',
     'serverURL',
-    'eventRooms',
     'user',
     'nickname',
     'userName',

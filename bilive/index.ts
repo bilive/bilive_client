@@ -21,10 +21,10 @@ class BiLive {
    * @memberof BiLive
    */
   public version: version = {
-    major: 2,
-    minor: 2,
+    major: 3,
+    minor: 0,
     patch: 0,
-    semver: '2.2.0'
+    semver: '3.0.0'
   }
   // 系统消息监听
   private _Listener!: Listener

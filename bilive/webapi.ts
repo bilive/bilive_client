@@ -235,7 +235,7 @@ class WebAPI extends EventEmitter {
           let msg = ''
           let captcha = ''
           let validate = ''
-          let authcode = ''
+          // let authcode = ''
           for (const i in userData) {
             if (typeof userData[i] !== typeof setUserData[i]) {
               msg = i + '参数错误'
@@ -253,7 +253,7 @@ class WebAPI extends EventEmitter {
               // 账号会尝试登录, 如果需要滑动验证码status会返回'validate', 并且链接会以Url字符串形式保存在validateURL
               else if (status === 'validate') validate = newUser.validateURL
               // 账号会尝试登录, 如果需要扫描登录status会返回'authcode', 并且链接会以Url字符串形式保存在authCodeURL
-              else if (status === 'authcode') authcode = newUser.authcodeURL
+              // else if (status === 'authcode') authcode = newUser.authcodeURL
               else if (Options.user.has(setUID)) Options.emit('newUser', newUser)
             }
             else if (userData.status && Options.user.has(setUID)) {
@@ -272,17 +272,17 @@ class WebAPI extends EventEmitter {
                 if (status === 'validate') validate = captchaUser.validateURL
                 else if (Options.user.has(setUID)) Options.emit('newUser', captchaUser)
               }
-              else if (captchaUser.authcodeURL !== '' && message.authcode !== undefined) {
-                const status = await captchaUser.Start()
-                if (status === 'authcode') authcode = captchaUser.authcodeURL
-                else if (Options.user.has(setUID)) Options.emit('newUser', captchaUser)
-              }
+              // else if (captchaUser.authcodeURL !== '' && message.authcode !== undefined) {
+              //   const status = await captchaUser.Start()
+              //   if (status === 'authcode') authcode = captchaUser.authcodeURL
+              //   else if (Options.user.has(setUID)) Options.emit('newUser', captchaUser)
+              // }
             }
             else if (!userData.status && Options.user.has(setUID)) (<User>Options.user.get(setUID)).Stop()
             Options.save()
             if (captcha !== '') this._Send({ message: { cmd, ts, uid: setUID, msg: 'captcha', data: userData, captcha }, client, option })
             else if (validate !== '') this._Send({ message: { cmd, ts, uid: setUID, msg: 'validate', data: userData, validate }, client, option })
-            else if (authcode !== '') this._Send({ message: { cmd, ts, uid: setUID, msg: 'authcode', data: userData, authcode }, client, option })
+            // else if (authcode !== '') this._Send({ message: { cmd, ts, uid: setUID, msg: 'authcode', data: userData, authcode }, client, option })
             else this._Send({ message: { cmd, ts, uid: setUID, data: userData }, client, option })
           }
           else this._Send({ message: { cmd, ts, uid: setUID, msg, data: userData }, client, option })

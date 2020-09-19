@@ -17,6 +17,8 @@
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
   <!-- crypto-js -->
   <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.js"></script>
+  <!-- geetest -->
+  <script src="https://static.geetest.com/static/tools/gt.js"></script>
   <script defer src="./view/ECDH.js"></script>
   <!-- 与服务器通信 -->
   <script defer src="./view/options.js"></script>
@@ -163,6 +165,15 @@
           <input type="text" class="form-control" placeholder="请输入验证码">
         </div>
       </div>
+    </template>
+    <!-- 极验 -->
+    <template id="validateTemplate">
+      <div class="validate">
+      </div>
+    </template>
+    <!-- 二维码 -->
+    <template id="authcodeTemplate">
+      <img class="authcode" alt="二维码">
     </template>
   </div>
 </body>

@@ -23,7 +23,6 @@ interface server {
 interface config {
   [x: string]: boolean | number | number[] | string | string[]
   serverURL: string
-  eventRooms: number[]
 }
 type userCollection = Record<string, userData>
 interface userData {

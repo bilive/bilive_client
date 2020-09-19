@@ -62,7 +62,9 @@ class Options {
         const ws = new WebSocket(path, protocols)
         const removeEvent = () => {
           this.__crypto = false
+          // @ts-ignore
           delete ws.onopen
+          // @ts-ignore
           delete ws.onerror
         }
         ws.onopen = async () => {

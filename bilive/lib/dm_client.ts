@@ -187,7 +187,7 @@ class DMclient extends EventEmitter {
    * @type {Buffer}
    * @memberof DMclient
    */
-  private __data!: Buffer
+  private __data?: Buffer
   /**
    * 错误类型
    *
