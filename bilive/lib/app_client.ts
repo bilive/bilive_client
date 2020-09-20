@@ -479,7 +479,7 @@ abstract class AppClient {
    */
   protected _auth(publicKey: getKeyResponseData): Promise<XHRresponse<authResponse> | undefined> {
     const passWord = this._RSAPassWord(publicKey)
-    const validate = this.validate === '' ? '' : `&${this.validate}`
+    const validate = this.validate === '' ? '' : `&validate=${this.validate}`
     const authQuery = `username=${encodeURIComponent(this.userName)}&password=${passWord}${validate}`
     const auth: XHRoptions = {
       method: 'POST',

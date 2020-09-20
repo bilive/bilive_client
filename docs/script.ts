@@ -241,7 +241,7 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
           onOK: () => {
             const result = geetestObj.getValidate()
             validate = result.geetest_validate
-            validate = `validate=${result.geetest_validate}&challenge=${result.geetest_challenge}&seccode=${encodeURIComponent(result.geetest_seccode)}`
+            validate = `${result.geetest_validate}&challenge=${result.geetest_challenge}&seccode=${encodeURIComponent(result.geetest_seccode)}`
             // geetestObj.destroy()
             saveUserButton.click()
           }
