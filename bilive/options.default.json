@@ -36,9 +36,10 @@
       "type": "string"
     },
     "passWord": {
-      "description": "密码",
+      "description": "密码 (已隐藏)",
       "tip": "密码",
-      "type": "string"
+      "type": "string",
+      "password": true
     },
     "biliUID": {
       "description": "B站UID",
@@ -46,9 +47,22 @@
       "type": "number"
     },
     "cookie": {
-      "description": "Cookie",
-      "tip": "cookie, 自动获取, 一般无用",
-      "type": "string"
+      "description": "Cookie (已隐藏)",
+      "tip": "cookie, 可自动获取, 一般无用",
+      "type": "string",
+      "password": true
+    },
+    "accessToken": {
+      "description": "accessToken (已隐藏)",
+      "tip": "accessToken, 可自动获取, 一般无用",
+      "type": "string",
+      "password": true
+    },
+    "refreshToken": {
+      "description": "refreshToken (已隐藏)",
+      "tip": "refreshToken, 可自动获取, 一般无用",
+      "type": "string",
+      "password": true
     },
     "status": {
       "description": "开关",

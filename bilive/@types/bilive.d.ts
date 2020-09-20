@@ -44,6 +44,7 @@ interface configInfoData {
   tip: string
   type: string
   cognate?: string
+  password?: boolean
 }
 /*******************
  ****** User ******

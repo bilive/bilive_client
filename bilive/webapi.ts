@@ -178,13 +178,18 @@ class WebAPI extends EventEmitter {
         break
       // 获取设置
       case 'getConfig': {
-        const data = Options._.config
+        const config = Options._.config
+        const configInfo = Options._.info
+        const data = Object.assign({}, config)
+        // 判断password类型
+        for (const i in config) if (configInfo[i].password) data[i] = ''
         this._Send({ message: { cmd, ts, data }, client, option })
       }
         break
       // 保存设置
       case 'setConfig': {
         const config = Options._.config
+        const configInfo = Options._.info
         const serverURL = config.serverURL
         const setConfig = <config>message.data || {}
         let msg = ''
@@ -197,9 +202,19 @@ class WebAPI extends EventEmitter {
         }
         if (msg === '') {
           // 防止setConfig里有未定义属性, 不使用Object.assign
-          for (const i in config) config[i] = setConfig[i]
+          for (const i in config) {
+            // 判断password类型
+            if (configInfo[i].password && setConfig[i] === '') continue
+            config[i] = setConfig[i]
+          }
           Options.save()
-          this._Send({ message: { cmd, ts, data: config }, client, option })
+          // 更新可能的设置
+          for (const i in config) {
+            // 判断password类型
+            if (configInfo[i].password) setConfig[i] = ''
+            else setConfig[i] = config[i]
+          }
+          this._Send({ message: { cmd, ts, data: setConfig }, client, option })
           if (serverURL !== config.serverURL) Options.emit('clientUpdate')
         }
         else this._Send({ message: { cmd, ts, msg, data: config }, client, option })
@@ -221,7 +236,14 @@ class WebAPI extends EventEmitter {
       case 'getUserData': {
         const user = Options._.user
         const getUID = message.uid
-        if (typeof getUID === 'string' && user[getUID] !== undefined) this._Send({ message: { cmd, ts, uid: getUID, data: user[getUID] }, client, option })
+        if (typeof getUID === 'string' && user[getUID] !== undefined) {
+          const userData = user[getUID]
+          const configInfo = Options._.info
+          const data = Object.assign({}, userData)
+          // 判断password类型
+          for (const i in userData) if (configInfo[i].password) data[i] = ''
+          this._Send({ message: { cmd, ts, uid: getUID, data }, client, option })
+        }
         else this._Send({ message: { cmd, ts, msg: '未知用户' }, client, option })
       }
         break
@@ -231,6 +253,7 @@ class WebAPI extends EventEmitter {
         const setUID = message.uid
         if (setUID !== undefined && user[setUID] !== undefined) {
           const userData = user[setUID]
+          const configInfo = Options._.info
           const setUserData = <userData>message.data || {}
           let msg = ''
           let captcha = ''
@@ -243,7 +266,11 @@ class WebAPI extends EventEmitter {
             }
           }
           if (msg === '') {
-            for (const i in userData) userData[i] = setUserData[i]
+            for (const i in userData) {
+              // 判断password类型
+              if (configInfo[i].password && setUserData[i] === '') continue
+              userData[i] = setUserData[i]
+            }
             if (userData.status && !Options.user.has(setUID)) {
               // 因为使用了Map保存已激活的用户, 所以需要添加一次
               const newUser = new User(setUID, userData)
@@ -280,12 +307,18 @@ class WebAPI extends EventEmitter {
             }
             else if (!userData.status && Options.user.has(setUID)) (<User>Options.user.get(setUID)).Stop()
             Options.save()
-            if (captcha !== '') this._Send({ message: { cmd, ts, uid: setUID, msg: 'captcha', data: userData, captcha }, client, option })
-            else if (validate !== '') this._Send({ message: { cmd, ts, uid: setUID, msg: 'validate', data: userData, validate }, client, option })
-            // else if (authcode !== '') this._Send({ message: { cmd, ts, uid: setUID, msg: 'authcode', data: userData, authcode }, client, option })
-            else this._Send({ message: { cmd, ts, uid: setUID, data: userData }, client, option })
+            // 更新可能的设置
+            for (const i in userData) {
+              // 判断password类型
+              if (configInfo[i].password) setUserData[i] = ''
+              else setUserData[i] = userData[i]
+            }
+            if (captcha !== '') this._Send({ message: { cmd, ts, uid: setUID, msg: 'captcha', data: setUserData, captcha }, client, option })
+            else if (validate !== '') this._Send({ message: { cmd, ts, uid: setUID, msg: 'validate', data: setUserData, validate }, client, option })
+            // else if (authcode !== '') this._Send({ message: { cmd, ts, uid: setUID, msg: 'authcode', data: setUserData, authcode }, client, option })
+            else this._Send({ message: { cmd, ts, uid: setUID, data: setUserData }, client, option })
           }
-          else this._Send({ message: { cmd, ts, uid: setUID, msg, data: userData }, client, option })
+          else this._Send({ message: { cmd, ts, uid: setUID, msg, data: setUserData }, client, option })
         }
         else this._Send({ message: { cmd, ts, uid: setUID, msg: '未知用户' }, client, option })
       }
@@ -308,10 +341,17 @@ class WebAPI extends EventEmitter {
       case 'newUserData': {
         // 虽然不能保证唯一性, 但是这都能重复的话可以去买彩票
         const uid = crypto.randomBytes(16).toString('hex')
-        const data = Object.assign({}, Options._.newUserData)
+        const newData = Object.assign({}, Options._.newUserData)
+        const data = Object.assign({}, newData)
+        const configInfo = Options._.info
         Options.whiteList.add(uid)
         Options._.user[uid] = data
         Options.save()
+        for (const i in newData) {
+          // 判断password类型
+          if (configInfo[i].password) data[i] = ''
+          else data[i] = newData[i]
+        }
         this._Send({ message: { cmd, ts, uid, data }, client, option })
       }
         break
