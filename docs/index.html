@@ -17,8 +17,6 @@
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
   <!-- crypto-js -->
   <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.js"></script>
-  <!-- geetest -->
-  <script src="https://static.geetest.com/static/tools/gt.js"></script>
   <script defer src="./view/ECDH.js"></script>
   <!-- 与服务器通信 -->
   <script defer src="./view/options.js"></script>
@@ -168,8 +166,9 @@
     </template>
     <!-- 极验 -->
     <template id="validateTemplate">
-      <div class="validate">
-      </div>
+      <iframe class="validate" style="width: 29rem; height: 29rem;">
+      </iframe>
+    </template>
     </template>
     <!-- 二维码 -->
     <template id="authcodeTemplate">

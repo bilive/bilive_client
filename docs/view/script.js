@@ -191,36 +191,22 @@ function getUserDF(uid, userData) {
             });
         }
         else if (userDataMSG.msg === 'validate' && userDataMSG.validate != null) {
-            const verificationUrl = userDataMSG.validate.match(/gt=(\w*)&challenge=(\w*)/);
-            if (verificationUrl !== null) {
-                const [, gt, challenge] = verificationUrl;
-                const validateTemplate = template.querySelector('#validateTemplate');
-                const clone = document.importNode(validateTemplate.content, true);
-                const validateBox = clone.querySelector('.validate');
-                let geetestObj;
-                initGeetest({
-                    gt,
-                    challenge,
-                    offline: false,
-                    new_captcha: false,
-                    https: true,
-                    product: 'float',
-                    width: '100%'
-                }, captchaObj => {
-                    captchaObj.appendTo(validateBox);
-                    captchaObj.onSuccess(() => geetestObj = captchaObj);
-                });
-                modal({
-                    body: clone,
-                    showOK: true,
-                    onOK: () => {
-                        const result = geetestObj.getValidate();
-                        validate = result.geetest_validate;
-                        validate = `validate=${result.geetest_validate}&challenge=${result.geetest_challenge}&seccode=${encodeURIComponent(result.geetest_seccode)}`;
-                        saveUserButton.click();
-                    }
-                });
-            }
+            const validateTemplate = template.querySelector('#validateTemplate');
+            const clone = document.importNode(validateTemplate.content, true);
+            const validateBox = clone.querySelector('.validate');
+            window.addEventListener('message', ev => {
+                const evD = ev.data;
+                if (evD.includes('challenge'))
+                    validate = evD;
+            });
+            validateBox.src = userDataMSG.validate;
+            modal({
+                body: clone,
+                showOK: true,
+                onOK: () => {
+                    saveUserButton.click();
+                }
+            });
         }
         else if (userDataMSG.msg === 'authcode' && userDataMSG.authcode != null) {
             const authcodeTemplate = template.querySelector('#authcodeTemplate');
