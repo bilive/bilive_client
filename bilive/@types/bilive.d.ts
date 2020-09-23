@@ -109,9 +109,8 @@ declare enum appStatus {
   'success' = 0,
   'error' = 1,
   'httpError' = 2,
-  'captcha' = 3,
-  'validate' = 4,
-  'authcode' = 5,
+  'validate' = 3,
+  'authcode' = 4,
 }
 /**
  * 公钥返回
@@ -175,13 +174,13 @@ interface revokeResponse {
 /**
  * 登录返回信息
  */
-type loginResponse = loginResponseSuccess | loginResponseCaptcha | loginResponseError | loginResponseHttp
+type loginResponse = loginResponseSuccess | loginResponseValidate | loginResponseError | loginResponseHttp
 interface loginResponseSuccess {
   status: appStatus.success
   data: authResponse
 }
-interface loginResponseCaptcha {
-  status: appStatus.captcha | appStatus.validate | appStatus.authcode
+interface loginResponseValidate {
+  status: appStatus.validate | appStatus.authcode
   data: authResponse
 }
 interface loginResponseError {
@@ -207,18 +206,6 @@ interface revokeResponseError {
 interface revokeResponseHttp {
   status: appStatus.httpError
   data: XHRresponse<revokeResponse> | undefined
-}
-/**
- * 验证码返回信息
- */
-type captchaResponse = captchaResponseSuccess | captchaResponseError
-interface captchaResponseSuccess {
-  status: appStatus.success
-  data: Buffer
-}
-interface captchaResponseError {
-  status: appStatus.error
-  data: XHRresponse<Buffer> | undefined
 }
 /**
  * 二维码返回
@@ -256,26 +243,10 @@ interface qrcodeResponseHttp {
  *******************/
 /**
  * XHR设置
- * 因为request已经为Deprecated状态, 为了兼容把设置项缩小, 可以会影响一些插件
  *
  * @interface XHRoptions
  */
-interface XHRoptions {
-  /** @deprecated 为了兼容request, 现在可以使用url */
-  uri?: string | URL
-  url?: string | URL
-  // OutgoingHttpHeaders包含number, 导致无法兼容got
-  headers?: import('http').IncomingHttpHeaders
-  method?: import('got').Method
-  body?: string | Buffer | import('stream').Readable | import('form-data')
-  /** @deprecated 为了兼容request, 现在可以使用cookieJar */
-  jar?: import('tough-cookie').CookieJar
-  cookieJar?: import('tough-cookie').CookieJar
-  /** 为了兼容request, 保留null */
-  encoding?: BufferEncoding | null
-  json?: object | Array<unknown> | number | string | boolean | null
-  responseType?: 'json' | 'buffer' | 'text'
-}
+type XHRoptions = import('got').Options & { responseType?: 'json' | 'buffer' | 'text' }
 /**
  * XHR返回
  *
@@ -523,23 +494,6 @@ interface getAllListDataRoomList {
   pendent_ru: string
   rec_type: number
   pk_id: number
-}
-/*******************
- ***** online ******
- *******************/
-/**
- * 在线心跳返回
- *
- * @interface userOnlineHeart
- */
-interface userOnlineHeart {
-  code: number
-  msg: string
-  message: string
-  data: userOnlineHeartData
-}
-interface userOnlineHeartData {
-  giftlist: any[]
 }
 /*******************
  ***** options *****

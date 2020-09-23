@@ -128,8 +128,8 @@ class Listener extends EventEmitter {
   public async updateAreaRoom() {
     // 获取直播列表
     const getAllList = await tools.XHR<getAllList>({
-      uri: `${apiLiveOrigin}/room/v2/AppIndex/getAllList?${AppClient.baseQuery}`,
-      json: true
+      url: `${apiLiveOrigin}/room/v2/AppIndex/getAllList?${AppClient.baseQuery}`,
+      responseType: 'json',
     }, 'Android')
     if (getAllList !== undefined && getAllList.response.statusCode === 200 && getAllList.body.code === 0) {
       const roomIDs: Set<number> = new Set()
@@ -194,8 +194,8 @@ class Listener extends EventEmitter {
     // 等待3s, 防止土豪刷屏
     await tools.Sleep(3000)
     const _lotteryInfo: XHRoptions = {
-      uri: `${apiLiveOrigin}/xlive/lottery-interface/v1/lottery/getLotteryInfo?${AppClient.signQueryBase(`roomid=${roomID}`)}`,
-      json: true
+      url: `${apiLiveOrigin}/xlive/lottery-interface/v1/lottery/getLotteryInfo?${AppClient.signQueryBase(`roomid=${roomID}`)}`,
+      responseType: 'json',
     }
     const lotteryInfo = await tools.XHR<lotteryInfo>(_lotteryInfo, 'Android')
     if (lotteryInfo !== undefined && lotteryInfo.response.statusCode === 200

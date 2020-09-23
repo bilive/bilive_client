@@ -7,7 +7,7 @@ interface modalOPtions {
   onOK?: (body: this['body']) => void
   onClose?: (body: this['body']) => void
 }
-declare function initGeetest(options: geetestOptions, callback: (captcha: geetestCaptcha) => void): void
+declare function initGeetest(options: geetestOptions, callback: (validate: geetestValidate) => void): void
 
 interface geetestOptions {
   /** 验证 id，极验后台申请得到 */
@@ -39,7 +39,7 @@ interface geetestOptions {
   /** 是否隐藏后续验证界面的刷新按钮, 默认值 false */
   hideRefresh?: boolean
 }
-interface geetestCaptcha {
+interface geetestValidate {
   appendTo(position: string | HTMLElement): void
   bindForm(position: HTMLFormElement): void
   getValidate(): geetestValidate

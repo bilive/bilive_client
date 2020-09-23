@@ -183,13 +183,11 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
   const userConfigDF = getConfigTemplate(userData)
   userConfigDiv.appendChild(userConfigDF)
   // 保存用户设置
-  let captcha: string | undefined = undefined
   let validate: string | undefined = undefined
   let authcode: string | undefined = undefined
   saveUserButton.onclick = async () => {
     modal()
-    const userDataMSG = await options.setUserData(uid, userData, captcha, validate, authcode)
-    captcha = undefined
+    const userDataMSG = await options.setUserData(uid, userData, validate, authcode)
     validate = undefined
     authcode = undefined
     if (userDataMSG.msg == null) {
@@ -199,21 +197,6 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
       userConfigDiv.innerText = ''
       userConfigDiv.appendChild(userConfigDF)
     }
-    else if (userDataMSG.msg === 'captcha' && userDataMSG.captcha != null) {
-      const captchaTemplate = <HTMLTemplateElement>template.querySelector('#captchaTemplate')
-      const clone = document.importNode(captchaTemplate.content, true)
-      const captchaImg = <HTMLImageElement>clone.querySelector('img')
-      const captchaInput = <HTMLInputElement>clone.querySelector('input')
-      captchaImg.src = userDataMSG.captcha
-      modal({
-        body: clone,
-        showOK: true,
-        onOK: () => {
-          captcha = captchaInput.value
-          saveUserButton.click()
-        }
-      })
-    }
     else if (userDataMSG.msg === 'validate' && userDataMSG.validate != null) {
       const verificationUrl = userDataMSG.validate.match(/gt=(\w*)&challenge=(\w*)/)
       if (verificationUrl !== null) {
@@ -221,7 +204,7 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
         const validateTemplate = <HTMLTemplateElement>template.querySelector('#validateTemplate')
         const clone = document.importNode(validateTemplate.content, true)
         const validateBox = <HTMLImageElement>clone.querySelector('.validate')
-        let geetestObj: geetestCaptcha
+        let geetestObj: geetestValidate
         initGeetest({
           gt,
           challenge,
@@ -231,9 +214,9 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
           product: 'float',
           width: '100%'
         },
-          captchaObj => {
-            captchaObj.appendTo(validateBox)
-            captchaObj.onSuccess(() => geetestObj = captchaObj)
+          validateObj => {
+            validateObj.appendTo(validateBox)
+            validateObj.onSuccess(() => geetestObj = validateObj)
           })
         modal({
           body: clone,

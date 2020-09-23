@@ -10,7 +10,6 @@ interface message {
   ts?: string
   uid?: string
   data?: config | optionsInfo | string | string[] | userData
-  captcha?: string
   validate?: string
   authcode?: string
 }
@@ -29,7 +28,6 @@ interface userMSG extends message {
 interface userDataMSG extends message {
   uid: string
   data: userData
-  captcha?: string
   validate?: string
   authcode?: string
 }

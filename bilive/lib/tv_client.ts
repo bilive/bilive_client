@@ -81,9 +81,9 @@ abstract class TVClient extends AppClient {
    */
   protected _getKey(): Promise<XHRresponse<getKeyResponse> | undefined> {
     const getKey: XHRoptions = {
-      uri: `https://passport.bilibili.com/x/passport-tv-login/key?${this.signLoginQuery()}`,
-      jar: this.__jar,
-      json: true,
+      url: `https://passport.bilibili.com/x/passport-tv-login/key?${this.signLoginQuery()}`,
+      cookieJar: this.__jar,
+      responseType: 'json',
       headers: this.loginHeaders
     }
     return tools.XHR<getKeyResponse>(getKey, 'Android')
@@ -101,10 +101,10 @@ abstract class TVClient extends AppClient {
     const authQuery = `username=${encodeURIComponent(this.userName)}&password=${passWord}`
     const auth: XHRoptions = {
       method: 'POST',
-      uri: 'https://passport.bilibili.com/x/passport-tv-login/login',
+      url: 'https://passport.bilibili.com/x/passport-tv-login/login',
       body: this.signLoginQuery(authQuery),
-      jar: this.__jar,
-      json: true,
+      cookieJar: this.__jar,
+      responseType: 'json',
       headers: this.loginHeaders
     }
     return tools.XHR<authResponse>(auth, 'Android')
@@ -118,9 +118,9 @@ abstract class TVClient extends AppClient {
   public async getAuthcode(): Promise<qrcodeResponse> {
     const authcode: XHRoptions = {
       method: 'POST',
-      uri: 'https://passport.snm0516.aisee.tv/x/passport-tv-login/qrcode/auth_code',
+      url: 'https://passport.snm0516.aisee.tv/x/passport-tv-login/qrcode/auth_code',
       body: this.signLoginQuery(),
-      json: true,
+      responseType: 'json',
       headers: this.headers
     }
     const authcodeResponse = await tools.XHR<authcodeResponse>(authcode, 'Android')
@@ -169,9 +169,9 @@ abstract class TVClient extends AppClient {
     const qrcodePollQuery = `auth_code=${this.authcode}`
     const qrcodePoll: XHRoptions = {
       method: 'POST',
-      uri: 'https://passport.bilibili.com/x/passport-tv-login/qrcode/poll',
+      url: 'https://passport.bilibili.com/x/passport-tv-login/qrcode/poll',
       body: this.signLoginQuery(qrcodePollQuery),
-      json: true,
+      responseType: 'json',
       headers: this.loginHeaders
     }
     this.authcode = ''
@@ -202,9 +202,9 @@ abstract class TVClient extends AppClient {
     const refreshQuery = `refresh_token=${this.refreshToken}`
     const refresh: XHRoptions = {
       method: 'POST',
-      uri: 'https://passport.bilibili.com/x/passport-login/oauth2/refresh_token',
+      url: 'https://passport.bilibili.com/x/passport-login/oauth2/refresh_token',
       body: this.signLoginQuery(refreshQuery),
-      json: true,
+      responseType: 'json',
       headers: this.loginHeaders
     }
     const refreshResponse = await tools.XHR<authResponse>(refresh, 'Android')

@@ -28,7 +28,7 @@ class Tools extends EventEmitter {
         return {
           'Connection': 'Keep-Alive',
           'env': 'prod',
-          'User-Agent': 'Mozilla/5.0 BiliDroid/6.6.0 (bbcallen@gmail.com) os/android model/J9110 mobi_app/android build/6070600 channel/bili innerVer/6070600 osVer/10 network/2'
+          'User-Agent': 'Mozilla/5.0 BiliDroid/6.10.0 (bbcallen@gmail.com) os/android model/J9110 mobi_app/android build/6100300 channel/master innerVer/6100310 osVer/10 network/2'
         }
       case 'WebView':
         return {
@@ -39,7 +39,7 @@ class Tools extends EventEmitter {
           'Sec-Fetch-Dest': 'empty',
           'Sec-Fetch-Mode': 'cors',
           'Sec-Fetch-Site': 'same-site',
-          'User-Agent': 'Mozilla/5.0 (Linux; Android 10; J9110 Build/55.1.A.3.107; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/84.0.4147.89 Mobile Safari/537.36 BiliApp/6070600',
+          'User-Agent': 'Mozilla/5.0 (Linux; Android 10; J9110 Build/55.1.A.3.107; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/85.0.4183.120 Mobile Safari/537.36 os/android model/J9110 build/6100300 osVer/10 network/2 BiliApp/6100300 mobi_app/android channel/master innerVer/6100310',
           'X-Requested-With': 'tv.danmaku.bili'
         }
       default:
@@ -52,7 +52,7 @@ class Tools extends EventEmitter {
           'Sec-Fetch-Dest': 'empty',
           'Sec-Fetch-Mode': 'cors',
           'Sec-Fetch-Site': 'same-site',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36'
         }
     }
   }
@@ -66,30 +66,13 @@ class Tools extends EventEmitter {
    * @memberof tools
    */
   public async XHR<T>(options: XHRoptions, platform: 'PC' | 'Android' | 'WebView' = 'PC'): Promise<XHRresponse<T> | undefined> {
-    // 为了兼容已有插件
-    if (options.url === undefined && options.uri !== undefined) {
-      options.url = options.uri
-      delete options.uri
-    }
-    if (options.cookieJar === undefined && options.jar !== undefined) {
-      options.cookieJar = options.jar
-      delete options.jar
-    }
-    if (options.encoding === null) {
-      options.responseType = 'buffer'
-      delete options.encoding
-    }
-    if (options.json === true) {
-      options.responseType = 'json'
-      delete options.json
-    }
     // 添加头信息
     const headers = this.getHeaders(platform)
     options.headers = options.headers === undefined ? headers : Object.assign(headers, options.headers)
     if (options.method !== undefined && options.method.toLocaleUpperCase() === 'POST' && options.headers['Content-Type'] === undefined)
       options.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
-    // @ts-ignore got把参数分的太细了, 导致responseType没法确定
-    const gotResponse: void | Response<T> = await got(options).catch(error => this.ErrorLog(options.url, error))
+    // got把参数分的太细了, 导致responseType没法确定
+    const gotResponse = await got<T>(<import('got').OptionsOfJSONResponseBody>options).catch(error => this.ErrorLog(options.url, error))
     if (gotResponse === undefined) return
     else return { response: gotResponse, body: gotResponse.body }
   }
@@ -194,21 +177,12 @@ class Tools extends EventEmitter {
     return new Promise<'sleep'>(resolve => setTimeout(() => resolve('sleep'), ms))
   }
   /**
-   * 为了兼容旧版
+   * 极验验证码识别
    *
-   * @deprecated
-   * @param {string} message
-   * @returns {void}
-   * @memberof Tools
-   */
-  public sendSCMSG!: (message: string) => void
-  /**
-   * 验证码识别
-   *
-   * @param {string} captchaJPEG
+   * @param {string} ValidateURL
    * @returns {Promise<string>}
    * @memberof tools
    */
-  public Captcha!: (captchaJPEG: string) => Promise<string>
+  public Validate!: (ValidateURL: string) => Promise<string>
 }
 export default new Tools()

@@ -231,11 +231,9 @@ class Options {
         const message = { cmd: 'getUserData', uid };
         return this._send(message);
     }
-    setUserData(uid, data, captcha, validate, authcode) {
+    setUserData(uid, data, validate, authcode) {
         const message = { cmd: 'setUserData', uid, data };
-        if (captcha !== undefined)
-            message.captcha = captcha;
-        else if (validate !== undefined)
+        if (validate !== undefined)
             message.validate = validate;
         else if (authcode !== undefined)
             message.authcode = authcode;

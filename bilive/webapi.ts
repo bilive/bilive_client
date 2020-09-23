@@ -182,7 +182,7 @@ class WebAPI extends EventEmitter {
         const configInfo = Options._.info
         const data = Object.assign({}, config)
         // 判断password类型
-        for (const i in config) if (configInfo[i].password) data[i] = ''
+        for (const i in config) if (configInfo[i]?.password) data[i] = ''
         this._Send({ message: { cmd, ts, data }, client, option })
       }
         break
@@ -204,14 +204,14 @@ class WebAPI extends EventEmitter {
           // 防止setConfig里有未定义属性, 不使用Object.assign
           for (const i in config) {
             // 判断password类型
-            if (configInfo[i].password && setConfig[i] === '') continue
+            if (configInfo[i]?.password && setConfig[i] === '') continue
             config[i] = setConfig[i]
           }
           Options.save()
           // 更新可能的设置
           for (const i in config) {
             // 判断password类型
-            if (configInfo[i].password) setConfig[i] = ''
+            if (configInfo[i]?.password) setConfig[i] = ''
             else setConfig[i] = config[i]
           }
           this._Send({ message: { cmd, ts, data: setConfig }, client, option })
@@ -241,7 +241,7 @@ class WebAPI extends EventEmitter {
           const configInfo = Options._.info
           const data = Object.assign({}, userData)
           // 判断password类型
-          for (const i in userData) if (configInfo[i].password) data[i] = ''
+          for (const i in userData) if (configInfo[i]?.password) data[i] = ''
           this._Send({ message: { cmd, ts, uid: getUID, data }, client, option })
         }
         else this._Send({ message: { cmd, ts, msg: '未知用户' }, client, option })
@@ -256,7 +256,6 @@ class WebAPI extends EventEmitter {
           const configInfo = Options._.info
           const setUserData = <userData>message.data || {}
           let msg = ''
-          let captcha = ''
           let validate = ''
           // let authcode = ''
           for (const i in userData) {
@@ -268,36 +267,27 @@ class WebAPI extends EventEmitter {
           if (msg === '') {
             for (const i in userData) {
               // 判断password类型
-              if (configInfo[i].password && setUserData[i] === '') continue
+              if (configInfo[i]?.password && setUserData[i] === '') continue
               userData[i] = setUserData[i]
             }
             if (userData.status && !Options.user.has(setUID)) {
               // 因为使用了Map保存已激活的用户, 所以需要添加一次
               const newUser = new User(setUID, userData)
               const status = await newUser.Start()
-              // 账号会尝试登录, 如果需要验证码status会返回'captcha', 并且验证码会以DataUrl形式保存在captchaJPEG
-              if (status === 'captcha') captcha = newUser.captchaJPEG
-              // 账号会尝试登录, 如果需要滑动验证码status会返回'validate', 并且链接会以Url字符串形式保存在validateURL
-              else if (status === 'validate') validate = newUser.validateURL
+              // 账号会尝试登录, 如果需要极验验证码status会返回'validate', 并且链接会以Url字符串形式保存在validateURL
+              if (status === 'validate') validate = newUser.validateURL
               // 账号会尝试登录, 如果需要扫描登录status会返回'authcode', 并且链接会以Url字符串形式保存在authCodeURL
               // else if (status === 'authcode') authcode = newUser.authcodeURL
               else if (Options.user.has(setUID)) Options.emit('newUser', newUser)
             }
             else if (userData.status && Options.user.has(setUID)) {
               // 对于已经存在的用户, 可能处在验证码待输入阶段
-              const captchaUser = <User>Options.user.get(setUID)
-              if (captchaUser.captchaJPEG !== '' && message.captcha !== undefined) {
-                // 对于这样的用户尝试使用验证码登录
-                captchaUser.captcha = message.captcha
-                const status = await captchaUser.Start()
-                if (status === 'captcha') captcha = captchaUser.captchaJPEG
-                else if (Options.user.has(setUID)) Options.emit('newUser', captchaUser)
-              }
-              else if (captchaUser.validateURL !== '' && message.validate !== undefined) {
-                captchaUser.validate = message.validate
-                const status = await captchaUser.Start()
-                if (status === 'validate') validate = captchaUser.validateURL
-                else if (Options.user.has(setUID)) Options.emit('newUser', captchaUser)
+              const validateUser = <User>Options.user.get(setUID)
+              if (validateUser.validateURL !== '' && message.validate !== undefined) {
+                validateUser.validate = message.validate
+                const status = await validateUser.Start()
+                if (status === 'validate') validate = validateUser.validateURL
+                else if (Options.user.has(setUID)) Options.emit('newUser', validateUser)
               }
               // else if (captchaUser.authcodeURL !== '' && message.authcode !== undefined) {
               //   const status = await captchaUser.Start()
@@ -310,11 +300,10 @@ class WebAPI extends EventEmitter {
             // 更新可能的设置
             for (const i in userData) {
               // 判断password类型
-              if (configInfo[i].password) setUserData[i] = ''
+              if (configInfo[i]?.password) setUserData[i] = ''
               else setUserData[i] = userData[i]
             }
-            if (captcha !== '') this._Send({ message: { cmd, ts, uid: setUID, msg: 'captcha', data: setUserData, captcha }, client, option })
-            else if (validate !== '') this._Send({ message: { cmd, ts, uid: setUID, msg: 'validate', data: setUserData, validate }, client, option })
+            if (validate !== '') this._Send({ message: { cmd, ts, uid: setUID, msg: 'validate', data: setUserData, validate }, client, option })
             // else if (authcode !== '') this._Send({ message: { cmd, ts, uid: setUID, msg: 'authcode', data: setUserData, authcode }, client, option })
             else this._Send({ message: { cmd, ts, uid: setUID, data: setUserData }, client, option })
           }
@@ -349,7 +338,7 @@ class WebAPI extends EventEmitter {
         Options.save()
         for (const i in newData) {
           // 判断password类型
-          if (configInfo[i].password) data[i] = ''
+          if (configInfo[i]?.password) data[i] = ''
           else data[i] = newData[i]
         }
         this._Send({ message: { cmd, ts, uid, data }, client, option })
@@ -508,7 +497,6 @@ interface message {
   msg?: string
   uid?: string
   data?: config | optionsInfo | string | string[] | userData
-  captcha?: string
   validate?: string
   authcode?: string
 }

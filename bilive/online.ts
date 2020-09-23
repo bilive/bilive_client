@@ -38,12 +38,6 @@ class Online extends AppClient {
   public set cookieString(cookieString: string) { this.userData.cookie = cookieString }
   public jar!: CookieJar
   /**
-   * 验证码 DataURL
-   *
-   * @memberof Online
-   */
-  public captchaJPEG = ''
-  /**
    * 如果抽奖做到外面的话应该有用
    *
    * @readonly
@@ -59,21 +53,21 @@ class Online extends AppClient {
    * @type {NodeJS.Timer}
    * @memberof Online
    */
-  protected _heartTimer!: NodeJS.Timer
+  protected _loopTimer!: NodeJS.Timer
   /**
-   * 当账号出现异常时, 会返回'captcha'或'stop'
-   * 'captcha'为登录需要验证码, 若无法处理需Stop()
+   * 当账号出现异常时, 会返回'validate'或'stop'
+   * 'validate'为登录需要极验验证码, 若无法处理需Stop()
    *
-   * @returns {(Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void>)}
+   * @returns {(Promise<'validate' | 'authcode' | 'stop' | void>)}
    * @memberof Online
    */
-  public async Start(): Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void> {
-    clearTimeout(this._heartTimer)
+  public async Start(): Promise<'validate' | 'authcode' | 'stop' | void> {
+    clearTimeout(this._loopTimer)
     if (!Options.user.has(this.uid)) Options.user.set(this.uid, this)
     if (this.jar === undefined) this.jar = tools.setCookie(this.cookieString)
-    const test = await this.getOnlineInfo()
-    if (test !== undefined) return test
-    this._heartLoop()
+    const statusTest = await this._getUserStatus()
+    if (statusTest !== undefined) return statusTest
+    this._loopTimer = setTimeout(() => this._getUserStatusLoop(), 5 * 60 * 1000)
   }
   /**
    * 停止挂机
@@ -81,7 +75,7 @@ class Online extends AppClient {
    * @memberof Online
    */
   public Stop() {
-    clearTimeout(this._heartTimer)
+    clearTimeout(this._loopTimer)
     Options.user.delete(this.uid)
     this.userData.status = false
     Options.save()
@@ -92,82 +86,52 @@ class Online extends AppClient {
     })
   }
   /**
-   * 检查是否登录
+   * 获取用户状态
    *
-   * @private
-   * @returns {(Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void>)}
+   * @protected
+   * @returns {(Promise<'validate' | 'authcode' | 'stop' | void>)}
    * @memberof Online
    */
-  public async getOnlineInfo(roomID = 3): Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void> {
-    const isLogin = await tools.XHR<{ code: number }>({
-      uri: `${apiLiveOrigin}/xlive/web-ucenter/user/get_user_info`,
-      jar: this.jar,
-      json: true,
+  protected async _getUserStatus(): Promise<'validate' | 'authcode' | 'stop' | void> {
+    const roomID = 3
+    const PCUserInfoXHRoptions = await tools.XHR<{ code: number }>({
+      url: `${apiLiveOrigin}/xlive/web-ucenter/user/get_user_info`,
+      cookieJar: this.jar,
+      responseType: 'json',
       headers: { 'Referer': `${liveOrigin}/${Options.getShortRoomID(roomID)}` }
     })
-    if (isLogin !== undefined && isLogin.response.statusCode === 200 && isLogin.body.code === -101)
-      return await this._cookieError()
+    if (PCUserInfoXHRoptions !== undefined && PCUserInfoXHRoptions.response.statusCode === 200 && PCUserInfoXHRoptions.body.code === -101) return await this._cookieError()
+    const AppUserInfoXHRoptions = await tools.XHR<{ code: number }>({
+      url: `${apiLiveOrigin}/xlive/app-ucenter/v1/user/get_user_info?${AppClient.signQueryBase(this.tokenQuery)}`,
+      responseType: 'json'
+    }, 'Android')
+    if (AppUserInfoXHRoptions !== undefined && AppUserInfoXHRoptions.response.statusCode === 200 && (AppUserInfoXHRoptions.body.code === -101 || AppUserInfoXHRoptions.body.code === -400)) return await this._tokenError()
   }
   /**
-   * 设置心跳循环
+   * 循环获取用户状态
    *
    * @protected
    * @memberof Online
    */
-  protected async _heartLoop() {
-    const heartTest = await this._onlineHeart()
-    if (heartTest !== undefined) {
-      const test = await this._cookieError()
-      if (test !== undefined) this.Stop()
-    }
-    else this._heartTimer = setTimeout(() => this._heartLoop(), 5 * 60 * 1000)
-  }
-  /**
-   * 发送在线心跳包
-   * B站改版以后纯粹用来检查登录凭证是否失效
-   *
-   * @protected
-   * @returns {(Promise<'cookieError' | 'tokenError' | void>)}
-   * @memberof Online
-   */
-  protected async _onlineHeart(): Promise<'cookieError' | 'tokenError' | void> {
-    const roomID = 3
-    const online: XHRoptions = {
-      method: 'POST',
-      uri: `${apiLiveOrigin}/User/userOnlineHeart`,
-      body: `csrf_token=${tools.getCookie(this.jar, 'bili_jct')}&csrf=${tools.getCookie(this.jar, 'bili_jct')}&visit_id=`,
-      jar: this.jar,
-      json: true,
-      headers: { 'Referer': `${liveOrigin}/${Options.getShortRoomID(roomID)}` }
-    }
-    const heartPC = await tools.XHR<userOnlineHeart>(online)
-    if (heartPC !== undefined && heartPC.response.statusCode === 200 && heartPC.body.code === -101) return 'cookieError'
-    // 客户端
-    const heartbeat: XHRoptions = {
-      method: 'POST',
-      uri: `${apiLiveOrigin}/heartbeat/v1/OnLine/mobileOnline?${AppClient.signQueryBase(this.tokenQuery)}`,
-      body: `room_id=${Options.getLongRoomID(roomID)}&scale=xxhdpi`,
-      json: true,
-      headers: this.headers
-    }
-    const heart = await tools.XHR<userOnlineHeart>(heartbeat, 'Android')
-    if (heart !== undefined && heart.response.statusCode === 200 && heart.body.code === -101) return 'tokenError'
+  protected async _getUserStatusLoop() {
+    const statusTest = await this._getUserStatus()
+    if (statusTest !== undefined) this.Stop()
+    else this._loopTimer = setTimeout(() => this._getUserStatusLoop(), 5 * 60 * 1000)
   }
   /**
    * cookie失效
    *
    * @protected
-   * @returns {(Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void>)}
+   * @returns {(Promise<'validate' | 'authcode' | 'stop' | void>)}
    * @memberof Online
    */
-  protected async _cookieError(): Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void> {
+  protected async _cookieError(): Promise<'validate' | 'authcode' | 'stop' | void> {
     tools.Log(this.nickname, 'Cookie已失效')
     const refresh = await this.refresh()
     if (refresh.status === AppClient.status.success) {
       this.jar = tools.setCookie(this.cookieString)
-      await this.getOnlineInfo()
       Options.save()
-      this._heartLoop()
+      this._getUserStatusLoop()
       tools.Log(this.nickname, 'Cookie已更新')
     }
     else return await this._tokenError()
@@ -176,35 +140,26 @@ class Online extends AppClient {
    * token失效
    *
    * @protected
-   * @returns {(Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void>)}
+   * @returns {(Promise<'validate' | 'authcode' | 'stop' | void>)}
    * @memberof Online
    */
-  protected async _tokenError(): Promise<'captcha' | 'validate' | 'authcode' | 'stop' | void> {
+  protected async _tokenError(): Promise<'validate' | 'authcode' | 'stop' | void> {
     tools.Log(this.nickname, 'Token已失效')
     let login: loginResponse
     // if (this.authcodeURL !== '') login = await this.qrcodePoll()
     /** else */ login = await this.login()
     switch (login.status) {
       case AppClient.status.success:
-        clearTimeout(this._heartTimer)
-        this.captchaJPEG = ''
+        clearTimeout(this._loopTimer)
         this.validateURL = ''
         // this.authcodeURL = ''
         this.jar = tools.setCookie(this.cookieString)
-        await this.getOnlineInfo()
         Options.save()
-        this._heartLoop()
+        this._getUserStatusLoop()
         tools.Log(this.nickname, 'Token已更新')
         break
-      case AppClient.status.captcha:
-        const captcha = await this.getCaptcha()
-        if (captcha.status === AppClient.status.success)
-          this.captchaJPEG = `data:image/jpeg;base64,${captcha.data.toString('base64')}`
-        this._heartTimer = setTimeout(() => this.Stop(), 60 * 1000)
-        tools.Log(this.nickname, '验证码错误')
-        return 'captcha'
       case AppClient.status.validate:
-        this._heartTimer = setTimeout(() => this.Stop(), 60 * 1000)
+        this._loopTimer = setTimeout(() => this.Stop(), 60 * 1000)
         tools.Log(this.nickname, '极验验证码错误')
         return 'validate'
       // case AppClient.status.authcode:
@@ -213,7 +168,7 @@ class Online extends AppClient {
       //     this.authcode = authcode.data.data.auth_code
       //     this.authcodeURL = authcode.data.data.url
       //   }
-      //   this._heartTimer = setTimeout(() => this.Stop(), 60 * 1000)
+      //   this._loopTimer = setTimeout(() => this.Stop(), 60 * 1000)
       //   tools.Log(this.nickname, '二维码错误')
       //   return 'authcode'
       case AppClient.status.error:

@@ -159,13 +159,11 @@ function getUserDF(uid, userData) {
     const deleteUserButton = clone.querySelector('.deleteUser');
     const userConfigDF = getConfigTemplate(userData);
     userConfigDiv.appendChild(userConfigDF);
-    let captcha = undefined;
     let validate = undefined;
     let authcode = undefined;
     saveUserButton.onclick = async () => {
         modal();
-        const userDataMSG = await options.setUserData(uid, userData, captcha, validate, authcode);
-        captcha = undefined;
+        const userDataMSG = await options.setUserData(uid, userData, validate, authcode);
         validate = undefined;
         authcode = undefined;
         if (userDataMSG.msg == null) {
@@ -174,21 +172,6 @@ function getUserDF(uid, userData) {
             const userConfigDF = getConfigTemplate(userData);
             userConfigDiv.innerText = '';
             userConfigDiv.appendChild(userConfigDF);
-        }
-        else if (userDataMSG.msg === 'captcha' && userDataMSG.captcha != null) {
-            const captchaTemplate = template.querySelector('#captchaTemplate');
-            const clone = document.importNode(captchaTemplate.content, true);
-            const captchaImg = clone.querySelector('img');
-            const captchaInput = clone.querySelector('input');
-            captchaImg.src = userDataMSG.captcha;
-            modal({
-                body: clone,
-                showOK: true,
-                onOK: () => {
-                    captcha = captchaInput.value;
-                    saveUserButton.click();
-                }
-            });
         }
         else if (userDataMSG.msg === 'validate' && userDataMSG.validate != null) {
             const verificationUrl = userDataMSG.validate.match(/gt=(\w*)&challenge=(\w*)/);
@@ -206,9 +189,9 @@ function getUserDF(uid, userData) {
                     https: true,
                     product: 'float',
                     width: '100%'
-                }, captchaObj => {
-                    captchaObj.appendTo(validateBox);
-                    captchaObj.onSuccess(() => geetestObj = captchaObj);
+                }, validateObj => {
+                    validateObj.appendTo(validateBox);
+                    validateObj.onSuccess(() => geetestObj = validateObj);
                 });
                 modal({
                     body: clone,

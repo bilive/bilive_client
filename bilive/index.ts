@@ -65,10 +65,10 @@ class BiLive {
       const user = new User(uid, Options._.user[uid])
       const status = await user.Start()
       if (status !== undefined) {
-        if (status === 'captcha' && typeof tools.Captcha === 'function') {
-          const captcha = await tools.Captcha(user.captchaJPEG)
-          if (captcha !== '') {
-            user.captcha = captcha
+        if (status === 'validate' && typeof tools.Validate === 'function') {
+          const validate = await tools.Validate(user.validateURL)
+          if (validate !== '') {
+            user.validate = validate
             const secondStatus = await user.Start()
             if (secondStatus !== undefined) user.Stop()
           }

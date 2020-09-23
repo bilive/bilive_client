@@ -377,16 +377,14 @@ class Options {
    *
    * @param {string} uid
    * @param {userData} data
-   * @param {string} [captcha]
    * @param {string} [validate]
    * @param {string} [authcode]
    * @returns {Promise<userDataMSG>}
    * @memberof Options
    */
-  public setUserData(uid: string, data: userData, captcha?: string, validate?: string, authcode?: string): Promise<userDataMSG> {
+  public setUserData(uid: string, data: userData, validate?: string, authcode?: string): Promise<userDataMSG> {
     const message: userDataMSG = { cmd: 'setUserData', uid, data }
-    if (captcha !== undefined) message.captcha = captcha
-    else if (validate !== undefined) message.validate = validate
+    if (validate !== undefined) message.validate = validate
     else if (authcode !== undefined) message.authcode = authcode
     return this._send<userDataMSG>(message)
   }
