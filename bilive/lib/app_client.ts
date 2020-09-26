@@ -713,13 +713,12 @@ abstract class AppClient {
    */
   protected _auth(publicKey: getKeyResponseData): Promise<XHRresponse<authResponse> | undefined> {
     const passWord = encodeURIComponent(this._RSAPassWord(publicKey))
-    const validate = this.validate === '' ? '' : `&validate=${this.validate}`
+    const validate = this.validate === '' ? '' : `validate=${this.validate}&`
     const key = AppClient.RandomID(16)
-    const meta = this._AESMeta(key)
+    const deviceMeta = this._AESMeta(key)
     const dt = encodeURIComponent(this._RSA(publicKey.key, key).toString('base64'))
-    const deviceMeta = `&device_meta=${meta}&dt=${dt}`
-    const authQuery = `username=${encodeURIComponent(this.userName)}&password=${passWord}${validate}${deviceMeta}&bili_local_id=${this.biliLocalId}&buvid=${this.buvid}\
-&device=phone&device_id=${this.deviceId}&device_name=${this.deviceName}&device_platform=${this.devicePlatform}&local_id=${this.localId}`
+    const authQuery = `${validate}username=${encodeURIComponent(this.userName)}&password=${passWord}&bili_local_id=${this.biliLocalId}&buvid=${this.buvid}\
+&device=phone&device_id=${this.deviceId}&device_meta=${deviceMeta}&device_name=${this.deviceName}&device_platform=${this.devicePlatform}&dt=${dt}&local_id=${this.localId}`
     const auth: XHRoptions = {
       method: 'POST',
       url: 'https://passport.bilibili.com/api/v3/oauth2/login',

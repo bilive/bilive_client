@@ -207,9 +207,9 @@ class DMclient extends EventEmitter {
     this._connected = true
     if (options === undefined) {
       // 动态获取服务器地址, 防止B站临时更换
-      const accessKey = this.token === '' ? '' : `&access_key=${this.token}`
+      const accessKey = this.token === '' ? '' : `access_key=${this.token}&`
       const getDanmuInfo: XHRoptions = {
-        url: `https://api.live.bilibili.com/xlive/app-room/v1/index/getDanmuInfo?${AppClient.signQueryBase(`room_id=${this.roomID}${accessKey}`)}`,
+        url: `https://api.live.bilibili.com/xlive/app-room/v1/index/getDanmuInfo?${AppClient.signQueryBase(`${accessKey}room_id=${this.roomID}`)}`,
         responseType: 'json'
       }
       const danmuInfo = await tools.XHR<danmuInfo>(getDanmuInfo, 'Android')
