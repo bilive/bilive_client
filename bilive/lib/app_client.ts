@@ -1,7 +1,7 @@
-import crypto from 'crypto'
+import crypto, { KeyLike, RsaPublicKey } from 'crypto'
+import { Headers } from 'got'
 import { CookieJar } from 'tough-cookie'
 import tools from './tools'
-import { IncomingHttpHeaders } from 'http'
 /**
  * 登录状态
  *
@@ -27,12 +27,12 @@ abstract class AppClient {
   public static readonly loginAppKey: string = 'bca7e84c2d947ac6'
   protected static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
   public static readonly appKey: string = '1d8b6e7d45233436'
-  public static get biliLocalId(): string { return this.RandomID(64) }
+  public static get biliLocalId(): string { return this.RandomHex(64) }
   public static readonly build: string = '6100310'
-  public static get buvid(): string { return this.RandomID(37).toLocaleUpperCase() }
+  public static get buvid(): string { return `XY${this.RandomHex(35).toUpperCase()}` }
   public static readonly Clocale: string = 'zh_CN'
   public static readonly channel: string = 'master'
-  public static readonly device: string = 'phone'
+  public static readonly device: string = 'android'
   // 同一客户端与biliLocalId相同
   public static get deviceId(): string { return this.biliLocalId }
   public static readonly deviceName: string = 'SonyJ9110'
@@ -72,7 +72,7 @@ abstract class AppClient {
   // public static readonly appKey: string = '4409e2ce8ffd12b8'
   // public static readonly biliLocalId: string = AppClient.RandomID(20)
   // public static readonly build: string = '102401'
-  // public static readonly buvid: string = AppClient.RandomID(37).toLocaleUpperCase()
+  // public static readonly buvid: string = AppClient.RandomID(37).toUpperCase()
   // public static readonly channel: string = 'master'
   // public static readonly device: string = 'Sony'
   // public static readonly deviceId: string = AppClient.biliLocalId
@@ -170,16 +170,124 @@ abstract class AppClient {
    *
    * @readonly
    * @static
-   * @type {IncomingHttpHeaders}
+   * @type {Headers}
    * @memberof AppClient
    */
-  public static get headers(): IncomingHttpHeaders {
+  public static get headers(): Headers {
     return {
       'User-Agent': 'Mozilla/5.0 BiliDroid/6.10.0 (bbcallen@gmail.com) os/android model/J9110 mobi_app/android build/6100300 channel/master innerVer/6100310 osVer/10 network/2',
       'APP-KEY': this.mobiApp,
       'Buvid': this.buvid,
       'Device-ID': this.deviceId,
       'env': 'prod'
+    }
+  }
+  /**
+   * 设备信息
+   *
+   * @readonly
+   * @static
+   * @type {object}
+   * @memberof AppClient
+   */
+  public static get deviceMeta() {
+    return {
+      // "aaid": "",
+      // "adid": "***",
+      // "androidapp20": "***",
+      // "androidappcnt": 120,
+      // "androidsysapp20": "***",
+      // "app_id": "1",
+      // "app_version": "6.10.0",
+      // "app_version_code": "6100300",
+      // "apps": "***",
+      // "axposed": "false",
+      // "band": "",
+      // "battery": 22,
+      // "batteryState": "BATTERY_STATUS_DISCHARGING",
+      // "boot": "",
+      // "brand": "",
+      // "brightness": "15",
+      // "bssid": "02:00:00:00:00:00",
+      // "btmac": "",
+      // "build_id": "***",
+      // "buvid_local": "***",
+      // "chid": "master",
+      // "countryIso": "cn",
+      // "cpuCount": "***",
+      // "cpuFreq": "***",
+      // "cpuModel": "",
+      // "cpuVendor": "Qualcomm",
+      // "emu": "000",
+      // "files": "/data/user/0/tv.danmaku.bili/files",
+      // "first": "false",
+      // "free_memory": "***",
+      // "fstorage": 111,
+      // "fts": "***",
+      // "gadid": "",
+      // "glimit": "",
+      // "guid": "***",
+      // "kernel_version": "***",
+      // "languages": "zh",
+      // "mac": "***",
+      // "maps": "",
+      // "mem": "***",
+      // "mid": "",
+      // "model": "***",
+      // "net": "***",
+      // "network": "WIFI",
+      // "oaid": "",
+      // "oid": "***",
+      // "os": "android",
+      // "osver": "10",
+      // "proc": "tv.danmaku.bili",
+      // "props": {
+      //   "gsm.network.type": "LTE,LTE",
+      //   "gsm.sim.state": "LOADED,LOADED",
+      //   "http.agent": "",
+      //   "http.proxy": "",
+      //   "net.dns1": "***",
+      //   "net.eth0.gw": "",
+      //   "net.gprs.local-ip": "",
+      //   "net.hostname": "",
+      //   "persist.sys.country": "",
+      //   "persist.sys.language": "",
+      //   "ro.boot.hardware": "qcom",
+      //   "ro.boot.serialno": "***",
+      //   "ro.build.date.utc": "***",
+      //   "ro.build.tags": "release-keys",
+      //   "ro.debuggable": "0",
+      //   "ro.product.device": "Onyx",
+      //   "ro.serialno": "***",
+      //   "sys.usb.state": "adb"
+      // },
+      // "rc_app_code": "0000000000",
+      // "root": false,
+      // "screen": "***",
+      // "sdkver": "0.2.3",
+      // "sensor": "***",
+      // "sim": "5",
+      // "ssid": "<unknown ssid>",
+      // "sys": {
+      //   "cpu_abi": "arm64-v8a",
+      //   "cpu_abi2": "",
+      //   "device": "Onyx",
+      //   "display": "***",
+      //   "fingerprint": "***",
+      //   "hardware": "qcom",
+      //   "manufacturer": "***",
+      //   "product": "***",
+      //   "serial": "unknown"
+      // },
+      // "systemvolume": 0,
+      // "t": "***",
+      // "totalSpace": 111,
+      // "udid": "***",
+      // "uid": "***",
+      // "vaid": "",
+      // "virtual": "0",
+      // "virtualproc": "[]",
+      // "wifimaclist": []
     }
   }
   /**
@@ -203,9 +311,8 @@ abstract class AppClient {
    * @memberof AppClient
    */
   public static get loginQuery(): string {
-    return `appkey=${this.loginAppKey}&bili_local_id=${this.biliLocalId}&build=${this.build}&buvid=${this.buvid}&channel=${this.channel}\
-&device=${this.device}&device_id=${this.deviceId}&device_name=${this.deviceName}&device_platform=${this.devicePlatform}&local_id=${this.localId}\
-&mobi_app=${this.mobiApp}&platform=${this.platform}&statistics=${this.statistics}`
+    return `appkey=${this.loginAppKey}&build=${this.build}&c_locale=${this.Clocale}&channel=${this.channel}\
+&mobi_app=${this.mobiApp}&platform=${this.platform}&s_locale=${this.Slocale}&statistics=${this.statistics}`
   }
   /**
    * 对参数签名
@@ -284,16 +391,120 @@ abstract class AppClient {
   /**
    * 请求头
    *
-   * @type {IncomingHttpHeaders}
+   * @type {Headers}
    * @memberof AppClient
    */
-  public headers: IncomingHttpHeaders = {
+  public headers: Headers = {
     'User-Agent': 'Mozilla/5.0 BiliDroid/6.10.0 (bbcallen@gmail.com) os/android model/J9110 mobi_app/android build/6100300 channel/master innerVer/6100310 osVer/10 network/2',
     'APP-KEY': this.mobiApp,
     'Buvid': this.buvid,
     'Device-ID': this.deviceId,
     'env': 'prod'
   }
+  /**
+   * 设备信息
+   *
+   * @memberof AppClient
+   */
+  public deviceMeta =
+    {
+      // "aaid": "",
+      // "adid": "***",
+      // "androidapp20": "***",
+      // "androidappcnt": 120,
+      // "androidsysapp20": "***",
+      // "app_id": "1",
+      // "app_version": "6.10.0",
+      // "app_version_code": "6100300",
+      // "apps": "***",
+      // "axposed": "false",
+      // "band": "",
+      // "battery": 22,
+      // "batteryState": "BATTERY_STATUS_DISCHARGING",
+      // "boot": "",
+      // "brand": "",
+      // "brightness": "15",
+      // "bssid": "02:00:00:00:00:00",
+      // "btmac": "",
+      // "build_id": "***",
+      // "buvid_local": "***",
+      // "chid": "master",
+      // "countryIso": "cn",
+      // "cpuCount": "***",
+      // "cpuFreq": "***",
+      // "cpuModel": "",
+      // "cpuVendor": "Qualcomm",
+      // "emu": "000",
+      // "files": "/data/user/0/tv.danmaku.bili/files",
+      // "first": "false",
+      // "free_memory": "***",
+      // "fstorage": 111,
+      // "fts": "***",
+      // "gadid": "",
+      // "glimit": "",
+      // "guid": "***",
+      // "kernel_version": "***",
+      // "languages": "zh",
+      // "mac": "***",
+      // "maps": "",
+      // "mem": "***",
+      // "mid": "",
+      // "model": "***",
+      // "net": "***",
+      // "network": "WIFI",
+      // "oaid": "",
+      // "oid": "***",
+      // "os": "android",
+      // "osver": "10",
+      // "proc": "tv.danmaku.bili",
+      // "props": {
+      //   "gsm.network.type": "LTE,LTE",
+      //   "gsm.sim.state": "LOADED,LOADED",
+      //   "http.agent": "",
+      //   "http.proxy": "",
+      //   "net.dns1": "***",
+      //   "net.eth0.gw": "",
+      //   "net.gprs.local-ip": "",
+      //   "net.hostname": "",
+      //   "persist.sys.country": "",
+      //   "persist.sys.language": "",
+      //   "ro.boot.hardware": "qcom",
+      //   "ro.boot.serialno": "***",
+      //   "ro.build.date.utc": "***",
+      //   "ro.build.tags": "release-keys",
+      //   "ro.debuggable": "0",
+      //   "ro.product.device": "Onyx",
+      //   "ro.serialno": "***",
+      //   "sys.usb.state": "adb"
+      // },
+      // "rc_app_code": "0000000000",
+      // "root": false,
+      // "screen": "***",
+      // "sdkver": "0.2.3",
+      // "sensor": "***",
+      // "sim": "5",
+      // "ssid": "<unknown ssid>",
+      // "sys": {
+      //   "cpu_abi": "arm64-v8a",
+      //   "cpu_abi2": "",
+      //   "device": "Onyx",
+      //   "display": "***",
+      //   "fingerprint": "***",
+      //   "hardware": "qcom",
+      //   "manufacturer": "***",
+      //   "product": "***",
+      //   "serial": "unknown"
+      // },
+      // "systemvolume": 0,
+      // "t": "***",
+      // "totalSpace": 111,
+      // "udid": "***",
+      // "uid": "***",
+      // "vaid": "",
+      // "virtual": "0",
+      // "virtualproc": "[]",
+      // "wifimaclist": []
+    }
   /**
    * 基本请求参数
    *
@@ -308,8 +519,7 @@ abstract class AppClient {
    * @type {string}
    * @memberof AppClient
    */
-  public loginQuery: string = `appkey=${this.loginAppKey}&bili_local_id=${this.biliLocalId}&build=${this.build}&buvid=${this.buvid}&c_locale=${this.Clocale}\
-&channel=${this.channel}&device=${this.device}&device_id=${this.deviceId}&device_name=${this.deviceName}&device_platform=${this.devicePlatform}&local_id=${this.localId}\
+  public loginQuery: string = `appkey=${this.loginAppKey}&build=${this.build}&c_locale=${this.Clocale}&channel=${this.channel}\
 &mobi_app=${this.mobiApp}&platform=${this.platform}&s_locale=${this.Slocale}&statistics=${this.statistics}`
   /**
    * 对参数签名
@@ -432,6 +642,23 @@ abstract class AppClient {
    */
   protected __jar: CookieJar = new CookieJar()
   /**
+   * RSA/ECB/PKCS1Padding
+   *
+   * @protected
+   * @param {KeyLike} key
+   * @param {string} plainText
+   * @returns {Buffer}
+   * @memberof AppClient
+   */
+  protected _RSA(key: KeyLike, plainText: string): Buffer {
+    const RSAPublicKey: RsaPublicKey = {
+      key,
+      padding: crypto.constants.RSA_PKCS1_PADDING
+    }
+    const encrypted = crypto.publicEncrypt(RSAPublicKey, Buffer.from(plainText))
+    return encrypted
+  }
+  /**
    * 对密码进行加密
    *
    * @protected
@@ -440,13 +667,23 @@ abstract class AppClient {
    * @memberof AppClient
    */
   protected _RSAPassWord(publicKey: getKeyResponseData): string {
-    const padding = {
-      key: publicKey.key,
-      padding: crypto.constants.RSA_PKCS1_PADDING
-    }
     const hashPassWord = publicKey.hash + this.passWord
-    const encryptPassWord = crypto.publicEncrypt(padding, Buffer.from(hashPassWord)).toString('base64')
-    return encodeURIComponent(encryptPassWord)
+    const encryptPassWord = this._RSA(publicKey.key, hashPassWord).toString('base64')
+    return encryptPassWord
+  }
+  /**
+   * 对指纹进行加密
+   *
+   * @protected
+   * @param {string} key
+   * @returns {string}
+   * @memberof AppClient
+   */
+  protected _AESMeta(key: string): string {
+    const metaText = JSON.stringify(this.deviceMeta)
+    const cipher = crypto.createCipheriv('aes-128-cbc', key, key)
+    const encrypted = Buffer.concat([cipher.update(metaText), cipher.final()])
+    return encrypted.toString('hex').toUpperCase()
   }
   /**
    * 获取公钥
@@ -475,9 +712,14 @@ abstract class AppClient {
    * @memberof AppClient
    */
   protected _auth(publicKey: getKeyResponseData): Promise<XHRresponse<authResponse> | undefined> {
-    const passWord = this._RSAPassWord(publicKey)
+    const passWord = encodeURIComponent(this._RSAPassWord(publicKey))
     const validate = this.validate === '' ? '' : `&validate=${this.validate}`
-    const authQuery = `username=${encodeURIComponent(this.userName)}&password=${passWord}${validate}`
+    const key = AppClient.RandomID(16)
+    const meta = this._AESMeta(key)
+    const dt = encodeURIComponent(this._RSA(publicKey.key, key).toString('base64'))
+    const deviceMeta = `&device_meta=${meta}&dt=${dt}`
+    const authQuery = `username=${encodeURIComponent(this.userName)}&password=${passWord}${validate}${deviceMeta}&bili_local_id=${this.biliLocalId}&buvid=${this.buvid}\
+&device=phone&device_id=${this.deviceId}&device_name=${this.deviceName}&device_platform=${this.devicePlatform}&local_id=${this.localId}`
     const auth: XHRoptions = {
       method: 'POST',
       url: 'https://passport.bilibili.com/api/v3/oauth2/login',
@@ -515,9 +757,9 @@ abstract class AppClient {
    */
   public async login(): Promise<loginResponse> {
     const getKeyResponse = await this._getKey()
-    if (getKeyResponse !== undefined && getKeyResponse.response.statusCode === 200 && getKeyResponse.body.code === 0) {
+    if (getKeyResponse?.response.statusCode === 200 && getKeyResponse.body.code === 0) {
       const authResponse = await this._auth(getKeyResponse.body.data)
-      if (authResponse !== undefined && authResponse.response.statusCode === 200) {
+      if (authResponse?.response.statusCode === 200) {
         if (authResponse.body.code === 0) {
           if (authResponse.body.data.token_info !== undefined && authResponse.body.data.cookie_info !== undefined) {
             this._update(authResponse.body.data)
@@ -542,7 +784,8 @@ abstract class AppClient {
    * @memberof AppClient
    */
   public async logout(): Promise<logoutResponse> {
-    const revokeQuery = `access_token=${this.accessToken}`
+    const revokeQuery = `access_token=${this.accessToken}&mid=${tools.getCookie(this.jar, 'DedeUserID')}&session=${encodeURIComponent(tools.getCookie(this.jar, 'SESSDATA'))}\
+&bili_local_id=${this.biliLocalId}&buvid=${this.buvid}&device=phone&device_id=${this.deviceId}&device_name=${this.deviceName}&device_platform=${this.devicePlatform}&local_id=${this.localId}`
     const revoke: XHRoptions = {
       method: 'POST',
       url: 'https://passport.bilibili.com/x/passport-login/revoke',
@@ -551,7 +794,7 @@ abstract class AppClient {
       headers: this.headers
     }
     const revokeResponse = await tools.XHR<revokeResponse>(revoke, 'Android')
-    if (revokeResponse !== undefined && revokeResponse.response.statusCode === 200) {
+    if (revokeResponse?.response.statusCode === 200) {
       if (revokeResponse.body.code === 0) return { status: AppClient.status.success, data: revokeResponse.body }
       return { status: AppClient.status.error, data: revokeResponse.body }
     }
@@ -564,17 +807,18 @@ abstract class AppClient {
    * @memberof AppClient
    */
   public async refresh(): Promise<loginResponse> {
-    const refreshQuery = `refresh_token=${this.refreshToken}`
+    const refreshQuery = `${this.cookieString.split('; ').map(cookie => cookie.split('=').map(v => encodeURIComponent(v)).join('=')).sort().join('&')}\
+&access_key=${this.accessToken}&access_token=${this.accessToken}&refresh_token=${this.refreshToken}`
     const refresh: XHRoptions = {
       method: 'POST',
-      url: 'https://passport.bilibili.com/x/passport-login/oauth2/refresh_token',
+      url: 'https://passport.bilibili.com/api/v2/oauth2/refresh_token',
       body: this.signLoginQuery(refreshQuery),
       responseType: 'json',
       headers: this.headers
     }
     const refreshResponse = await tools.XHR<authResponse>(refresh, 'Android')
-    if (refreshResponse !== undefined && refreshResponse.response.statusCode === 200) {
-      if (refreshResponse.body !== undefined && refreshResponse.body.code === 0) {
+    if (refreshResponse?.response.statusCode === 200) {
+      if (refreshResponse.body?.code === 0) {
         this._update(refreshResponse.body.data)
         return { status: AppClient.status.success, data: refreshResponse.body }
       }
