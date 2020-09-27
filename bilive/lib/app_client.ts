@@ -27,9 +27,22 @@ abstract class AppClient {
   public static readonly loginAppKey: string = 'bca7e84c2d947ac6'
   protected static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
   public static readonly appKey: string = '1d8b6e7d45233436'
-  public static get biliLocalId(): string { return this.RandomHex(64) }
+  public static get biliLocalId(): string {
+    const model = 'J9110'
+    const band = '855-sm8150.gen.prodQ-00036-22,855-sm8150.gen.prodQ-00036-22'
+    const yyyyMMddHHmmss = new Date().toISOString().replace(/[-:TZ]/g, '').slice(0, 14)
+    const deviceID = tools.Hash('MD5', this.buvid + model + band) + yyyyMMddHHmmss + this.RandomHex(16)
+    const check = deviceID.match(/\w{2}/g)?.map(v => parseInt(v, 16)).reduce((a, c) => a + c).toString(16).substr(-2)
+    return deviceID + check
+  }
   public static readonly build: string = '6100310'
-  public static get buvid(): string { return `XY${this.RandomHex(35).toUpperCase()}` }
+  public static get buvid(): string {
+    // const mac = '00:00:00:00:00:00'
+    // const uuid = tools.Hash('MD5', mac)
+    // return 'XY' + uuid[2] + uuid[12] + uuid[22] + uuid
+    const uuid = this.RandomHex(32).toUpperCase()
+    return 'XW' + uuid[2] + uuid[12] + uuid[22] + uuid
+  }
   public static readonly Clocale: string = 'zh_CN'
   public static readonly channel: string = 'master'
   public static readonly device: string = 'android'
