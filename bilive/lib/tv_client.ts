@@ -14,18 +14,18 @@ abstract class TVClient extends AppClient {
   public loginAppKey: string = '4409e2ce8ffd12b8'
   protected __secretKey: string = '59b43e04ad6965f34319062b478f83dd'
   public appKey: string = '4409e2ce8ffd12b8'
-  public biliLocalId: string = AppClient.biliLocalId
+  public biliLocalID: string = AppClient.biliLocalID
   public build: string = '102401'
   public buvid: string = AppClient.buvid
   public channel: string = 'master'
   public device: string = 'Sony'
-  public deviceId: string = this.biliLocalId
+  public deviceID: string = this.biliLocalID
   public deviceName: string = 'G8142'
   public devicePlatform: string = 'Android10SonyG8142'
   public fingerprint: string = AppClient.RandomID(62)
   public guid: string = this.buvid
   public localFingerprint: string = this.fingerprint
-  public localId: string = this.buvid
+  public localID: string = this.buvid
   public mobiApp: string = 'android_tv_yst'
   public networkstate: string = 'wifi'
   public platform: string = 'android'
@@ -47,9 +47,9 @@ abstract class TVClient extends AppClient {
    * @type {string}
    * @memberof AppClient
    */
-  public loginQuery: string = `appkey=${this.loginAppKey}&bili_local_id=${this.biliLocalId}&build=${this.build}&buvid=${this.buvid}&channel=${this.channel}\
-&device=${this.device}&device_id=${this.deviceId}&device_name=${this.deviceName}&device_platform=${this.devicePlatform}&fingerprint=${this.fingerprint}&guid=${this.guid}\
-&local_fingerprint=${this.localFingerprint}&local_id=${this.localId}&mobi_app=${this.mobiApp}&networkstate=${this.networkstate}&platform=${this.platform}`
+  public loginQuery: string = `appkey=${this.loginAppKey}&bili_local_id=${this.biliLocalID}&build=${this.build}&buvid=${this.buvid}&channel=${this.channel}\
+&device=${this.device}&device_id=${this.deviceID}&device_name=${this.deviceName}&device_platform=${this.devicePlatform}&fingerprint=${this.fingerprint}&guid=${this.guid}\
+&local_fingerprint=${this.localFingerprint}&local_id=${this.localID}&mobi_app=${this.mobiApp}&networkstate=${this.networkstate}&platform=${this.platform}`
   /**
    * 验证码, 登录时会自动清空
    *

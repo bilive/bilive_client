@@ -145,9 +145,10 @@ class Online extends AppClient {
    */
   protected async _tokenError(): Promise<'validate' | 'authcode' | 'stop' | void> {
     tools.Log(this.nickname, 'Token已失效')
-    let login: loginResponse
+    // let login: loginResponse
     // if (this.authcodeURL !== '') login = await this.qrcodePoll()
-    /** else */ login = await this.login()
+    // else login = await this.login()
+    const login = await this.login()
     switch (login.status) {
       case AppClient.status.success:
         clearTimeout(this._loopTimer)
