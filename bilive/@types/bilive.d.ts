@@ -34,6 +34,7 @@ interface userData {
   accessToken: string
   refreshToken: string
   cookie: string
+  deviceInfo: string
   status: boolean
 }
 type optionsInfo = {
@@ -237,6 +238,38 @@ interface qrcodeResponseError {
 interface qrcodeResponseHttp {
   status: appStatus.httpError
   data: XHRresponse<authcodeResponse> | undefined
+}
+/**
+ * 设备信息
+ */
+interface deviceInfo {
+  vendor: {
+    brand: string
+    cpuVendor: string
+    date: string
+    device: string
+    fingerprint: string
+    id: string
+    incremental: string
+    kernel: string
+    manufacturer: string
+    marketname: string
+    model: string
+    modem: string
+    name: string
+    platform: string
+    release: string
+    sdk: string
+    tags: string
+    type: string
+    utc: string
+  }
+  adid: string
+  guid: string
+  mac: string
+  sn: string
+  uid: string
+  yyyyMMddHHmmss: string
 }
 /*******************
  ****** tools ******

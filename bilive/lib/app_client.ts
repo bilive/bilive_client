@@ -422,6 +422,19 @@ abstract class AppClient {
   }
 
   // 固定参数
+  constructor(deviceInfo?: deviceInfo) {
+    if (deviceInfo !== undefined) {
+      this._vendor = deviceInfo.vendor
+      this._adid = deviceInfo.adid
+      this._guid = deviceInfo.guid
+      this._mac = deviceInfo.mac
+      this._sn = deviceInfo.sn
+      this._uid = deviceInfo.uid
+      this._yyyyMMddHHmmss = deviceInfo.yyyyMMddHHmmss
+    }
+  }
+
+  protected _vendor = AppClient.vendor
   protected _adid = AppClient.RandomHex(16)
   protected _guid = AppClient.UUID
   protected _mac = AppClient.MAC
@@ -482,22 +495,22 @@ abstract class AppClient {
       'app_version_code': AppClient._versionCode,
       'apps': '[]',
       'axposed': 'false',
-      'band': AppClient.vendor.modem,
+      'band': this._vendor.modem,
       'battery': AppClient.RandomNum(2),
       'batteryState': 'BATTERY_STATUS_DISCHARGING',
       'boot': '',
-      'brand': AppClient.vendor.brand,
+      'brand': this._vendor.brand,
       'brightness': AppClient.RandomNum(2).toString(),
       'bssid': '02:00:00:00:00:00',
       'btmac': '',
-      'build_id': AppClient.vendor.id,
+      'build_id': this._vendor.id,
       'buvid_local': this.buvid,
       'chid': 'master',
       'countryIso': 'cn',
       'cpuCount': '8',
       'cpuFreq': `1${AppClient.RandomNum(3)}000`,
       'cpuModel': '',
-      'cpuVendor': AppClient.vendor.cpuVendor,
+      'cpuVendor': this._vendor.cpuVendor,
       'emu': '000',
       'files': '/data/user/0/tv.danmaku.bili/files',
       'first': 'false',
@@ -507,19 +520,19 @@ abstract class AppClient {
       'gadid': '',
       'glimit': '',
       'guid': this._guid,
-      'kernel_version': AppClient.vendor.kernel,
+      'kernel_version': this._vendor.kernel,
       'languages': 'zh',
       'mac': this._mac,
       'maps': '',
       'mem': `12000${AppClient.RandomNum(6)}`,
       'mid': '',
-      'model': AppClient.vendor.model,
+      'model': this._vendor.model,
       'net': '[]',
       'network': 'WIFI',
       'oaid': '',
       'oid': '46001',
       'os': 'android',
-      'osver': AppClient.vendor.release,
+      'osver': this._vendor.release,
       'proc': 'tv.danmaku.bili',
       'props': {
         'gsm.network.type': 'LTE,LTE',
@@ -532,12 +545,12 @@ abstract class AppClient {
         'net.hostname': '',
         'persist.sys.country': '',
         'persist.sys.language': '',
-        'ro.boot.hardware': AppClient.vendor.platform,
+        'ro.boot.hardware': this._vendor.platform,
         'ro.boot.serialno': this._sn,
-        'ro.build.date.utc': AppClient.vendor.utc,
-        'ro.build.tags': AppClient.vendor.tags,
+        'ro.build.date.utc': this._vendor.utc,
+        'ro.build.tags': this._vendor.tags,
         'ro.debuggable': '0',
-        'ro.product.device': AppClient.vendor.device,
+        'ro.product.device': this._vendor.device,
         'ro.serialno': this._sn,
         'sys.usb.state': 'adb'
       },
@@ -551,12 +564,12 @@ abstract class AppClient {
       'sys': {
         'cpu_abi': 'arm64-v8a',
         'cpu_abi2': '',
-        'device': AppClient.vendor.device,
-        'display': AppClient.vendor.id,
-        'fingerprint': AppClient.vendor.fingerprint,
-        'hardware': AppClient.vendor.platform,
-        'manufacturer': AppClient.vendor.manufacturer,
-        'product': AppClient.vendor.name,
+        'device': this._vendor.device,
+        'display': this._vendor.id,
+        'fingerprint': this._vendor.fingerprint,
+        'hardware': this._vendor.platform,
+        'manufacturer': this._vendor.manufacturer,
+        'product': this._vendor.name,
         'serial': 'unknown'
       },
       'systemvolume': AppClient.RandomNum(2),

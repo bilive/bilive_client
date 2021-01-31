@@ -16,7 +16,23 @@ class Online extends AppClient {
    * @memberof Online
    */
   constructor(uid: string, userData: userData) {
-    super()
+    if (userData.deviceInfo === '' || userData.deviceInfo === undefined) {
+      super()
+      const deviceInfo: deviceInfo = {
+        vendor: this._vendor,
+        adid: this._adid,
+        guid: this._guid,
+        mac: this._mac,
+        sn: this._sn,
+        uid: this._uid,
+        yyyyMMddHHmmss: this._yyyyMMddHHmmss
+      }
+      userData.deviceInfo = JSON.stringify(deviceInfo)
+    }
+    else {
+      const deviceInfo: deviceInfo = JSON.parse(userData.deviceInfo)
+      super(deviceInfo)
+    }
     this.uid = uid
     this.userData = userData
   }
