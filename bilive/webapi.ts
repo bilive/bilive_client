@@ -73,7 +73,7 @@ class WebAPI extends EventEmitter {
                 let message: message | undefined
                 if (typeof msg === 'string') message = await tools.JSONparse<message>(msg)
                 else {
-                  const aesData = Buffer.from(msg)
+                  const aesData = Buffer.from(<Buffer>msg)
                   if (option.encrypt && option.sharedSecret !== undefined)
                     message = await this._Decipher(aesData, option)
                   else message = await tools.JSONparse<message>(aesData.toString())

@@ -321,7 +321,7 @@ class DMclient extends EventEmitter {
       data = JSON.stringify({ group: '', uid: this.userID, roomid: this.roomID, key: this.key, platform: 'android', clientver: '6.10.0.6100310', hwid: AppClient.deviceID, protover: 2 })
     else if (this._protocol === 'flash')
       data = JSON.stringify({ key: this.key, clientver: '2.4.6-9e02b4f1', roomid: this.roomID, uid: this.userID, protover: 2, platform: 'flash' })
-    else data = JSON.stringify({ uid: this.userID, roomid: this.roomID, protover: 2, platform: 'web', clientver: '1.16.1', type: 2, key: this.key })
+    else data = JSON.stringify({ uid: this.userID, roomid: this.roomID, protover: 2, platform: 'web', clientver: '2.0.11', type: 2, key: this.key })
     this._ClientSendData(16 + data.length, 16, this.version, 7, this.driver, data)
   }
   /**
@@ -488,12 +488,12 @@ class DMclient extends EventEmitter {
    * @memberof DMclient
    */
   protected _Uncompress(data: Buffer): Promise<Buffer | undefined> {
-    return new Promise<Buffer>(resolve => {
+    return new Promise<Buffer | undefined>(resolve => {
       inflate(data, (error, result) => {
         if (error === null) return resolve(result)
         else {
           tools.ErrorLog(data, error)
-          return resolve()
+          return resolve(undefined)
         }
       })
     })
