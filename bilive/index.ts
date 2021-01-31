@@ -23,8 +23,8 @@ class BiLive {
   public version: version = {
     major: 3,
     minor: 0,
-    patch: 0,
-    semver: '3.0.0'
+    patch: 1,
+    semver: '3.0.1'
   }
   // 系统消息监听
   private _Listener!: Listener
