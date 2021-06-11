@@ -1,5 +1,5 @@
 import { Socket } from 'net'
-import { inflate } from 'zlib'
+import { inflate, brotliDecompress } from 'zlib'
 import { EventEmitter } from 'events'
 import ws from 'ws'
 import tools from './tools'
@@ -318,10 +318,10 @@ class DMclient extends EventEmitter {
   protected _ClientConnectHandler() {
     let data: string
     if (this._protocol === 'socket')
-      data = JSON.stringify({ group: '', uid: this.userID, roomid: this.roomID, key: this.key, platform: 'android', clientver: '6.10.0.6100310', hwid: AppClient.deviceID, protover: 2 })
+      data = JSON.stringify({ clientver: '6.28.0.6280300', group: '', hwid: AppClient.deviceID, key: this.key, platform: 'android', protover: 3, roomid: this.roomID, uid: this.userID })
     else if (this._protocol === 'flash')
       data = JSON.stringify({ key: this.key, clientver: '2.4.6-9e02b4f1', roomid: this.roomID, uid: this.userID, protover: 2, platform: 'flash' })
-    else data = JSON.stringify({ uid: this.userID, roomid: this.roomID, protover: 2, platform: 'web', clientver: '2.0.11', type: 2, key: this.key })
+    else data = JSON.stringify({ uid: this.userID, roomid: this.roomID, protover: 3, platform: 'web', type: 2, key: this.key })
     this._ClientSendData(16 + data.length, 16, this.version, 7, this.driver, data)
   }
   /**
@@ -333,7 +333,7 @@ class DMclient extends EventEmitter {
   protected _ClientHeart() {
     if (!this._connected) return
     let data: string
-    if (this._protocol === 'socket') data = '{}'
+    if (this._protocol === 'socket') data = ''
     else if (this._protocol === 'flash') data = ''
     else data = '[object Object]'
     this._timeout = setTimeout(() => {
@@ -349,7 +349,7 @@ class DMclient extends EventEmitter {
    * @protected
    * @param {number} totalLen 总长度
    * @param {number} [headLen=16] 头部长度
-   * @param {number} [version=this.version] 版本
+   * @param {number} [version=this.version] 协议版本
    * @param {number} [type=2] 类型
    * @param {number} [driver=this.driver] 设备
    * @param {string} [data] 数据
@@ -410,14 +410,24 @@ class DMclient extends EventEmitter {
     if (dataLen < packageLen) return this.__data = data
     // 数据长度20时为在线人数
     if (dataLen > 20) {
-      // const version = data.readInt16BE(6)
-      // if (version === 2) {
-      const compress = data.readInt16BE(16)
-      if (compress === 0x78DA) {
-        // 检查是否压缩, 目前来说压缩格式固定
-        const uncompressData = await this._Uncompress(data.slice(16, packageLen))
-        if (uncompressData !== undefined) {
-          this._ClientDataHandler(uncompressData)
+      // 检查是否压缩
+      const version = data.readInt16BE(6)
+      if (version > 1) {
+        // const compress = data.readInt16BE(16)
+        // if (compress === 0x78DA) {
+        let sourceData: Buffer | undefined
+        switch (version) {
+          case 2:
+            sourceData = await this._Inflate(data.slice(16, packageLen))
+            break
+          case 3:
+            sourceData = await this._BrotliDecompress(data.slice(16, packageLen))
+            break
+          default:
+            break
+        }
+        if (sourceData !== undefined) {
+          this._ClientDataHandler(sourceData)
           if (dataLen > packageLen) this._ClientDataHandler(data.slice(packageLen))
           return
         }
@@ -480,16 +490,35 @@ class DMclient extends EventEmitter {
     this.emit(dataJson.cmd, dataJson)
   }
   /**
-   * 解压数据
+   * 解压Deflate/Inflate数据
    *
    * @protected
    * @param {Buffer} data
-   * @returns {Promise<Buffer | undefined>}
+   * @returns {(Promise<Buffer | undefined>)}
    * @memberof DMclient
    */
-  protected _Uncompress(data: Buffer): Promise<Buffer | undefined> {
+  protected _Inflate(data: Buffer): Promise<Buffer | undefined> {
     return new Promise<Buffer | undefined>(resolve => {
       inflate(data, (error, result) => {
+        if (error === null) return resolve(result)
+        else {
+          tools.ErrorLog(data, error)
+          return resolve(undefined)
+        }
+      })
+    })
+  }
+  /**
+   * 解压Brotli数据
+   *
+   * @protected
+   * @param {Buffer} data
+   * @returns {(Promise<Buffer | undefined>)}
+   * @memberof DMclient
+   */
+  protected _BrotliDecompress(data: Buffer): Promise<Buffer | undefined> {
+    return new Promise<Buffer | undefined>(resolve => {
+      brotliDecompress(data, (error, result) => {
         if (error === null) return resolve(result)
         else {
           tools.ErrorLog(data, error)
