@@ -12,7 +12,7 @@ class Options extends EventEmitter {
   constructor() {
     super()
     // 根据npm start参数不同设置不同路径
-    this._dirname = __dirname + (process.env.npm_package_scripts_start === 'node build/app.js' ? '/../..' : '/..')
+    this._dirname = __dirname + (process.env.npm_package_scripts_start === 'node build/app.js' || process.env.npm_lifecycle_script === 'node build/app.js' ? '/../..' : '/..')
     // 检查是否有options目录
     const hasDir = fs.existsSync(this._dirname + '/options/')
     if (!hasDir) fs.mkdirSync(this._dirname + '/options/')
