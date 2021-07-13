@@ -44,9 +44,9 @@ abstract class AppClient {
     utc: '1599583607',
   }
   // bilibili 客户端
-  protected static _version = '6.10.0'
-  protected static _versionCode = '6100300'
-  protected static _innerVersionCode = '6100310'
+  protected static _version = '6.32.0'
+  protected static _versionCode = '6320200'
+  protected static _innerVersionCode = '6320200'
 
   protected static readonly __loginSecretKey: string = '60698ba2f68e01ce44738920a0ffe768'
   public static readonly loginAppKey: string = 'bca7e84c2d947ac6'
@@ -67,7 +67,7 @@ abstract class AppClient {
     // const uuid = tools.Hash('MD5', this.MAC).toUpperCase()
     return 'XY' + uuid[2] + uuid[12] + uuid[22] + uuid
   }
-  public static readonly Clocale: string = 'zh_CN'
+  public static readonly Clocale: string = 'zh-Hans_CN'
   public static readonly channel: string = 'master'
   public static readonly device: string = 'android'
   // 同一客户端与biliLocalID相同
@@ -78,7 +78,7 @@ abstract class AppClient {
   public static get localID(): string { return this.buvid }
   public static readonly mobiApp: string = 'android'
   public static readonly platform: string = 'android'
-  public static readonly Slocale: string = 'zh_CN'
+  public static readonly Slocale: string = 'zh-Hans_CN'
   public static readonly statistics: string = encodeURIComponent(`{"appId":1,"platform":3,"version":"${AppClient._version}","abtest":""}`)
 
   // bilibili 国际版
@@ -712,14 +712,6 @@ abstract class AppClient {
    */
   public abstract jar: CookieJar
   /**
-   * cookieJar
-   *
-   * @protected
-   * @type {CookieJar}
-   * @memberof AppClient
-   */
-  protected __jar: CookieJar = new CookieJar()
-  /**
    * RSA/ECB/PKCS1Padding
    *
    * @protected
@@ -772,10 +764,7 @@ abstract class AppClient {
    */
   protected _getKey(): Promise<XHRresponse<getKeyResponse> | undefined> {
     const getKey: XHRoptions = {
-      method: 'POST',
-      url: 'https://passport.bilibili.com/api/oauth2/getKey',
-      body: this.signLoginQuery(),
-      cookieJar: this.__jar,
+      url: `https://passport.bilibili.com/x/passport-login/web/key?${this.signLoginQuery()}`,
       responseType: 'json',
       headers: this.headers
     }
@@ -795,13 +784,14 @@ abstract class AppClient {
     const key = AppClient.RandomID(16)
     const deviceMeta = this._AESMeta(key)
     const dt = encodeURIComponent(this._RSA(publicKey.key, key).toString('base64'))
-    const authQuery = `${validate}username=${encodeURIComponent(this.userName)}&password=${passWord}&bili_local_id=${this.biliLocalID}&buvid=${this.buvid}\
-&device=phone&device_id=${this.deviceID}&device_meta=${deviceMeta}&device_name=${this.deviceName}&device_platform=${this.devicePlatform}&dt=${dt}&local_id=${this.localID}`
+    const authQuery = `${validate}username=${encodeURIComponent(this.userName)}&password=${passWord}&bili_local_id=${this.biliLocalID}&device=phone\
+&device_id=${this.deviceID}&device_meta=${deviceMeta}&device_name=${this.deviceName}&device_platform=${this.devicePlatform}\
+&dt=${dt}&from_pv=${encodeURIComponent('main.my-information.my-login.0.click')}&from_url=${encodeURIComponent('bilibili://user_center/mine')}\
+&local_id=${this.localID}&login_session_id=${tools.Hash('MD5', this.buvid + Date.now())}&spm_id=${encodeURIComponent('main.my-information.my-login.0')}`
     const auth: XHRoptions = {
       method: 'POST',
-      url: 'https://passport.bilibili.com/api/v3/oauth2/login',
+      url: 'https://passport.bilibili.com/x/passport-login/oauth2/login',
       body: this.signLoginQuery(authQuery),
-      cookieJar: this.__jar,
       responseType: 'json',
       headers: this.headers
     }
