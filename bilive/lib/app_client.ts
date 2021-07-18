@@ -23,30 +23,31 @@ enum appStatus {
 abstract class AppClient {
   // 固定参数
   public static readonly vendor = {
-    brand: 'Xiaomi',
-    cpuVendor: 'Qualcomm',
-    date: 'Wed Sep  9 00:46:47 CST 2020',
-    device: 'cas',
-    fingerprint: 'Xiaomi/cas/cas:10/QKQ1.200419.002/V12.0.10.0.QJJCNXM:user/release-keys',
-    id: 'QKQ1.200419.002',
-    incremental: 'V12.0.10.0.QJJCNXM',
-    kernel: '4.19.81-perf-g5d68dba',
-    manufacturer: 'Xiaomi',
-    marketname: 'Mi 10 Ultra',
-    model: 'M2007J1SC',
-    modem: '205.5.8356.20-0908_2156_977face,205.5.8356.20-0908_2156_977face',
-    name: 'cas',
+    brand: 'Sony',
+    buildhost: 'ip-10-26-20-19',
+    cpuVendor: 'ARM',
+    date: 'Thu Jul 1 21:41:24 JST 2021',
+    device: 'qssi',
+    fingerprint: 'Sony/qssi/qssi:11/RKQ1.210107.001/1:user/release-keys',
+    id: '61.0.A.10.1',
+    incremental: '1',
+    kernel: '5.4.61-qgki-00366-g7f139a75669b',
+    manufacturer: 'Sony',
+    marketname: 'Xperia 1 III',
+    model: 'XQ-BC72',
+    modem: 'lahaina.gen-00013-13,lahaina.gen-00013-13',
+    name: 'qssi',
     platform: 'qcom',
-    release: '10',
-    sdk: '29',
+    release: '11',
+    sdk: '30',
     tags: 'release-keys',
     type: 'user',
-    utc: '1599583607',
+    utc: '1625143284',
   }
   // bilibili 客户端
-  protected static _version = '6.32.0'
-  protected static _versionCode = '6320200'
-  protected static _innerVersionCode = '6320200'
+  protected static _version = '6.33.0'
+  protected static _versionCode = '6330300'
+  protected static _innerVersionCode = '6330300'
 
   protected static readonly __loginSecretKey: string = '60698ba2f68e01ce44738920a0ffe768'
   public static readonly loginAppKey: string = 'bca7e84c2d947ac6'
@@ -63,9 +64,7 @@ abstract class AppClient {
   public static readonly build: string = AppClient._versionCode
   public static get buvid(): string {
     const uuid = this.RandomHex(32).toUpperCase()
-    // return 'XW' + uuid[2] + uuid[12] + uuid[22] + uuid
-    // const uuid = tools.Hash('MD5', this.MAC).toUpperCase()
-    return 'XY' + uuid[2] + uuid[12] + uuid[22] + uuid
+    return 'XX' + uuid[2] + uuid[12] + uuid[22] + uuid
   }
   public static readonly Clocale: string = 'zh-Hans_CN'
   public static readonly channel: string = 'master'
@@ -214,136 +213,6 @@ abstract class AppClient {
     return this.RandomHex(12).match(/\w{2}/g)?.join(':') || '00:00:00:00:00:00'
   }
   /**
-   * 请求头
-   *
-   * @readonly
-   * @static
-   * @type {Headers}
-   * @memberof AppClient
-   */
-  public static get headers(): Headers {
-    return {
-      'User-Agent': `Mozilla/5.0 BiliDroid/${this._version} (bbcallen@gmail.com) os/${this.device} model/${this.vendor.model} mobi_app/${this.mobiApp} build/${this.build} channel/${this.channel} innerVer/${this._innerVersionCode} osVer/${this.vendor.release} network/2`,
-      'APP-KEY': this.mobiApp,
-      'Buvid': this.buvid,
-      'Device-ID': this.deviceID,
-      'env': 'prod'
-    }
-  }
-  /**
-   * 设备信息
-   *
-   * @readonly
-   * @static
-   * @type {object}
-   * @memberof AppClient
-   */
-  public static get deviceMeta() {
-    const adid = this.RandomHex(16)
-    const mac = this.MAC
-    const buvid = tools.Hash('MD5', mac).toUpperCase()
-    const buvidXY = 'XY' + buvid[2] + buvid[12] + buvid[22] + buvid
-    const sn = `29829/${this.RandomID(4).toUpperCase()}${this.RandomNum(5)}`
-    return {
-      'aaid': '',
-      'adid': adid,
-      'androidapp20': '[]',
-      'androidappcnt': 100 + this.RandomNum(2),
-      'androidsysapp20': '[]',
-      'app_id': '1',
-      'app_version': this._version,
-      'app_version_code': this._versionCode,
-      'apps': '[]',
-      'axposed': 'false',
-      'band': this.vendor.modem,
-      'battery': this.RandomNum(2),
-      'batteryState': 'BATTERY_STATUS_DISCHARGING',
-      'boot': '',
-      'brand': this.vendor.brand,
-      'brightness': this.RandomNum(2).toString(),
-      'bssid': '02:00:00:00:00:00',
-      'btmac': '',
-      'build_id': this.vendor.id,
-      'buvid_local': buvidXY,
-      'chid': 'master',
-      'countryIso': 'cn',
-      'cpuCount': '8',
-      'cpuFreq': `1${this.RandomNum(3)}000`,
-      'cpuModel': '',
-      'cpuVendor': this.vendor.cpuVendor,
-      'emu': '000',
-      'files': '/data/user/0/tv.danmaku.bili/files',
-      'first': 'false',
-      'free_memory': this.RandomNum(10).toString(),
-      'fstorage': 256_100_000_000 + this.RandomNum(7),
-      'fts': this.TS.toString(),
-      'gadid': '',
-      'glimit': '',
-      'guid': this.UUID,
-      'kernel_version': this.vendor.kernel,
-      'languages': 'zh',
-      'mac': mac,
-      'maps': '',
-      'mem': `12000${this.RandomNum(6)}`,
-      'mid': '',
-      'model': this.vendor.model,
-      'net': '[]',
-      'network': 'WIFI',
-      'oaid': '',
-      'oid': '46001',
-      'os': 'android',
-      'osver': this.vendor.release,
-      'proc': 'tv.danmaku.bili',
-      'props': {
-        'gsm.network.type': 'LTE,LTE',
-        'gsm.sim.state': 'LOADED,LOADED',
-        'http.agent': '',
-        'http.proxy': '',
-        'net.dns1': `fd${this.RandomHex(2)}:${this.RandomHex(4)}:${this.RandomHex(4)}::1`,
-        'net.eth0.gw': '',
-        'net.gprs.local-ip': '',
-        'net.hostname': '',
-        'persist.sys.country': '',
-        'persist.sys.language': '',
-        'ro.boot.hardware': this.vendor.platform,
-        'ro.boot.serialno': sn,
-        'ro.build.date.utc': this.vendor.utc,
-        'ro.build.tags': this.vendor.tags,
-        'ro.debuggable': '0',
-        'ro.product.device': this.vendor.device,
-        'ro.serialno': sn,
-        'sys.usb.state': 'adb'
-      },
-      'rc_app_code': '0000000000',
-      'root': false,
-      'screen': '1080,2340,392',
-      'sdkver': '0.2.3',
-      'sensor': '[]',
-      'sim': '5',
-      'ssid': '<unknown ssid>',
-      'sys': {
-        'cpu_abi': 'arm64-v8a',
-        'cpu_abi2': '',
-        'device': this.vendor.device,
-        'display': this.vendor.id,
-        'fingerprint': this.vendor.fingerprint,
-        'hardware': this.vendor.platform,
-        'manufacturer': this.vendor.manufacturer,
-        'product': this.vendor.name,
-        'serial': 'unknown'
-      },
-      'systemvolume': this.RandomNum(2),
-      't': Date.now().toString(),
-      'totalSpace': this.RandomNum(12),
-      'udid': adid,
-      'uid': this.RandomNum(5).toString(),
-      'vaid': '',
-      'virtual': '0',
-      'virtualproc': '[]',
-      'wifimaclist': []
-    }
-  }
-  /**
    * 基本请求参数
    *
    * @readonly
@@ -426,9 +295,8 @@ abstract class AppClient {
     if (deviceInfo !== undefined) {
       this._vendor = deviceInfo.vendor
       this._adid = deviceInfo.adid
+      this._guestID = deviceInfo.guestID
       this._guid = deviceInfo.guid
-      this._mac = deviceInfo.mac
-      this._sn = deviceInfo.sn
       this._uid = deviceInfo.uid
       this._yyyyMMddHHmmss = deviceInfo.yyyyMMddHHmmss
     }
@@ -438,13 +306,17 @@ abstract class AppClient {
   protected _adid = AppClient.RandomHex(16)
   protected _guid = AppClient.UUID
   protected _mac = AppClient.MAC
-  protected _sn = `29829/${AppClient.RandomID(4).toUpperCase()}${AppClient.RandomNum(5)}`
   protected _uid = AppClient.RandomNum(5).toString()
-  protected _buvid = tools.Hash('MD5', this._mac).toUpperCase()
-  protected _buvidXY = 'XY' + this._buvid[2] + this._buvid[12] + this._buvid[22] + this._buvid
+  // XW UUID
+  // XX AndroidID
+  // XY MAC
+  // XZ IMEI
+  protected _buvid = tools.Hash('MD5', this._adid).toUpperCase()
+  protected _buvidXX = 'XX' + this._buvid[2] + this._buvid[12] + this._buvid[22] + this._buvid
   protected _yyyyMMddHHmmss = new Date().toISOString().replace(/[-:TZ]/g, '').slice(0, 14)
-  protected _deviceID = tools.Hash('MD5', this._buvidXY + AppClient.vendor.model + AppClient.vendor.modem) + this._yyyyMMddHHmmss + AppClient.RandomHex(16)
+  protected _deviceID = tools.Hash('MD5', this._buvidXX + AppClient.vendor.model + AppClient.vendor.modem) + this._yyyyMMddHHmmss + AppClient.RandomHex(16)
   protected _deviceIDCheck = this._deviceID.match(/\w{2}/g)?.map(v => parseInt(v, 16)).reduce((a, c) => a + c).toString(16).substr(-2)
+  protected _guestID = ''
 
   protected __loginSecretKey: string = AppClient.__loginSecretKey
   public loginAppKey: string = AppClient.loginAppKey
@@ -453,7 +325,7 @@ abstract class AppClient {
   public appKey: string = AppClient.appKey
   public biliLocalID = this._deviceID + this._deviceIDCheck
   public build: string = AppClient.build
-  public buvid = this._buvidXY
+  public buvid = this._buvidXX
   public channel: string = AppClient.channel
   public Clocale: string = AppClient.Clocale
   public device: string = AppClient.device
@@ -465,6 +337,13 @@ abstract class AppClient {
   public platform: string = AppClient.platform
   public Slocale: string = AppClient.Slocale
   public statistics: string = AppClient.statistics
+  // 此Device-ID和之前的Device-ID并不一致, 多用在headers
+  public get headerDeviceID() {
+    let device = Buffer.from(`${this._adid}@${this._vendor.model}`)
+    device[0] = device[0] ^ (device.length & 0x00ff)
+    for (let i = 1; i < device.length; i = i + 1)  device[i] = ((device[(i - 1)] ^ device[i]) & 0x00ff)
+    return device.toString('base64url')
+  }
   /**
    * 请求头
    *
@@ -472,20 +351,26 @@ abstract class AppClient {
    * @memberof AppClient
    */
   public headers: Headers = {
-    'User-Agent': `Mozilla/5.0 BiliDroid/${AppClient._version} (bbcallen@gmail.com) os/${this.device} model/${AppClient.vendor.model} mobi_app/${this.mobiApp} build/${this.build} channel/${this.channel} innerVer/${AppClient._innerVersionCode} osVer/${AppClient.vendor.release} network/2`,
+    'User-Agent': `Mozilla/5.0 BiliDroid/${AppClient._version} (bbcallen@gmail.com) os/${this.device} model/${AppClient.vendor.model} mobi_app/${this.mobiApp} build/${this.build} channel/${this.channel} innerVer/${AppClient._innerVersionCode} osVer/${AppClient.vendor.release} network/1`,
     'APP-KEY': this.mobiApp,
     'Buvid': this.buvid,
-    'Device-ID': this.deviceID,
+    'Device-ID': this.headerDeviceID,
     'env': 'prod'
   }
   /**
-   * 设备信息
+   * 设备指纹
+   * 目前登录并不会检测此项, 从MITM破坏dt值并不会报错得出此结论
    *
    * @memberof AppClient
    */
   public get deviceMeta() {
+    const battery = AppClient.RandomNum(2)
+    const brightness = AppClient.RandomNum(2).toString()
+    const mem = `12000${AppClient.RandomNum(6)}`
     return {
       'aaid': '',
+      'accessibility_service': '[]',
+      'adb_enabled': '0',
       'adid': this._adid,
       'androidapp20': '[]',
       'androidappcnt': 100 + AppClient.RandomNum(2),
@@ -496,11 +381,13 @@ abstract class AppClient {
       'apps': '[]',
       'axposed': 'false',
       'band': this._vendor.modem,
-      'battery': AppClient.RandomNum(2),
+      'battery': battery,
       'batteryState': 'BATTERY_STATUS_DISCHARGING',
+      'biometric': '1',
+      'biometrics': 'touchid',
       'boot': '',
       'brand': this._vendor.brand,
-      'brightness': AppClient.RandomNum(2).toString(),
+      'brightness': brightness,
       'bssid': '02:00:00:00:00:00',
       'btmac': '',
       'build_id': this._vendor.id,
@@ -508,9 +395,12 @@ abstract class AppClient {
       'chid': 'master',
       'countryIso': 'cn',
       'cpuCount': '8',
-      'cpuFreq': `1${AppClient.RandomNum(3)}000`,
-      'cpuModel': '',
+      'cpuFreq': '1804800',
+      'cpuModel': 'ARMv8 Processor rev 0 (v8l)',
       'cpuVendor': this._vendor.cpuVendor,
+      'data_activity_state': '3',
+      'data_connect_state': '2',
+      'device_angle': '',
       'emu': '000',
       'files': '/data/user/0/tv.danmaku.bili/files',
       'first': 'false',
@@ -519,16 +409,24 @@ abstract class AppClient {
       'fts': AppClient.TS.toString(),
       'gadid': '',
       'glimit': '',
+      'gps_sensor': '1',
+      'guest_id': this._guestID,
       'guid': this._guid,
+      'gyroscope_sensor': '1',
+      'is_root': 'false',
       'kernel_version': this._vendor.kernel,
       'languages': 'zh',
-      'mac': this._mac,
+      'last_dump_ts': Date.now().toString(),
+      'light_intensity': '',
+      'linear_speed_sensor': '0',
+      'mac': '',
       'maps': '',
-      'mem': `12000${AppClient.RandomNum(6)}`,
+      'mem': mem,
+      "memory": mem,
       'mid': '',
       'model': this._vendor.model,
       'net': '[]',
-      'network': 'WIFI',
+      'network': 'CELLULAR',
       'oaid': '',
       'oid': '46001',
       'os': 'android',
@@ -539,31 +437,36 @@ abstract class AppClient {
         'gsm.sim.state': 'LOADED,LOADED',
         'http.agent': '',
         'http.proxy': '',
-        'net.dns1': `fd${AppClient.RandomHex(2)}:${AppClient.RandomHex(4)}:${AppClient.RandomHex(4)}::1`,
+        'net.dns1': '',
         'net.eth0.gw': '',
         'net.gprs.local-ip': '',
         'net.hostname': '',
         'persist.sys.country': '',
         'persist.sys.language': '',
         'ro.boot.hardware': this._vendor.platform,
-        'ro.boot.serialno': this._sn,
+        'ro.boot.serialno': '',
         'ro.build.date.utc': this._vendor.utc,
         'ro.build.tags': this._vendor.tags,
         'ro.debuggable': '0',
         'ro.product.device': this._vendor.device,
-        'ro.serialno': this._sn,
-        'sys.usb.state': 'adb'
+        'ro.serialno': '',
+        'sys.usb.state': ''
       },
       'rc_app_code': '0000000000',
       'root': false,
       'screen': '1080,2340,392',
-      'sdkver': '0.2.3',
+      'sdkver': '0.2.4',
       'sensor': '[]',
+      'sensors_info': '[]',
       'sim': '5',
+      'speed_sensor': '1',
       'ssid': '<unknown ssid>',
+      'str_app_id': '1',
+      'str_battery': battery.toString(),
+      'str_brightness': brightness,
       'sys': {
-        'cpu_abi': 'arm64-v8a',
-        'cpu_abi2': '',
+        'cpu_abi': 'armeabi-v7a',
+        'cpu_abi2': 'armeabi',
         'device': this._vendor.device,
         'display': this._vendor.id,
         'fingerprint': this._vendor.fingerprint,
@@ -572,16 +475,34 @@ abstract class AppClient {
         'product': this._vendor.name,
         'serial': 'unknown'
       },
-      'systemvolume': AppClient.RandomNum(2),
+      'systemvolume': 0,
       't': Date.now().toString(),
       'totalSpace': AppClient.RandomNum(12),
       'udid': this._adid,
+      'ui_version': this._vendor.id.toLowerCase(),
       'uid': this._uid,
+      'usb_connected': '0',
       'vaid': '',
       'virtual': '0',
       'virtualproc': '[]',
+      'wifimac': '',
       'wifimaclist': []
     }
+  }
+  /**
+   * 设备信息
+   *
+   * @memberof AppClient
+   */
+  public deviceInfo = {
+    'AndroidID': this._adid,
+    'BuildBrand': this._vendor.brand,
+    'BuildDisplay': this._vendor.id,
+    'BuildFingerprint': this._vendor.fingerprint,
+    'BuildHost': this._vendor.buildhost,
+    'Buvid': this.buvid,
+    'DeviceType': AppClient.device,
+    'fts': AppClient.TS.toString()
   }
   /**
    * 基本请求参数
@@ -597,7 +518,7 @@ abstract class AppClient {
    * @type {string}
    * @memberof AppClient
    */
-  public loginQuery: string = `appkey=${this.loginAppKey}&build=${this.build}&c_locale=${this.Clocale}&channel=${this.channel}\
+  public loginQuery: string = `appkey=${this.loginAppKey}&build=${this.build}&buvid=${this.buvid}&c_locale=${this.Clocale}&channel=${this.channel}\
 &mobi_app=${this.mobiApp}&platform=${this.platform}&s_locale=${this.Slocale}&statistics=${this.statistics}`
   /**
    * 对参数签名
@@ -746,14 +667,80 @@ abstract class AppClient {
    *
    * @protected
    * @param {string} key
+   * @param {object} [meta=this.deviceMeta]
    * @returns {string}
    * @memberof AppClient
    */
-  protected _AESMeta(key: string): string {
-    const metaText = JSON.stringify(this.deviceMeta)
+  protected _AESMeta(key: string, meta: object = this.deviceMeta): string {
+    const metaText = JSON.stringify(meta)
     const cipher = crypto.createCipheriv('aes-128-cbc', key, key)
     const encrypted = Buffer.concat([cipher.update(metaText), cipher.final()])
     return encrypted.toString('hex').toUpperCase()
+  }
+  /**
+   * 获取来宾ID
+   *
+   * @protected
+   * @returns {(Promise<string>)}
+   * @memberof AppClient
+   */
+  protected async _getGuestID(): Promise<string> {
+    const fts = this.deviceInfo.fts
+    const stime = (Date.now() - 10).toString()
+    const ftime = Date.now().toString()
+
+    const reportBaseQuery = `appkey=${this.appKey}&build=${this.build}&buvid=${this.buvid}&c_locale=${this.Clocale}&channel=${this.channel}\
+&event_type=4&fts=${fts}&mobi_app=${this.mobiApp}&platform=${this.platform}&s_locale=${this.Slocale}&statistics=${this.statistics}`
+
+    const reportStartupQuery = `${reportBaseQuery}&event_id=${encodeURIComponent('app.active.startup.sys')}&message_info=${encodeURIComponent(`{"app_id":"1",\
+"brand":${this._vendor.brand},"buvid":${this.buvid},"chid":${this.channel},"ctime":${stime},"device_id":${this.headerDeviceID},"event_category":"4",\
+"event_id":"app.active.startup.sys","extended_fields":"{buvid_ext=${this.buvid}, idfa=, session_id=null, lastruninterval=0, openudid=${this._adid}, \
+mac=, oaid=}","fts":${fts},"latitude":"0","logver":"","longitude":"0","mid":"","model":${this._vendor.model},"network":"1","oid":"46001","osver":"11",\
+"platform":"3","retry_send_count":"0","upload_time":${stime},"version":${AppClient._version},"version_code":${AppClient._versionCode}}`)}`
+    const reportStartup: XHRoptions = {
+      method: 'POST',
+      url: 'https://app.bilibili.com/x/v2/dataflow/report',
+      body: this.signQuery(reportStartupQuery),
+      responseType: 'json',
+      headers: this.headers
+    }
+
+    const reportFingerprintQuery = `${reportBaseQuery}&event_id=${encodeURIComponent('app.active.devicefingerprint.sys')}&message_info=${encodeURIComponent(`{"app_id":"1",\
+"brand":${this._vendor.brand},"buvid":${this.buvid},"chid":${this.channel},"ctime":${ftime},"device_id":${this.headerDeviceID},"event_category":"4",\
+"event_id":"app.active.devicefingerprint.sys","extended_fields":"{serial=unknown, guid=${this._uid}, android_id=${this._adid}}","fts":${fts},"latitude":"0",\
+"logver":"","longitude":"0","mid":"","model":${this._vendor.model},"network":"1","oid":"46001","osver":"11","platform":"3","retry_send_count":"0",\
+"upload_time":${ftime},"version":${AppClient._version},"version_code":${AppClient._versionCode}}`)}`
+    const reportFingerprin: XHRoptions = {
+      method: 'POST',
+      url: 'https://app.bilibili.com/x/v2/dataflow/report',
+      body: this.signQuery(reportFingerprintQuery),
+      responseType: 'json',
+      headers: this.headers
+    }
+
+    const reportStartupResponse = await tools.XHR<regResponse>(reportStartup, 'Android')
+    const reportFingerprinResponse = await tools.XHR<regResponse>(reportFingerprin, 'Android')
+    if (reportStartupResponse?.response.statusCode === 200 && reportFingerprinResponse?.response.statusCode === 200 && reportStartupResponse.body.code === 0 && reportFingerprinResponse.body.code === 0) {
+      const getKeyResponse = await this._getKey()
+      if (getKeyResponse?.response.statusCode === 200 && getKeyResponse.body.code === 0) {
+        const publicKey = getKeyResponse.body.data
+        const key = AppClient.RandomID(16)
+        const deviceInfo = this._AESMeta(key, this.deviceInfo)
+        const dt = encodeURIComponent(this._RSA(publicKey.key, key).toString('base64'))
+        const regQuery = `device_info=${deviceInfo}&dt=${dt}`
+        const reg: XHRoptions = {
+          method: 'POST',
+          url: 'https://passport.bilibili.com/x/passport-user/guest/reg',
+          body: this.signLoginQuery(regQuery),
+          responseType: 'json',
+          headers: this.headers
+        }
+        const regResponse = await tools.XHR<regResponse>(reg, 'Android')
+        if (regResponse?.response.statusCode === 200 && regResponse.body.code === 0)
+          return regResponse.body.data.guest_id.toString()
+      }
+    }
+    return ''
   }
   /**
    * 获取公钥
@@ -785,7 +772,7 @@ abstract class AppClient {
     const deviceMeta = this._AESMeta(key)
     const dt = encodeURIComponent(this._RSA(publicKey.key, key).toString('base64'))
     const authQuery = `${validate}username=${encodeURIComponent(this.userName)}&password=${passWord}&bili_local_id=${this.biliLocalID}&device=phone\
-&device_id=${this.deviceID}&device_meta=${deviceMeta}&device_name=${this.deviceName}&device_platform=${this.devicePlatform}\
+&device_id=${this.deviceID}&device_meta=${deviceMeta}&device_name=${this.deviceName}&device_platform=${this.devicePlatform}&device_tourist_id=${this._guestID}\
 &dt=${dt}&from_pv=${encodeURIComponent('main.my-information.my-login.0.click')}&from_url=${encodeURIComponent('bilibili://user_center/mine')}\
 &local_id=${this.localID}&login_session_id=${tools.Hash('MD5', this.buvid + Date.now())}&spm_id=${encodeURIComponent('main.my-information.my-login.0')}`
     const auth: XHRoptions = {
@@ -823,6 +810,7 @@ abstract class AppClient {
    * @memberof AppClient
    */
   public async login(): Promise<loginResponse> {
+    if (this._guestID === '') this._guestID = await this._getGuestID()
     const getKeyResponse = await this._getKey()
     if (getKeyResponse?.response.statusCode === 200 && getKeyResponse.body.code === 0) {
       const authResponse = await this._auth(getKeyResponse.body.data)
@@ -878,7 +866,7 @@ abstract class AppClient {
     const refreshQuery = `${cookie}access_key=${this.accessToken}&access_token=${this.accessToken}&refresh_token=${this.refreshToken}`
     const refresh: XHRoptions = {
       method: 'POST',
-      url: 'https://passport.bilibili.com/api/v2/oauth2/refresh_token',
+      url: 'https://passport.bilibili.com/x/passport-login/oauth2/refresh_token',
       body: this.signLoginQuery(refreshQuery),
       responseType: 'json',
       headers: this.headers

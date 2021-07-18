@@ -28,7 +28,7 @@ class Tools extends EventEmitter {
         return {
           'Connection': 'Keep-Alive',
           'env': 'prod',
-          'User-Agent': 'Mozilla/5.0 BiliDroid/6.32.0 (bbcallen@gmail.com) os/android model/M2007J1SC mobi_app/android build/6320200 channel/master innerVer/6320200 osVer/10 network/2'
+          'User-Agent': 'Mozilla/5.0 BiliDroid/6.33.0 (bbcallen@gmail.com) os/android model/XQ-BC72 mobi_app/android build/6330300 channel/master innerVer/6330300 osVer/10 network/1'
         }
       case 'WebView':
         return {
@@ -39,7 +39,7 @@ class Tools extends EventEmitter {
           'Sec-Fetch-Dest': 'empty',
           'Sec-Fetch-Mode': 'cors',
           'Sec-Fetch-Site': 'same-site',
-          'User-Agent': 'Mozilla/5.0 (Linux; Android 10; M2007J1SC Build/QKQ1.200419.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/87.0.4280.141 Mobile Safari/537.36 os/android model/M2007J1SC build/6320200 osVer/10 network/2 BiliApp/6320200 mobi_app/android channel/master innerVer/6320200',
+          'User-Agent': 'Mozilla/5.0 (Linux; Android 11; XQ-BC72 Build/61.0.A.10.1; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.120 Mobile Safari/537.36 os/android model/XQ-BC72 build/6330300 osVer/11 sdkInt/30 network/1 BiliApp/6330300 mobi_app/android channel/master innerVer/6330300 c_locale/zh-Hans_CN s_locale/zh-Hans_CN',
           'X-Requested-With': 'tv.danmaku.bili'
         }
       default:

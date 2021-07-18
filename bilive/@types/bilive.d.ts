@@ -114,6 +114,20 @@ declare enum appStatus {
   'authcode' = 4,
 }
 /**
+ * 注册返回
+ *
+ * @interface regResponse
+ */
+interface regResponse {
+  code: number
+  data: regResponseData
+  message: number
+  ttl: number
+}
+interface regResponseData {
+  guest_id: number
+}
+/**
  * 公钥返回
  *
  * @interface getKeyResponse
@@ -245,6 +259,7 @@ interface qrcodeResponseHttp {
 interface deviceInfo {
   vendor: {
     brand: string
+    buildhost: string
     cpuVendor: string
     date: string
     device: string
@@ -265,9 +280,8 @@ interface deviceInfo {
     utc: string
   }
   adid: string
+  guestID: string
   guid: string
-  mac: string
-  sn: string
   uid: string
   yyyyMMddHHmmss: string
 }
