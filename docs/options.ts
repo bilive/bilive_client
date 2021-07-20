@@ -382,9 +382,10 @@ class Options {
    * @returns {Promise<userDataMSG>}
    * @memberof Options
    */
-  public setUserData(uid: string, data: userData, validate?: string, authcode?: string): Promise<userDataMSG> {
+  public setUserData(uid: string, data: userData, validate?: string, validatecode?: string, authcode?: string): Promise<userDataMSG> {
     const message: userDataMSG = { cmd: 'setUserData', uid, data }
     if (validate !== undefined) message.validate = validate
+    else if (validatecode !== undefined) message.validatecode = validatecode
     else if (authcode !== undefined) message.authcode = authcode
     return this._send<userDataMSG>(message)
   }

@@ -231,10 +231,12 @@ class Options {
         const message = { cmd: 'getUserData', uid };
         return this._send(message);
     }
-    setUserData(uid, data, validate, authcode) {
+    setUserData(uid, data, validate, validatecode, authcode) {
         const message = { cmd: 'setUserData', uid, data };
         if (validate !== undefined)
             message.validate = validate;
+        else if (validatecode !== undefined)
+            message.validatecode = validatecode;
         else if (authcode !== undefined)
             message.authcode = authcode;
         return this._send(message);

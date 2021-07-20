@@ -184,11 +184,13 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
   userConfigDiv.appendChild(userConfigDF)
   // 保存用户设置
   let validate: string | undefined = undefined
+  let validatecode: string | undefined = undefined
   let authcode: string | undefined = undefined
   saveUserButton.onclick = async () => {
     modal()
-    const userDataMSG = await options.setUserData(uid, userData, validate, authcode)
+    const userDataMSG = await options.setUserData(uid, userData, validate, validatecode, authcode)
     validate = undefined
+    validatecode = undefined
     authcode = undefined
     if (userDataMSG.msg == null) {
       modal({ body: '保存成功' })
@@ -223,13 +225,27 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
           showOK: true,
           onOK: () => {
             const result = geetestObj.getValidate()
-            validate = result.geetest_validate
             validate = `gee_challenge=${result.geetest_challenge}&gee_seccode=${encodeURIComponent(result.geetest_seccode)}&gee_validate=${result.geetest_validate}&recaptcha_token=${token}`
             // geetestObj.destroy()
             saveUserButton.click()
           }
         })
       }
+      else modal({ body: userDataMSG.validate })
+    }
+    else if (userDataMSG.msg === 'validatecode' && userDataMSG.validatecode != null) {
+      const validatecodeTemplate = <HTMLTemplateElement>template.querySelector('#validatecodeTemplate')
+      const clone = document.importNode(validatecodeTemplate.content, true)
+      const validatecodeIframe = <HTMLImageElement>clone.querySelector('.validatecode')
+      validatecodeIframe.src = userDataMSG.validatecode
+      modal({
+        body: clone,
+        showOK: true,
+        onOK: () => {
+          validatecode = 'confirm'
+          saveUserButton.click()
+        }
+      })
     }
     else if (userDataMSG.msg === 'authcode' && userDataMSG.authcode != null) {
       const authcodeTemplate = <HTMLTemplateElement>template.querySelector('#authcodeTemplate')

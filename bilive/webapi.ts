@@ -257,6 +257,7 @@ class WebAPI extends EventEmitter {
           const setUserData = <userData>message.data || {}
           let msg = ''
           let validate = ''
+          let validatecode = ''
           // let authcode = ''
           for (const i in userData) {
             if (typeof userData[i] !== typeof setUserData[i]) {
@@ -276,6 +277,8 @@ class WebAPI extends EventEmitter {
               const status = await newUser.Start()
               // 账号会尝试登录, 如果需要极验验证码status会返回'validate', 并且链接会以Url字符串形式保存在validateURL
               if (status === 'validate') validate = newUser.validateURL
+              // 账号会尝试登录, 如果需要手机验证码status会返回'validatecode', 并且链接会以Url字符串形式保存在validatecodeURL
+              else if (status === 'validatecode') validatecode = newUser.validatecodeURL
               // 账号会尝试登录, 如果需要扫描登录status会返回'authcode', 并且链接会以Url字符串形式保存在authCodeURL
               // else if (status === 'authcode') authcode = newUser.authcodeURL
               else if (Options.user.has(setUID)) Options.emit('newUser', newUser)
@@ -287,6 +290,11 @@ class WebAPI extends EventEmitter {
                 validateUser.validate = message.validate
                 const status = await validateUser.Start()
                 if (status === 'validate') validate = validateUser.validateURL
+                else if (Options.user.has(setUID)) Options.emit('newUser', validateUser)
+              }
+              else if (validateUser.validatecodeURL !== '' && message.validatecode !== undefined) {
+                const status = await validateUser.Start()
+                if (status === 'validatecode') validatecode = validateUser.validatecodeURL
                 else if (Options.user.has(setUID)) Options.emit('newUser', validateUser)
               }
               // else if (captchaUser.authcodeURL !== '' && message.authcode !== undefined) {
@@ -304,6 +312,7 @@ class WebAPI extends EventEmitter {
               else setUserData[i] = userData[i]
             }
             if (validate !== '') this._Send({ message: { cmd, ts, uid: setUID, msg: 'validate', data: setUserData, validate }, client, option })
+            else if (validatecode !== '') this._Send({ message: { cmd, ts, uid: setUID, msg: 'validatecode', data: setUserData, validatecode }, client, option })
             // else if (authcode !== '') this._Send({ message: { cmd, ts, uid: setUID, msg: 'authcode', data: setUserData, authcode }, client, option })
             else this._Send({ message: { cmd, ts, uid: setUID, data: setUserData }, client, option })
           }
@@ -498,6 +507,7 @@ interface message {
   uid?: string
   data?: config | optionsInfo | string | string[] | userData
   validate?: string
+  validatecode?: string
   authcode?: string
 }
 interface wsOptions {

@@ -12,6 +12,7 @@ enum appStatus {
   'error',
   'httpError',
   'validate',
+  'validatecode',
   'authcode',
 }
 /**
@@ -596,6 +597,20 @@ abstract class AppClient {
    */
   public validateURL: string = ''
   /**
+   * 手机验证码, 登录时会自动清空
+   *
+   * @type {string}
+   * @memberof AppClient
+   */
+  public validatecode: string = ''
+  /**
+   * 手机验证页面, 登录时会自动清空
+   *
+   * @type {string}
+   * @memberof AppClient
+   */
+  public validatecodeURL: string = ''
+  /**
    * 用户名, 推荐邮箱或电话号
    *
    * @abstract
@@ -804,6 +819,23 @@ mac=, oaid=}","fts":${this._fts},"latitude":"0","logver":"","longitude":"0","mid
     return tools.XHR<authResponse>(auth, 'Android')
   }
   /**
+   * 手机验证
+   *
+   * @protected
+   * @returns {(Promise<XHRresponse<authResponse> | undefined>)}
+   * @memberof AppClient
+   */
+  protected _accessToken(): Promise<XHRresponse<authResponse> | undefined> {
+    const accessToken: XHRoptions = {
+      url: `https://passport.bilibili.com/api/v2/oauth2/access_token?${this.signLoginQuery(`bili_local_id=${this.biliLocalID}&code=${this.validatecode}\
+&grant_type=volatile_code&local_id=${this.localID}`)}`,
+      responseType: 'json',
+      headers: this.headers
+    }
+    this.validatecode = ''
+    return tools.XHR<authResponse>(accessToken, 'Android')
+  }
+  /**
    * 更新用户凭证
    *
    * @protected
@@ -828,27 +860,51 @@ mac=, oaid=}","fts":${this._fts},"latitude":"0","logver":"","longitude":"0","mid
    * @memberof AppClient
    */
   public async login(): Promise<loginResponse> {
-    if (this._guestID === '') this._guestID = await this._getGuestID()
-    const getKeyResponse = await this._getKey()
-    if (getKeyResponse?.response.statusCode === 200 && getKeyResponse.body.code === 0) {
-      const authResponse = await this._auth(getKeyResponse.body.data)
-      if (authResponse?.response.statusCode === 200) {
-        if (authResponse.body.code === 0) {
-          if (authResponse.body.data.status === 0 && authResponse.body.data.token_info != null && authResponse.body.data.cookie_info != null) {
-            this._update(authResponse.body.data)
-            return { status: AppClient.status.success, data: authResponse.body }
+    if (this._guestID === '') {
+      this._guestID = await this._getGuestID()
+    }
+    let authResponse: XHRresponse<authResponse> | undefined
+    if (this.validatecode !== '') {
+      authResponse = await this._accessToken()
+    }
+    else {
+      const getKeyResponse = await this._getKey()
+      if (getKeyResponse?.response.statusCode === 200 && getKeyResponse.body.code === 0) {
+        authResponse = await this._auth(getKeyResponse.body.data)
+      }
+      else {
+        return { status: AppClient.status.httpError, data: getKeyResponse }
+      }
+    }
+    if (authResponse?.response.statusCode === 200) {
+      if (authResponse.body.code === 0) {
+        if (authResponse.body.data.token_info != null && authResponse.body.data.cookie_info != null) {
+          this._update(authResponse.body.data)
+          return { status: AppClient.status.success, data: authResponse.body }
+        }
+        else if (authResponse.body.data.status === 1 || authResponse.body.data.status === 2) {
+          const token = authResponse.body.data.url.match(/token=(\w*)&/)
+          if (token !== null) {
+            this.validatecode = token[1]
           }
+          this.validatecodeURL = authResponse.body.data.url
+          return { status: AppClient.status.validatecode, data: authResponse.body }
+        }
+        else {
           return { status: AppClient.status.error, data: authResponse.body }
         }
-        if (authResponse.body.code === -105) {
-          this.validateURL = authResponse.body.data.url
-          return { status: AppClient.status.validate, data: authResponse.body }
-        }
+      }
+      else if (authResponse.body.code === -105) {
+        this.validateURL = authResponse.body.data.url
+        return { status: AppClient.status.validate, data: authResponse.body }
+      }
+      else {
         return { status: AppClient.status.error, data: authResponse.body }
       }
+    }
+    else {
       return { status: AppClient.status.httpError, data: authResponse }
     }
-    return { status: AppClient.status.httpError, data: getKeyResponse }
   }
   /**
    * 客户端登出

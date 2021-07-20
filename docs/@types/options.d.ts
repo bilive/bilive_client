@@ -29,6 +29,7 @@ interface userDataMSG extends message {
   uid: string
   data: userData
   validate?: string
+  validatecode?: string
   authcode?: string
 }
 // 应用设置

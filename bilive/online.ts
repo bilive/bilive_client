@@ -63,15 +63,20 @@ class Online extends AppClient {
    * 当账号出现异常时, 会返回'validate'或'stop'
    * 'validate'为登录需要极验验证码, 若无法处理需Stop()
    *
-   * @returns {(Promise<'validate' | 'authcode' | 'stop' | void>)}
+   * @returns {(Promise<'validate' | 'validatecode' | 'authcode' | 'stop' | void>)}
    * @memberof Online
    */
-  public async Start(): Promise<'validate' | 'authcode' | 'stop' | void> {
+  public async Start(): Promise<'validate' | 'validatecode' | 'authcode' | 'stop' | void> {
     clearTimeout(this._loopTimer)
     if (!Options.user.has(this.uid)) Options.user.set(this.uid, this)
     if (this.jar === undefined) this.jar = tools.setCookie(this.cookieString)
     const statusTest = await this._getUserStatus()
-    if (statusTest !== undefined) return statusTest
+    // 目前B站有bug
+    if (statusTest === 'validatecode') {
+      const statusTest = await this._getUserStatus()
+      if (statusTest !== undefined) return statusTest
+    }
+    else if (statusTest !== undefined) return statusTest
     this._loopTimer = setTimeout(() => this._getUserStatusLoop(), 5 * 60 * 1000)
   }
   /**
@@ -94,10 +99,10 @@ class Online extends AppClient {
    * 获取用户状态
    *
    * @protected
-   * @returns {(Promise<'validate' | 'authcode' | 'stop' | void>)}
+   * @returns {(Promise<'validate' | 'validatecode' | 'authcode' | 'stop' | void>)}
    * @memberof Online
    */
-  protected async _getUserStatus(): Promise<'validate' | 'authcode' | 'stop' | void> {
+  protected async _getUserStatus(): Promise<'validate' | 'validatecode' | 'authcode' | 'stop' | void> {
     const roomID = 3
     const PCUserInfoXHRoptions = await tools.XHR<{ code: number }>({
       url: `${apiLiveOrigin}/xlive/web-ucenter/user/get_user_info`,
@@ -127,10 +132,10 @@ class Online extends AppClient {
    * cookie失效
    *
    * @protected
-   * @returns {(Promise<'validate' | 'authcode' | 'stop' | void>)}
+   * @returns {(Promise<'validate' | 'validatecode' | 'authcode' | 'stop' | void>)}
    * @memberof Online
    */
-  protected async _cookieError(): Promise<'validate' | 'authcode' | 'stop' | void> {
+  protected async _cookieError(): Promise<'validate' | 'validatecode' | 'authcode' | 'stop' | void> {
     tools.Log(this.nickname, 'Cookie已失效')
     const refresh = await this.refresh()
     if (refresh.status === AppClient.status.success) {
@@ -145,10 +150,10 @@ class Online extends AppClient {
    * token失效
    *
    * @protected
-   * @returns {(Promise<'validate' | 'authcode' | 'stop' | void>)}
+   * @returns {(Promise<'validate' | 'validatecode' | 'authcode' | 'stop' | void>)}
    * @memberof Online
    */
-  protected async _tokenError(): Promise<'validate' | 'authcode' | 'stop' | void> {
+  protected async _tokenError(): Promise<'validate' | 'validatecode' | 'authcode' | 'stop' | void> {
     tools.Log(this.nickname, 'Token已失效')
     // let login: loginResponse
     // if (this.authcodeURL !== '') login = await this.qrcodePoll()
@@ -178,8 +183,12 @@ class Online extends AppClient {
         break
       case AppClient.status.validate:
         this._loopTimer = setTimeout(() => this.Stop(), 60 * 1000)
-        tools.Log(this.nickname, '极验验证码错误')
+        tools.Log(this.nickname, '需要极验验证码')
         return 'validate'
+      case AppClient.status.validatecode:
+        this._loopTimer = setTimeout(() => this.Stop(), 60 * 1000)
+        tools.Log(this.nickname, '需要手机验证码')
+        return 'validatecode'
       // case AppClient.status.authcode:
       //   const authcode = await this.getAuthcode()
       //   if (authcode.status === AppClient.status.success) {
