@@ -198,9 +198,9 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
       userConfigDiv.appendChild(userConfigDF)
     }
     else if (userDataMSG.msg === 'validate' && userDataMSG.validate != null) {
-      const verificationUrl = userDataMSG.validate.match(/gt=(\w*)&challenge=(\w*)/)
+      const verificationUrl = userDataMSG.validate.match(/recaptcha_token=(\w*)&gee_gt=(\w*)&gee_challenge=(\w*)&hash=(\w*)/)
       if (verificationUrl !== null) {
-        const [, gt, challenge] = verificationUrl
+        const [, token, gt, challenge, _hash] = verificationUrl
         const validateTemplate = <HTMLTemplateElement>template.querySelector('#validateTemplate')
         const clone = document.importNode(validateTemplate.content, true)
         const validateBox = <HTMLImageElement>clone.querySelector('.validate')
@@ -224,7 +224,7 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
           onOK: () => {
             const result = geetestObj.getValidate()
             validate = result.geetest_validate
-            validate = `${result.geetest_validate}&challenge=${result.geetest_challenge}&seccode=${encodeURIComponent(result.geetest_seccode)}`
+            validate = `gee_challenge=${result.geetest_challenge}&gee_seccode=${encodeURIComponent(result.geetest_seccode)}&gee_validate=${result.geetest_validate}&recaptcha_token=${token}`
             // geetestObj.destroy()
             saveUserButton.click()
           }

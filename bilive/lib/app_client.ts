@@ -785,7 +785,7 @@ mac=, oaid=}","fts":${this._fts},"latitude":"0","logver":"","longitude":"0","mid
    */
   protected _auth(publicKey: getKeyResponseData): Promise<XHRresponse<authResponse> | undefined> {
     const passWord = encodeURIComponent(this._RSAPassWord(publicKey))
-    const validate = this.validate === '' ? '' : `validate=${this.validate}&`
+    const validate = this.validate === '' ? '' : `${this.validate}&`
     const key = AppClient.RandomID(16)
     const deviceMeta = this._AESMeta(key)
     const dt = encodeURIComponent(this._RSA(publicKey.key, key).toString('base64'))
