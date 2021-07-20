@@ -280,10 +280,11 @@ interface deviceInfo {
     utc: string
   }
   adid: string
+  deviceID: string
+  fts: string
   guestID: string
   guid: string
   uid: string
-  yyyyMMddHHmmss: string
 }
 /*******************
  ****** tools ******

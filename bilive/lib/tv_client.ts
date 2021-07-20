@@ -14,21 +14,12 @@ abstract class TVClient extends AppClient {
   public loginAppKey: string = '4409e2ce8ffd12b8'
   protected __secretKey: string = '59b43e04ad6965f34319062b478f83dd'
   public appKey: string = '4409e2ce8ffd12b8'
-  public biliLocalID: string = AppClient.biliLocalID
   public build: string = '102401'
-  public buvid: string = AppClient.buvid
-  public channel: string = 'master'
-  public device: string = 'Sony'
-  public deviceID: string = this.biliLocalID
-  public deviceName: string = 'G8142'
-  public devicePlatform: string = 'Android10SonyG8142'
   public fingerprint: string = AppClient.RandomID(62)
   public guid: string = this.buvid
   public localFingerprint: string = this.fingerprint
-  public localID: string = this.buvid
   public mobiApp: string = 'android_tv_yst'
   public networkstate: string = 'wifi'
-  public platform: string = 'android'
   /**
    * TV登录请求头
    *

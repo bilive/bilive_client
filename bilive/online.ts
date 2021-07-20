@@ -158,10 +158,11 @@ class Online extends AppClient {
     const deviceInfo: deviceInfo = {
       vendor: this._vendor,
       adid: this._adid,
+      deviceID: this._deviceID,
+      fts: this._fts,
       guestID: this._guestID,
       guid: this._guid,
       uid: this._uid,
-      yyyyMMddHHmmss: this._yyyyMMddHHmmss
     }
     this.userData.deviceInfo = JSON.stringify(deviceInfo)
 

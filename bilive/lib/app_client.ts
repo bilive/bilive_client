@@ -48,33 +48,41 @@ abstract class AppClient {
   protected static _version = '6.33.0'
   protected static _versionCode = '6330300'
   protected static _innerVersionCode = '6330300'
+  protected static get _buvid(): string {
+    const uuid = this.RandomHex(32).toUpperCase()
+    return 'XX' + uuid[2] + uuid[12] + uuid[22] + uuid
+  }
+  protected static get _deviceID(): string {
+    const yyyyMMddHHmmss = new Date().toISOString().replace(/[-:TZ]/g, '').slice(0, 14)
+    const deviceID = this.RandomHex(32) + yyyyMMddHHmmss + this.RandomHex(16)
+    const check = deviceID.match(/\w{2}/g)?.map(v => parseInt(v, 16)).reduce((a, c) => a + c).toString(16).substr(-2)
+    return deviceID + check
+  }
+  protected static get _headerDeviceID(): string {
+    const device = Buffer.from(`${AppClient.RandomHex(16)}@${AppClient.vendor.model}`)
+    device[0] = device[0] ^ (device.length & 0x00ff)
+    for (let i = 1; i < device.length; i = i + 1)  device[i] = ((device[(i - 1)] ^ device[i]) & 0x00ff)
+    return device.toString('base64url')
+  }
 
   protected static readonly __loginSecretKey: string = '60698ba2f68e01ce44738920a0ffe768'
   public static readonly loginAppKey: string = 'bca7e84c2d947ac6'
   protected static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
   public static readonly appKey: string = '1d8b6e7d45233436'
   public static readonly actionKey: string = 'appkey'
-  public static get biliLocalID(): string {
-    const yyyyMMddHHmmss = new Date().toISOString().replace(/[-:TZ]/g, '').slice(0, 14)
-    // const deviceID = tools.Hash('MD5', this.buvid + this.vendor.model + this.vendor.modem) + yyyyMMddHHmmss + this.RandomHex(16)
-    const deviceID = this.RandomHex(32) + yyyyMMddHHmmss + this.RandomHex(16)
-    const check = deviceID.match(/\w{2}/g)?.map(v => parseInt(v, 16)).reduce((a, c) => a + c).toString(16).substr(-2)
-    return deviceID + check
-  }
+  // 同一客户端应与deviceID相同
+  public static get biliLocalID(): string { return AppClient._deviceID }
   public static readonly build: string = AppClient._versionCode
-  public static get buvid(): string {
-    const uuid = this.RandomHex(32).toUpperCase()
-    return 'XX' + uuid[2] + uuid[12] + uuid[22] + uuid
-  }
+  public static get buvid(): string { return AppClient._buvid }
   public static readonly Clocale: string = 'zh-Hans_CN'
   public static readonly channel: string = 'master'
   public static readonly device: string = 'android'
-  // 同一客户端与biliLocalID相同
-  public static get deviceID(): string { return this.biliLocalID }
+  public static get deviceID(): string { return AppClient._deviceID }
   public static readonly deviceName: string = AppClient.vendor.brand + AppClient.vendor.model
   public static readonly devicePlatform: string = 'Android' + AppClient.vendor.release + AppClient.vendor.brand + AppClient.vendor.model
-  // 同一客户端与buvid相同
-  public static get localID(): string { return this.buvid }
+  public static get headerDeviceID(): string { return AppClient._headerDeviceID }
+  // 同一客户端应与buvid相同
+  public static get localID(): string { return AppClient._buvid }
   public static readonly mobiApp: string = 'android'
   public static readonly platform: string = 'android'
   public static readonly Slocale: string = 'zh-Hans_CN'
@@ -295,55 +303,64 @@ abstract class AppClient {
     if (deviceInfo !== undefined) {
       this._vendor = deviceInfo.vendor
       this._adid = deviceInfo.adid
+      this._fts = deviceInfo.fts
       this._guestID = deviceInfo.guestID
       this._guid = deviceInfo.guid
       this._uid = deviceInfo.uid
-      this._yyyyMMddHHmmss = deviceInfo.yyyyMMddHHmmss
+      this._deviceID = deviceInfo.deviceID
     }
   }
 
   protected _vendor = AppClient.vendor
   protected _adid = AppClient.RandomHex(16)
-  protected _guid = AppClient.UUID
-  protected _mac = AppClient.MAC
-  protected _uid = AppClient.RandomNum(5).toString()
-  // XW UUID
-  // XX AndroidID
-  // XY MAC
-  // XZ IMEI
-  protected _buvid = tools.Hash('MD5', this._adid).toUpperCase()
-  protected _buvidXX = 'XX' + this._buvid[2] + this._buvid[12] + this._buvid[22] + this._buvid
-  protected _yyyyMMddHHmmss = new Date().toISOString().replace(/[-:TZ]/g, '').slice(0, 14)
-  protected _deviceID = tools.Hash('MD5', this._buvidXX + AppClient.vendor.model + AppClient.vendor.modem) + this._yyyyMMddHHmmss + AppClient.RandomHex(16)
-  protected _deviceIDCheck = this._deviceID.match(/\w{2}/g)?.map(v => parseInt(v, 16)).reduce((a, c) => a + c).toString(16).substr(-2)
+  protected _fts = AppClient.TS.toString()
   protected _guestID = ''
+  protected _guid = AppClient.UUID
+  protected _uid = `101${AppClient.RandomNum(2)}`
+  protected _deviceID = this._biliLocalID
+
+  protected get _buvidXX(): string {
+    // XW UUID
+    // XX AndroidID
+    // XY MAC
+    // XZ IMEI
+    const buvid = tools.Hash('MD5', this._adid).toUpperCase()
+    return 'XX' + buvid[2] + buvid[12] + buvid[22] + buvid
+  }
+  protected get _biliLocalID(): string {
+    const yyyyMMddHHmmss = new Date().toISOString().replace(/[-:TZ]/g, '').slice(0, 14)
+    const biliLocalID = tools.Hash('MD5', this._buvidXX + this._vendor.model + this._vendor.modem) + yyyyMMddHHmmss + AppClient.RandomHex(16)
+    const biliLocalIDCheck = biliLocalID.match(/\w{2}/g)?.map(v => parseInt(v, 16)).reduce((a, c) => a + c).toString(16).substr(-2)
+    return biliLocalID + biliLocalIDCheck
+  }
+  // 此Device-ID和之前的Device-ID并不一致, 多用在headers
+  protected get _headerDeviceID(): string {
+    const device = Buffer.from(`${this._adid}@${this._vendor.model}`)
+    device[0] = device[0] ^ (device.length & 0x00ff)
+    for (let i = 1; i < device.length; i = i + 1)  device[i] = ((device[(i - 1)] ^ device[i]) & 0x00ff)
+    return device.toString('base64url')
+  }
 
   protected __loginSecretKey: string = AppClient.__loginSecretKey
   public loginAppKey: string = AppClient.loginAppKey
   protected __secretKey: string = AppClient.__secretKey
   public actionKey: string = AppClient.actionKey
   public appKey: string = AppClient.appKey
-  public biliLocalID = this._deviceID + this._deviceIDCheck
+  public get biliLocalID(): string { return this._deviceID }
   public build: string = AppClient.build
-  public buvid = this._buvidXX
+  public get buvid(): string { return this._buvidXX }
   public channel: string = AppClient.channel
   public Clocale: string = AppClient.Clocale
   public device: string = AppClient.device
-  public deviceID: string = this.biliLocalID
+  public get deviceID(): string { return this._deviceID }
   public deviceName: string = AppClient.deviceName
   public devicePlatform: string = AppClient.devicePlatform
-  public localID: string = this.buvid
+  public get headerDeviceID(): string { return this._headerDeviceID }
+  public get localID(): string { return this._buvidXX }
   public mobiApp: string = AppClient.mobiApp
   public platform: string = AppClient.platform
   public Slocale: string = AppClient.Slocale
   public statistics: string = AppClient.statistics
-  // 此Device-ID和之前的Device-ID并不一致, 多用在headers
-  public get headerDeviceID() {
-    let device = Buffer.from(`${this._adid}@${this._vendor.model}`)
-    device[0] = device[0] ^ (device.length & 0x00ff)
-    for (let i = 1; i < device.length; i = i + 1)  device[i] = ((device[(i - 1)] ^ device[i]) & 0x00ff)
-    return device.toString('base64url')
-  }
   /**
    * 请求头
    *
@@ -351,7 +368,7 @@ abstract class AppClient {
    * @memberof AppClient
    */
   public headers: Headers = {
-    'User-Agent': `Mozilla/5.0 BiliDroid/${AppClient._version} (bbcallen@gmail.com) os/${this.device} model/${AppClient.vendor.model} mobi_app/${this.mobiApp} build/${this.build} channel/${this.channel} innerVer/${AppClient._innerVersionCode} osVer/${AppClient.vendor.release} network/1`,
+    'User-Agent': `Mozilla/5.0 BiliDroid/${AppClient._version} (bbcallen@gmail.com) os/${this.device} model/${this._vendor.model} mobi_app/${this.mobiApp} build/${this.build} channel/${this.channel} innerVer/${AppClient._innerVersionCode} osVer/${this._vendor.release} network/1`,
     'APP-KEY': this.mobiApp,
     'Buvid': this.buvid,
     'Device-ID': this.headerDeviceID,
@@ -373,7 +390,7 @@ abstract class AppClient {
       'adb_enabled': '0',
       'adid': this._adid,
       'androidapp20': '[]',
-      'androidappcnt': 100 + AppClient.RandomNum(2),
+      'androidappcnt': 400 + AppClient.RandomNum(2),
       'androidsysapp20': '[]',
       'app_id': '1',
       'app_version': AppClient._version,
@@ -406,7 +423,7 @@ abstract class AppClient {
       'first': 'false',
       'free_memory': AppClient.RandomNum(10).toString(),
       'fstorage': 256_100_000_000 + AppClient.RandomNum(7),
-      'fts': AppClient.TS.toString(),
+      'fts': this._fts,
       'gadid': '',
       'glimit': '',
       'gps_sensor': '1',
@@ -494,15 +511,17 @@ abstract class AppClient {
    *
    * @memberof AppClient
    */
-  public deviceInfo = {
-    'AndroidID': this._adid,
-    'BuildBrand': this._vendor.brand,
-    'BuildDisplay': this._vendor.id,
-    'BuildFingerprint': this._vendor.fingerprint,
-    'BuildHost': this._vendor.buildhost,
-    'Buvid': this.buvid,
-    'DeviceType': AppClient.device,
-    'fts': AppClient.TS.toString()
+  public get deviceInfo() {
+    return {
+      'AndroidID': this._adid,
+      'BuildBrand': this._vendor.brand,
+      'BuildDisplay': this._vendor.id,
+      'BuildFingerprint': this._vendor.fingerprint,
+      'BuildHost': this._vendor.buildhost,
+      'Buvid': this.buvid,
+      'DeviceType': AppClient.device,
+      'fts': this._fts
+    }
   }
   /**
    * 基本请求参数
@@ -685,17 +704,16 @@ abstract class AppClient {
    * @memberof AppClient
    */
   protected async _getGuestID(): Promise<string> {
-    const fts = this.deviceInfo.fts
     const stime = (Date.now() - 10).toString()
     const ftime = Date.now().toString()
 
     const reportBaseQuery = `appkey=${this.appKey}&build=${this.build}&buvid=${this.buvid}&c_locale=${this.Clocale}&channel=${this.channel}\
-&event_type=4&fts=${fts}&mobi_app=${this.mobiApp}&platform=${this.platform}&s_locale=${this.Slocale}&statistics=${this.statistics}`
+&event_type=4&fts=${this._fts}&mobi_app=${this.mobiApp}&platform=${this.platform}&s_locale=${this.Slocale}&statistics=${this.statistics}`
 
     const reportStartupQuery = `${reportBaseQuery}&event_id=${encodeURIComponent('app.active.startup.sys')}&message_info=${encodeURIComponent(`{"app_id":"1",\
 "brand":${this._vendor.brand},"buvid":${this.buvid},"chid":${this.channel},"ctime":${stime},"device_id":${this.headerDeviceID},"event_category":"4",\
 "event_id":"app.active.startup.sys","extended_fields":"{buvid_ext=${this.buvid}, idfa=, session_id=null, lastruninterval=0, openudid=${this._adid}, \
-mac=, oaid=}","fts":${fts},"latitude":"0","logver":"","longitude":"0","mid":"","model":${this._vendor.model},"network":"1","oid":"46001","osver":"11",\
+mac=, oaid=}","fts":${this._fts},"latitude":"0","logver":"","longitude":"0","mid":"","model":${this._vendor.model},"network":"1","oid":"46001","osver":"11",\
 "platform":"3","retry_send_count":"0","upload_time":${stime},"version":${AppClient._version},"version_code":${AppClient._versionCode}}`)}`
     const reportStartup: XHRoptions = {
       method: 'POST',
@@ -707,7 +725,7 @@ mac=, oaid=}","fts":${fts},"latitude":"0","logver":"","longitude":"0","mid":"","
 
     const reportFingerprintQuery = `${reportBaseQuery}&event_id=${encodeURIComponent('app.active.devicefingerprint.sys')}&message_info=${encodeURIComponent(`{"app_id":"1",\
 "brand":${this._vendor.brand},"buvid":${this.buvid},"chid":${this.channel},"ctime":${ftime},"device_id":${this.headerDeviceID},"event_category":"4",\
-"event_id":"app.active.devicefingerprint.sys","extended_fields":"{serial=unknown, guid=${this._uid}, android_id=${this._adid}}","fts":${fts},"latitude":"0",\
+"event_id":"app.active.devicefingerprint.sys","extended_fields":"{serial=unknown, guid=${this._uid}, android_id=${this._adid}}","fts":${this._fts},"latitude":"0",\
 "logver":"","longitude":"0","mid":"","model":${this._vendor.model},"network":"1","oid":"46001","osver":"11","platform":"3","retry_send_count":"0",\
 "upload_time":${ftime},"version":${AppClient._version},"version_code":${AppClient._versionCode}}`)}`
     const reportFingerprin: XHRoptions = {
