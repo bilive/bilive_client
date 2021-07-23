@@ -49,6 +49,12 @@ abstract class AppClient {
   protected static _version = '6.33.0'
   protected static _versionCode = '6330300'
   protected static _innerVersionCode = '6330300'
+  // secretKey加密存储
+  private static __keyDecipher(ciphertext: string): string {
+    const decipher = crypto.createDecipheriv('aes-128-cbc', 'bilive_client_ky', 'bilive_client_iv')
+    const decrypted = Buffer.concat([decipher.update(ciphertext, 'base64'), decipher.final()])
+    return decrypted.toString()
+  }
   protected static get _buvid(): string {
     const uuid = this.RandomHex(32).toUpperCase()
     return 'XX' + uuid[2] + uuid[12] + uuid[22] + uuid
@@ -66,10 +72,10 @@ abstract class AppClient {
     return device.toString('base64url')
   }
 
-  protected static readonly __loginSecretKey: string = '60698ba2f68e01ce44738920a0ffe768'
-  public static readonly loginAppKey: string = 'bca7e84c2d947ac6'
-  protected static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
-  public static readonly appKey: string = '1d8b6e7d45233436'
+  protected static readonly __loginSecretKey: string = AppClient.__keyDecipher('Dm7CQ24e04FmHXd72MSvyiEdqQttvjch37EtG4okpsT8PmMZDajn6YpYvl7sorcG')
+  public static readonly loginAppKey: string = AppClient.__keyDecipher('8TemNdmvbqTNs84NWd70EWy+Vd/cOvadoumt2Ob1pPw=')
+  protected static readonly __secretKey: string = AppClient.__keyDecipher('Y87akNed7ky5jIP6y+pMAXXi/TkO21T4wCj7TnmO/vTFAoNw+DT8YrO0uqmGw0cX')
+  public static readonly appKey: string = AppClient.__keyDecipher('gwsZCcXA46H2E3SjJ8qIwGPugB82Q5vnvMuleW1A7Nc=')
   public static readonly actionKey: string = 'appkey'
   // 同一客户端应与deviceID相同
   public static get biliLocalID(): string { return AppClient._deviceID }
@@ -89,57 +95,53 @@ abstract class AppClient {
   public static readonly Slocale: string = 'zh-Hans_CN'
   public static readonly statistics: string = encodeURIComponent(`{"appId":1,"platform":3,"version":"${AppClient._version}","abtest":""}`)
 
-  // bilibili 国际版
-  // protected static readonly __loginSecretKey: string = 'c75875c596a69eb55bd119e74b07cfe3'
-  // public static readonly loginAppKey: string = 'ae57252b0c09105d'
-  // protected static readonly __secretKey: string = '36efcfed79309338ced0380abd824ac1'
-  // public static readonly appKey: string = 'bb3101000e232e27'
-  // public static readonly build: string = '112000'
-  // public static readonly lang: string = 'hans'
-  // public static readonly locale: string = 'zh_CN'
-  // public static readonly sim_code: string = '46001'
-  // public static readonly statistics: string = encodeURIComponent('{"appId":1,"platform":3,"version":"2.10.1","abtest":""}')
-  // public static readonly timezone: string = 'GMT+08:00'
-  // public static readonly mobiApp: string = 'android_i'
+  // android
+  // gwsZCcXA46H2E3SjJ8qIwGPugB82Q5vnvMuleW1A7Nc=
+  // Y87akNed7ky5jIP6y+pMAXXi/TkO21T4wCj7TnmO/vTFAoNw+DT8YrO0uqmGw0cX
 
-  // bilibili 概念版
-  // protected static readonly __loginSecretKey: string = '34381a26236dd1171185c0beb042e1c6'
-  // public static readonly loginAppKey: string = '178cf125136ca8ea'
-  // protected static readonly __secretKey: string = '25bdede4e1581c836cab73a48790ca6e'
-  // public static readonly appKey: string = '07da50c9a0bf829f'
-  // public static readonly build: string = '5380400'
-  // public static readonly mobiApp: string = 'android_b'
+  // android_i
+  // VATs+mm0IbWIssPaAL9XZdadOprGkOlBXfH7N4yudHg=
+  // 9/CgiQLpXCY/Ep0A1kmxQIrOVrSt5/JZrsmDLEqXsyX2uwSMezf7VYMcdfGHqU41
 
-  // bilibili TV
-  // protected static readonly __loginSecretKey: string = '59b43e04ad6965f34319062b478f83dd'
-  // public static readonly loginAppKey: string = '4409e2ce8ffd12b8'
-  // protected static readonly __secretKey: string = '59b43e04ad6965f34319062b478f83dd'
-  // public static readonly appKey: string = '4409e2ce8ffd12b8'
-  // public static readonly biliLocalId: string = AppClient.RandomID(20)
-  // public static readonly build: string = '102401'
-  // public static readonly buvid: string = AppClient.RandomID(37).toUpperCase()
-  // public static readonly channel: string = 'master'
-  // public static readonly device: string = 'Sony'
-  // public static readonly deviceId: string = AppClient.biliLocalId
-  // public static readonly deviceName: string = 'M2007J1SC'
-  // public static readonly devicePlatform: string = 'Android10XiaomiM2007J1SC'
-  // public static get fingerprint(): string { return this.RandomID(62) }
-  // public static readonly guid: string = AppClient.buvid
-  // // 同一客户端与fingerprint相同
-  // public static get localFingerprint(): string { return this.fingerprint }
-  // public static readonly localId: string = AppClient.buvid
-  // public static readonly mobiApp: string = 'android_tv_yst'
-  // public static readonly networkstate: string = 'wifi'
-  // public static readonly platform: string = 'android'
+  // android_b
+  // dvmlOWlm2yIkc4vESMsXb50jTMHRG/TlG9ZMLIDvyt0=
+  // scOc3+xIoQkaCBY7Fdu46xdJtT9NxJFq52eeX3jottyZiJQWeAfm432Brz7iKfJt
 
-  // bilibili link
-  // protected static readonly __loginSecretKey: string = 'e988e794d4d4b6dd43bc0e89d6e90c43'
-  // public static readonly loginAppKey: string = '37207f2beaebf8d7'
-  // protected static readonly __secretKey: string = 'e988e794d4d4b6dd43bc0e89d6e90c43'
-  // public static readonly appKey: string = '37207f2beaebf8d7'
-  // public static readonly build: string = '4610002'
-  // public static readonly mobiApp: string = 'biliLink'
-  // public static readonly platform: string = 'android_link'
+  // android_tv
+  // yu/40OkOYE8O2lLionpVcW1XgkJnW61FB9re8eXFXa4=
+  // EM2lWQPSyqRVRJTQOUIiEU45VTqgV9K9r6oWJX6hW/E6KlpZoN4qUMln8SXnp31u
+
+  // biliLink
+  // txL6bA2vonrvUCvFEl10I3MU/YQgyg4NdPFz5YLexO8=
+  // wi52gYdW5DqOFsdrHK+eWRuJIp28xkQK1eMY9TBLT4MGz8Cy8iyW2nmeUQYt9t2U
+
+  // android_bilithings
+  // MV6kQr0L4hdQw2K2CkTX34jMtG3UfxHF95SZS5C6qyY=
+  // CYM76s9bzPsmY62uR2GmfEjuQck48PORXohmHMt0zGx0wFGzppY7avixxWZCYDf2
+
+  // bstar_a
+  // lymmf7qg9U+ROOiEi58h4MOYqeowVL3U799HZ+A/kz4=
+  // sC3ZmVABqQCPn/CrB4sgTVNdonOnzkr6ZqtPJJ8u3tWSqO7kHPQGn/aJkLO9UBJo
+
+  // android_mall_ticket
+  // TAqI+PCxVoHlvP/+gmzBB/Bdnf31qK6pd3Cv4+QkD6g=
+  // LyNvn4jyuqv1plN3nPG5QxpJJzaz2HY0AMyejXPUvQ55F/XbONKSpTfRcwlfuUs5
+
+  // bili_scan
+  // y5OjurXa2RTY2iZYeiiw+IjPHbKCprDgwTxBCyYiSHk=
+  // yMX/pAip8e7UKUSBS8btD9qP0TNDKoyTIh+rEZJFVgf5qPAmFj5MzYifEM6yGecd
+
+  // ai4c_creator_android
+  // aK4PKvF9yNzPJulKY6zhsxufizAZCcvDQfuZR4V/v4c=
+  // GM/xnH53ahF3qb5+1BbUQSTeJWXYcU9z1R0xbWZkdv1wGAY7R/fhc+nJvFkFcU76
+
+  // android_ott_sdk
+  // uuQC4Ad0yLQaItcosb+Z3RDdu6AMVyLnEok/vXa8goU=
+  // uM7TZQwcisLNfE3G5DKO0kGT76w3TdTq2vcfVEP4oG6NL+pXigWzMWu5oCDJgjct
+
+  // android_hd
+  // xRD6wpyekzPSQizJqIvVizoplcZ6FuHVLFEe9f7k+co=
+  // HWC2Vpy15W39WEqombSiEghp1bkcVS7IlWIkLk0Crq8aMFpx89IqEq9aZ73Wx6hi
 
   /**
    * 谜一样的TS
