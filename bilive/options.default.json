@@ -2,7 +2,7 @@
   "server": {
     "path": "",
     "hostname": "",
-    "port": 10080,
+    "port": 10086,
     "protocol": "admin"
   },
   "config": {
